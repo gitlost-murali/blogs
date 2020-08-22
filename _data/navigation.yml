@@ -2,6 +2,8 @@
 main:
   - title: "About"
     url: /about/
+  - title: "Category-Wise"
+    url: /sort-by-tags/
   - title: "Machine Learning"
     url: /machine-learning/
   # - title: "Quick-Start Guide"
