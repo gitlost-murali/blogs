@@ -101,7 +101,7 @@ author:
   links:
     - label: "Email"
       icon: "fas fa-fw fa-envelope-square"
-      url: "mailto:connect@gitlostmurali.com"
+      # url: "mailto:connect@gitlostmurali.com"
     - label: "Website"
       icon: "fas fa-fw fa-link"
       url: "https://gitlost-murali.com"
