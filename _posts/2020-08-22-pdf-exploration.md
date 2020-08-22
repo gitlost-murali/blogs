@@ -1,8 +1,9 @@
 ---
 title: "PDF exploration"
 excerpt: "Rating Python PDF libraries by their capability, usability etc."
-tags: [Software Engineering, Tooling, PDF parsing, PDF]
+tags: [Engineering, Tooling, PDF, PDF parsing]
 mathjax: true
+categories: tooling pdf
 ---
 
 ## Hello Everyone!
