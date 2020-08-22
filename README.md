@@ -1,0 +1,3 @@
+# blogs
+
+Jekyll Based Blog
