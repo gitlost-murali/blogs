@@ -12,9 +12,9 @@ $$ y = mx + c$$
 
 <!-- <img src="/assets/images/displaypic.jpeg" alt=""> -->
 <figure class="half">
-    <a href="/assets/images/displaypic.jpeg"><img src="/assets/images/displaypic.jpeg"></a>
-    <a href="/assets/images/displaypic.jpeg"><img src="/assets/images/displaypic.jpeg"></a>
+    <a href="{{ site.url }}{{ site.baseurl }}/assets/images/displaypic.jpeg"><img src="/assets/images/displaypic.jpeg"></a>
+    <a href="{{ site.url }}{{ site.baseurl }}/assets/images/displaypic.jpeg"><img src="/assets/images/displaypic.jpeg"></a>
     <figcaption>Caption describing these two images.</figcaption>
 </figure>
 
-<!-- ![alt](/assets/images/displaypic.jpeg) -->
+<!-- ![alt]({{ site.url }}{{ site.baseurl }}/assets/images/displaypic.jpeg) -->
