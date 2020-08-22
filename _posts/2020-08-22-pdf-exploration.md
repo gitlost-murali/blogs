@@ -12,8 +12,8 @@ $$ y = mx + c$$
 
 <!-- <img src="/assets/images/displaypic.jpeg" alt=""> -->
 <figure class="half">
-    <a href="{{ site.url }}{{ site.baseurl }}/assets/images/displaypic.jpeg"><img src="/assets/images/displaypic.jpeg"></a>
-    <a href="{{ site.url }}{{ site.baseurl }}/assets/images/displaypic.jpeg"><img src="/assets/images/displaypic.jpeg"></a>
+    <a href="{{ site.url }}{{ site.baseurl }}/assets/images/displaypic.jpeg"><img src="{{ site.url }}{{ site.baseurl }}/assets/images/displaypic.jpeg"></a>
+    <a href="{{ site.url }}{{ site.baseurl }}/assets/images/displaypic.jpeg"><img src="{{ site.url }}{{ site.baseurl }}/assets/images/displaypic.jpeg"></a>
     <figcaption>Caption describing these two images.</figcaption>
 </figure>
 
