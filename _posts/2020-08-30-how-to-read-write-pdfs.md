@@ -104,7 +104,7 @@ Here comes the most important question, how do you write to PDFs? Again, its usi
 1. Masking out a word
 2. Replacing the word
 
-In our case, let's use the word `small` in the sentence.
+In our case, let's use the word `small` in the sentence,
 > This is a __small__ demonstration .pdf file -
 
 As shown in 1.1 section, we can easily get the coordinates of the word `small`  => `[112.03, 92.64, 135.36, 106.38]`
