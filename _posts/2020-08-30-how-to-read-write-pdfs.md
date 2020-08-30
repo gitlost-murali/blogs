@@ -18,7 +18,7 @@ So, this post helps you understand how PDF works and what you can/cannot do with
 
 What makes PDF parsing (Portable Document Format) so difficult is its way of storing the data. For instance, do you (90s kids especially) remember cutting celebrities' photos from newspapers and pasting them on a page/chart? PDF is inspired from the same methodology. Every word/character is just pasted on a blank page w.r.t coordinate system. So unlike your HTML/XML format, you can't simply find a table by looking at tags because there are __no tags__. This problem is also reflected & [discussed](https://youtu.be/99A9Fz6uHAA) in the recent efforts of [Camelot](https://camelot-py.readthedocs.io/en/master/) and [Tabula](https://tabula-py.readthedocs.io/en/latest/).
 
-Coming back to the question of how storage is done, it is __rectangles__. Yes, we'll get back to why that's the case in just a minute. Also, note that PDF maintains two layers - Data Layer and Metadata layer for storing different types of data.
+Coming back to the question of how storage is done, it is __coordinates__. Yes, we'll get back to why that's the case in just a minute. Also, note that PDF maintains two layers - Data Layer and Metadata layer for storing different types of data.
 
 {% include figure image_path="/assets/images/pdf-parts.png" alt="PDF layering" caption="__Figure 1:__ _How PDF stores data in layers_." %}
 
@@ -87,7 +87,7 @@ Glimpse of how words & annotations are stored inside PDF.
 <figure class="half">
     <a href="{{ site.url }}{{ site.baseurl }}/assets/images/pdf-text-only.png"><img src="{{ site.url }}{{ site.baseurl }}/assets/images/pdf-text-only.png"></a>
     <a href="{{ site.url }}{{ site.baseurl }}/assets/images/pdf-only-highlight.png"><img src="{{ site.url }}{{ site.baseurl }}/assets/images/pdf-only-highlight.png"></a>
-    <figcaption><b>Figure</b>: <i>Left</i>: Data layer of PDF. && <i>Right</i>: Annotation layer of PDF.</figcaption>
+    <figcaption><b>Figure 4</b>: <i>Left</i>: Data layer of PDF. && <i>Right</i>: Annotation layer of PDF.</figcaption>
 </figure>
 
 To get the words inside highlighted, we need to map rectangle-coordinates of either sides. In our case, rectangle coordinates for
@@ -99,4 +99,26 @@ So, one can write a simple script to find what words coincide-with/lie-inside th
 
 ### 2. Writing to PDFs
 
-Here comes the most important question, how do you write to PDFs? Again, it's __rectangles__.
+Here comes the most important question, how do you write to PDFs? Again, its using __coordinates__. Let's consider 2 scenarios here,
+
+1. Masking out a word
+2. Replacing the word
+
+In our case, let's use the word `small` in the sentence.
+> This is a __small__ demonstration .pdf file -
+
+As shown in 1.1 section, we can easily get the coordinates of the word `small`  => `[112.03, 92.64, 135.36, 106.38]`
+
+So, step-1 i.e masking out is done this way,
+```python
+coords = (112.03999328613281, 92.64202880859375, \
+          135.3699951171875, 106.38202667236328)
+annot1 = page1.addRedactAnnot(coords, text = " ")
+annot1.setColors(stroke=fitz.utils.getColor('black'),
+                           fill=fitz.utils.getColor('black'))
+
+page1.apply_redactions()
+doc.save('output.pdf')
+```
+Open the file `output.pdf` to see the changes:
+{% include figure image_path="/assets/images/pdf_redacted.png" alt="Redacted out" caption="__Figure 5:__ _Masked the word __small__ in the PDF._" %}
