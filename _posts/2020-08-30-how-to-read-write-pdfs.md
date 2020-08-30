@@ -95,7 +95,7 @@ To get the words inside highlighted, we need to map rectangle-coordinates of eit
 word "demonstration"  is  138.14, 92.64, 201.50, 106.38
 highlighted area      is  135.17, 94.25, 204.82, 107.75
 ```
-So, one can write a simple script to find what words coincide-with/lie-inside the annotation/highlight.
+So, one can write a simple script to find which words coincide-with/lie-inside the annotation/highlight.
 
 ### 2. Writing to PDFs
 
