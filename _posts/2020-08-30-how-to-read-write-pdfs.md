@@ -12,7 +12,7 @@ PDF extraction is admittedly a tough engineering task. I know people who founded
 
 There are some beautiful libraries out there trying to perfect the process as much as possible. However, I didn't find a tool that could help me end-to-end in preserving the structure i.e headings, annotations and writing back to the PDF. I found an ensemble of tools each better at individual tasks but stitching them together is a tough task. After dedicating good amount of time, I was able to zero-down all my requirements to one tool albeit it requires some coding from you.
 
-So, this post helps you understand how PDF works and what you can/cannot do with it. __Note:__ I'll be using PyMuPDF in this post.
+So, this post helps you understand how PDF works and what you can/cannot do with it. __Note:__ I'll be using [PyMuPDF](https://pymupdf.readthedocs.io/en/latest/) in this post.
 
 ## Understanding PDF 
 
