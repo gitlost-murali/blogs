@@ -85,8 +85,8 @@ Rect(135.17, 94.25, 204.82, 107.75)
 Glimpse of how words & annotations are stored inside PDF.
 
 <figure class="half">
-    <a href="/assets/images/pdf-text-only.png"><img src="/assets/images/pdf-text-only.png"></a>
-    <a href="/assets/images/pdf-only-highlight.png"><img src="/assets/images/pdf-only-highlight.png"></a>
+    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/pdf-text-only.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/pdf-text-only.png"></a>
+    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/pdf-only-highlight.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/pdf-only-highlight.png"></a>
     <figcaption><b>Figure</b>: <i>Left</i>: Data layer of PDF. && <i>Right</i>: Annotation layer of PDF.</figcaption>
 </figure>
 
