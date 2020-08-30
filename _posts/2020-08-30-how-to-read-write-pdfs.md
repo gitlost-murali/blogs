@@ -8,7 +8,7 @@ categories: tooling pdf
 
 ## Motivation for the Post
 
-PDF extraction is admittedly a tough engineering task. I know people who founded startups offering PDF extraction services and failed. Hey, it's not their fault. Even, __Amazon__ failed to offer the service through its product __Textract__. 
+PDF extraction is admittedly a tough engineering task. I know people who founded startups offering PDF extraction services and failed. Hey, it's not their fault. Even, Amazon failed to perfect it through its product [Textract](https://aws.amazon.com/textract/). 
 
 There are some beautiful libraries out there trying to perfect the process as much as possible. However, I didn't find a tool that could help me end-to-end in preserving the structure i.e headings, annotations and writing back to the PDF. I found an ensemble of tools each better at individual tasks but stitching them together is a tough task. After dedicating good amount of time, I was able to zero-down all my requirements to one tool albeit it requires some coding from you.
 
