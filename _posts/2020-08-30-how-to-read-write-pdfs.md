@@ -1,7 +1,7 @@
 ---
 title: "Reading & Writing to PDFs"
-excerpt: "Rating Python PDF libraries by their capability, usability etc."
-tags: [Engineering, Tooling, PDF, PDF parsing]
+excerpt: "Shows how to read/write PDFs and explains how PDF stores data"
+tags: [Engineering, Tooling, PDF, PDF parsing, Writing to PDF, Reading PDFs]
 mathjax: true
 categories: tooling pdf
 ---
@@ -65,7 +65,7 @@ print(page1_info)
 
 #### 1.2. Getting Highlights
 
- `.getannots()` gives information about each annotation i.e `[Type of annotation - Highlight/Text, Rectangle of the highlight]`.
+ `.annots()` gives information about each annotation i.e `[Type of annotation - Highlight/Text, Rectangle of the highlight]`.
 
 ```python
 for annot in doc[0].annots():
@@ -109,7 +109,7 @@ In our case, let's use the word `small` in the sentence.
 
 As shown in 1.1 section, we can easily get the coordinates of the word `small`  => `[112.03, 92.64, 135.36, 106.38]`
 
-So, step-1 i.e masking out is done this way,
+So, step-1 i.e `masking out` is done this way,
 ```python
 coords = (112.03999328613281, 92.64202880859375, \
           135.3699951171875, 106.38202667236328)
@@ -122,3 +122,19 @@ doc.save('output.pdf')
 ```
 Open the file `output.pdf` to see the changes:
 {% include figure image_path="/assets/images/pdf_redacted.png" alt="Redacted out" caption="__Figure 5:__ _Masked the word __small__ in the PDF._" %}
+
+Step-2 i.e `overwriting` can be done this way,
+
+```python
+coords = (112.03999328613281, 92.64202880859375, \
+          135.3699951171875, 106.38202667236328)
+page1.addFreetextAnnot(coords, 'XXX')
+doc.save('output2.pdf')
+```
+{% include figure image_path="/assets/images/pdf-replaced-word.png" alt="Word is replaced" caption="__Figure 6:__ _Replaced the word __small__ with __XXX__._" %}
+
+That's it from my side. Hope you find this post useful.
+
+Thanks,
+
+_Murali Manohar_.
