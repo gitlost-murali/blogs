@@ -26,7 +26,7 @@ Let's understand it better using [this PDF](http://africau.edu/images/default/sa
 
 {% include figure image_path="/assets/images/sample-pdf.png" alt="PDF Sample" caption="__Figure 2:__ _Sample PDF file_." %}
 
-For brevity, narrow down our understanding of Data Layer to Words and Metadata to Annotations/Highlights. Now, I have highlighted some portion of the PDF to see how PDF stores the details.
+For brevity, narrow down our understanding of Data Layer to Words and Metadata to Annotations/Highlights. Now, I have highlighted some portion of the PDF to obtain both layers with some code.
 
 {% include figure image_path="/assets/images/pdf-highlight.png" alt="Sample Highlight" caption="__Figure 3:__ _Highlighting some portion of PDF_." %}
 
