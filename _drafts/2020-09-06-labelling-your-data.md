@@ -16,7 +16,7 @@ Unlike most academia, Industrial problems won't come with a gold-standard datase
  
 > Telling that you need a lot of training data to get a high quality ML model is like saying __"You need a lot of money to be rich"__. - [Christopher Ré, Snorkel](https://www.youtube.com/watch?v=yu15Nf5eJEE)
 
-While it sounds like a redundant fact, it comes with an operational overhead. So, this post talks about how to deal with this situation and speed up your project. It also highlights that the role of Data Scientists is not just to create a DL-Architecture at the end but to participate in the whole project-cycle.
+While the data-dependency sounds like a redundant fact, it comes with an operational overhead. So, this post talks about how to deal with this situation and speed up your project. It also highlights that the role of Data Scientists is not just to create a DL-Architecture at the end but to participate in the whole project-cycle.
 
 ## Automating the process
 
