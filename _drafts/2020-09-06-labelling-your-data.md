@@ -58,18 +58,32 @@ With the predictions from rule-based functions, you have two objectives now,
 #### 2.1 Tools for annotation:
 These are exciting times to live. There are some great open-source annotation tools for us to use. Pick the one that suits your requirement. For this post, I'm taking `Named-Entity-Recognition` as the task and [`label-studio`](https://labelstud.io/) as the annotation tool.
 
-{% include figure image_path="{{ site.url }}{{ site.baseurl }}/assets/images/label-studio-val.png" alt="Label-Studio visual" caption="__Figure 1:__ NER prediction using [`Label-Studio`](https://labelstud.io/)." %}
+{% include figure image_path="/assets/images/label-studio-val.png" alt="Label-Studio visual" caption="__Figure 1:__ NER prediction using [`Label-Studio`](https://labelstud.io/)." %}
 
+#### 2.2 Pipeline for annotation
 In addition to re-annotating your instances, validate your predictions into `Yes/No` category. If it's a YES, you can send them straight into an ML model. Otherwise, depending on your bandwidth, either update the rules again or just train the ML model on re-annotated/`NO`-labelled instances.
 
     YES-> Rules succeded at identifying entities.
 
     NO->  Rules failed at identifying entities.
 
-{% include figure image_path="{{ site.url }}{{ site.baseurl }}/assets/images/plan-for-data-creation.jpg" alt="Plan or pipeline" caption="__Figure 2:__ Pipeline from rule-based functions to ML model." %}
+{% include figure image_path="/assets/images/plan-for-data-creation.jpg" alt="Plan or pipeline" caption="__Figure 2:__ Pipeline from rule-based functions to ML model." %}
 
 Make sure that your pipeline of _Seed-Data -> Annotation Tool -> Verified Data_ is strong enough.
 
+##### 2.2.1 Visualizing the steps 
+
+Your noisy data at the end of Step-2 would look something like this,
+{% include figure image_path="/assets/images/label-studiostep2-pipeline.png" alt="Noisy Data" caption="__Figure 3:__ Noisy Data Format" %}
+
+After validating & re-annotating your noisy data, this is the output you'd be getting for Step-3 (left) & Step-4 (right),
+<figure class="half">
+	<img src="{{ site.url }}/{{ site.baseurl }}/assets/images/label-studiostep2-yes-pipeline.png">
+	<img src="{{ site.url }}/{{ site.baseurl }}/assets/images/label-studiostep2-no-pipeline.png">
+	<figcaption><b>Figure 4:</b> <i>Left -></i> Instances that are correctly predicted by rules. <i>Right -> </i> Failed to detect by Rules</figcaption>
+</figure>
+
+__Note:__ The objective of using `Yes/No` is update the rule-based functions. We re-annotate the wronly-predicted instances but validate it as `No` to let the Data-Scientist know where rules fail.
 
 ## Conclusion
 
