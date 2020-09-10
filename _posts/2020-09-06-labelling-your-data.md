@@ -1,6 +1,6 @@
 ---
-title: "Expediting your dataset-creation process"
-excerpt: "Talks about building a dataset from scratch and a few tricks to consider."
+title: "Speeding-up your dataset-creation process"
+excerpt: "Talks about building a dataset from scratch and offers a few tricks to speed-up the process"
 tags: [Engineering, Tooling, Dataset creation, Annotation, Machine Learning, Deep Learning]
 mathjax: true
 categories: tooling annotation
