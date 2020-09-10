@@ -21,19 +21,21 @@ While the data-dependency sounds like a redundant fact, it comes with an operati
 ## Automating the process
 
 ### 1. __Seed Data:__
- When the project starts, you don't want to make your Data-Scientists sit idle until the data is arrived. Instead, make it a _continuous loop_ and involve your Data-Scientists from Day-1. You have two options here,
+ When the project starts, you don't want to make your Data-Scientists sit idle until the data is arrived. Instead, make it a _continuous loop_ and involve your Data-Scientists from Day-1. 
+ 
+Getting the seed data enables you to fix the pipeline first _i.e_ Training data format, annotation tool, the ML/DL architecture setup and the output format.
+ 
+There are two options/way to get the seed-data,
 
     1. Manual intervention
     2. Automation
-
-Getting the seed data enables you to fix the pipeline first _i.e_ Training data format, annotation tool, the ML/DL architecture setup and the output format.
 
 __Option #1__ -> Manual intervention:
 
 This option is straightforward in asking annotators to label small amout of instances but this is not a desired scenario because
 
 1. It demands a lot of attention from annotators in creating a gold-standard dataset. And this small data may cover only a small distribution of the data.
-2. Your Data-Scientistis are still not putting any effort to understand the domain & problem.
+2. Your Data-Scientistis are still not putting any effort to understand the domain & problem. But the plus-side is that they can start working on the project-pipeline.
 
 __Option #2__ -> Getting noisy data:
 
