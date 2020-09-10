@@ -73,17 +73,17 @@ Make sure that your pipeline of _Seed-Data -> Annotation Tool -> Verified Data_ 
 
 ## Conclusion
 
-_Q) Demanding domain-expertise for rule-based functions sounds like we're dating back to the pre-deep-learning era of feature-engineering. Isn't it counter-productive?_
+__Q)__ _Demanding domain-expertise for rule-based functions sounds like we're dating back to the pre-deep-learning era of feature-engineering. Isn't it counter-productive?_
 
-Ans. Our objective of rules is to support the ML model not deliver a complete rule-based solution. For instance, let's consider an example,
+__Ans.__ Our objective of rules is to support the ML model not deliver a complete rule-based solution. For instance, let's consider an example,
 
 > __Uber__ raised $1 million from the initial IPO.
 
 From a rules perspective, you might just do a lookup on 100-popular companies and tag any sub-string that matches the company as an entity. But from the ML perspective, it considers the context rather than just the word. Hence, if 60% of your data can be covered with rules and we train an ML model on the 60%, chances are that ML will bring in a deeper-perspective to cover the remaining 40%.
 
-_Q) Any alternatives to rule-based functions?_
+__Q)__ _Any alternatives to rule-based functions?_
 
-Ans. If an off-shelf ML model matches the problem or its domain, one can use that for the 1st iteration of data.
+__Ans.__ If an off-shelf ML model matches the problem or its domain, one can use that for the 1st iteration of data.
 
 That's it from my side. Hope you find this post useful.
 
