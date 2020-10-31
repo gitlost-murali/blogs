@@ -18,3 +18,5 @@ This post is majorly a discussion-driven/opinionated piece on handling data-drif
 
 
 ## Leveraging Language models
+
+## Octopus Test: "We" assign intelligence to machines
