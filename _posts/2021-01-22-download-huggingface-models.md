@@ -13,19 +13,17 @@ While downloading HuggingFace may seem trivial, I found that a few in my circle 
 
 * Directly head to [HuggingFace page](https://huggingface.co/) and click on "models".
 
-<!-- {% include figure image_path="/assets/images/huggingface-opening.png" alt="HuggingFace landing page" caption="__Figure 1:__ _HuggingFace landing page_."%} -->
 
 <figure>
-    <a href="/assets/images/huggingface-opening.png"><img src="/assets/images/huggingface-opening.png"></a>
+    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/huggingface-opening.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/huggingface-opening.png"></a>
     <figcaption><b>Figure 1:</b> <i> HuggingFace landing page </i> </figcaption>
 </figure>
 
 * Select a model. For now, let's select `bert-base-uncased`
 
-<!-- {% include figure image_path="/assets/images/hf-models.png" alt="HuggingFace models page" caption="__Figure 2:__ _HuggingFace models page_."%} -->
 
 <figure>
-    <a href="/assets/images/hf-models.png"><img src="/assets/images/hf-models.png"></a>
+    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/hf-models.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/hf-models.png"></a>
     <figcaption><b>Figure 2:</b> <i> HuggingFace models page </i> </figcaption>
 </figure>
 

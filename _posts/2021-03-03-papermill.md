@@ -12,7 +12,7 @@ Python Notebooks are great when you are experimenting/ideating. You can quickly 
 Let us understand this with a sample script,
 
 <figure>
-    <a href="/assets/images/papermill_samplecode.png"><img src="/assets/images/papermill_samplecode.png"></a>
+    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/papermill_samplecode.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/papermill_samplecode.png"></a>
     <figcaption><b>Figure 1:</b> <i> Sample Script </i></figcaption>
 </figure>
 
@@ -27,15 +27,15 @@ OR
 
 1. Papermill tells you to tag the cells which think you are parameters. You can tag your variables' cell the following way,
 <figure>
-    <a href="/assets/images/papermill-tags.png"><img src="/assets/images/papermill-tags.png"></a>
+    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/papermill-tags.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/papermill-tags.png"></a>
     <figcaption><b>Figure 2:</b> <i> Select the option to tag cells </i></figcaption>
 </figure>
 <figure>
-    <a href="/assets/images/papermill-tag1.png"><img src="/assets/images/papermill-tag1.png"></a>
+    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/papermill-tag1.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/papermill-tag1.png"></a>
     <figcaption><b>Figure 3:</b> <i> Name the cell as `parameters`  </i></figcaption>
 </figure>
 <figure>
-    <a href="/assets/images/papermill-tag2.png"><img src="/assets/images/papermill-tag2.png"></a>
+    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/papermill-tag2.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/papermill-tag2.png"></a>
     <figcaption><b>Figure 4:</b> <i> Cell tagged as `parameters` </i></figcaption>
 </figure>
 
@@ -56,6 +56,6 @@ for name in names:
 
 Above code executes the notebooks by injecting parameters. You can look at the `injected parameters` in the output notebooks. For ex, in `out_pm_bcd.csv.ipynb`:
 <figure>
-    <a href="/assets/images/pm-injectedparams.png"><img src="/assets/images/pm-injectedparams.png"></a>
+    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/pm-injectedparams.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/pm-injectedparams.png"></a>
     <figcaption><b>Figure 5:</b> <i> Injected Parameters by papermill </i></figcaption>
 </figure>
