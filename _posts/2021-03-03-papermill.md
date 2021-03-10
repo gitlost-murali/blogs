@@ -2,7 +2,7 @@
 title: \[Shorts-2\] Papermill=>Adding Parameters to Python Notebooks & executing them like a function
 excerpt: Make Notebooks work like functions
 tags: [Python, Shorts, Jupyter Notebook, Notebook, iPython Notebook, Tools]
-date: 2021-01-28 06:58:10 +0530
+date: 2021-03-03 06:58:10 +0530
 categories: python tooling
 permalink: /:categories/:title
 ---
