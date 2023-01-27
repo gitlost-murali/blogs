@@ -2,7 +2,7 @@
 title: Delineating my NLP experience considering Okra.ai's feedback
 excerpt: Talks about my experience in NLP - tools, techniques, and projects.
 tags: [data science, nlp, interviews]
-date: 2023-27-01 18:58:10 +0530
+date: 2023-01-27 18:58:10 +0530
 categories: python data-science nlp
 permalink: /:categories/:title
 toc: True
