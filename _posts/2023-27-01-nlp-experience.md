@@ -33,13 +33,13 @@ Pharamacuetical giant, Novartis, wanted to have a in-house translation service a
 
 * __Text Classification__: This has been the most popular and common task in NLP. Starting from 2017, I have used different techniques for text classification. I have used CNNs, RNNs, LSTMs, GRUs, Transformers, etc. I have also used different techniques for feature engineering like TF-IDF, Word2Vec, GloVe, FastText, etc.
 
-There has been different variants to it. For example, in a course project of building __stance detection__ in Covid vaccine, we combined Twitter network features with text encoder features. Trust me on this, this is an interesting read (mainly, the user network features computation). Here's the [link](https://gitlost-murali.github.io/blogs/work/Apps_1_NLP_WriteUp.pdf). The professor, [Prof. Rodrigo Agerri](https://ragerri.github.io/) wanted me to publish this work with some tweaks but I was busy shifting to Netherlands for 2nd year of my Masters and couldn't work on it further.
+There has been different variants to it. For example, in a course project of building __stance detection__ in Covid vaccine, we combined Twitter network features with text encoder features. Trust me on this, this is an __interesting read__ (mainly, the user network features computation). Here's the [link](https://gitlost-murali.github.io/blogs/work/Apps_1_NLP_WriteUp.pdf). The professor, [Prof. Rodrigo Agerri](https://ragerri.github.io/) wanted me to publish this work with some tweaks but I was busy shifting to Netherlands for 2nd year of my Masters and couldn't work on it further.
 
 There was also something called [__sentiment neuron__](https://openai.com/blog/unsupervised-sentiment-neuron/) from OpenAI, where they use one node's activation value to decide the sentiment value of text. I built a wrapper around it and passed it to the labeling team in my former company, Gramener.
 
 * __Named Entity Recognition__: The 2nd most used task in NLP. Starting with BiLSTM CRF model as my baseline in 2018, I have now experimented (successfully) pivoting NER task as seq2seq task with generative models like BART, T5, etc. In Industry, while building a patient-deidentification app for Novartis, I have used Spacy, SciSpacy, ClinicalBERT, BioBERT, AllenNLP, Flair etc. 
 
-* __Coreference Resolution__: Again, for the same project in Novartis, we used AllenNLP's models for coreference resolution.
+* __Coreference Resolution__: Again, for the same project in Novartis, we used AllenNLP's models for coreference resolution of patient/subject instances.
 
 * __Question Answering__: In my recent efforts to pivot NER task into multiple other tasks, I have used BERT based model for this question answering task.
 
