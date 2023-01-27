@@ -8,10 +8,8 @@ permalink: /:categories/:title
 toc: True
 ---
 
+Feedback from Okra.ai : _The main reason is that we believe you don't have enough NLP experience with the techniques and the tools we use, especially as we have very high standards when it comes to NLP exposure._
 
-"
-The main reason is that we believe you don't have enough NLP experience with the techniques and the tools we use, especially as we have very high standards when it comes to NLP exposure.
-"
 
 Hi Yahya & Xavier,
 
