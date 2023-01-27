@@ -48,6 +48,8 @@ There was also something called [__sentiment neuron__](https://openai.com/blog/u
 * __Unsupervised Word Alignment__: 
 I wrote a few project proposals to Netflix and Duolingo based on this idea. Here's a sample image of the application I built for them. Note that there is no training involved. This is completely zero shot.
 
+* __Multi-modal work__: We built a MEME retrieval system using CLIP, sentence embeddings and presented our poster. This is again a __very interesting work__. Here's the [link](https://gitlost-murali.github.io/blogs/work/memeR_poster.pdf). We also built a demo but it's down considering the costs.
+
 <figure>
     <a href="{{ site.url }}/{{ site.baseurl }}/work/proposal.png"><img src="{{ site.url }}/{{ site.baseurl }}/work/proposal.png"></a>
     <figcaption><b>Figure 1:</b> <i> Proposal image </i></figcaption>
