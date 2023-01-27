@@ -63,7 +63,7 @@ Speaking about thesis advisors, I am working with [Prof. Eneko Agirre](https://e
 
 Before starting my masters, I maintained a technical blog where I wrote about my projects. I didn't highlight it in the interview. Here's the [link](https://gitlost-murali.github.io/blogs/). There are [medium posts](https://medium.com/@kmanoharmurali) on [Unsupervised Translation](https://medium.com/@kmanoharmurali/an-overview-of-unsupervised-machine-translation-mt-f3298dcd6206) and [Generative Adversarial Networks (GANs)](https://medium.com/@kmanoharmurali/friendly-introduction-to-gans-357cf0a99a6e).
 
-Here's my latest [course work paper](https://gitlost-murali.github.io/blogs/work/LfD_Final_Project.pdf).
+Here's my latest [course work paper](https://gitlost-murali.github.io/blogs/work/LfD_Final_Project.pdf). You will find it __interesting__. Explainable NLP could have been my thesis topic but I pivoted to Math Word Problem Solving.
 
 __Coding skills:__
 
