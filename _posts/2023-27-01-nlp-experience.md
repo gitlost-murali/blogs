@@ -24,18 +24,18 @@ It is said that there is "not enough NLP experience in techniques and tools.". I
 * __Foundational NLP tools__: I have used NLTK, Spacy, Gensim, Stanford CoreNLP suite. With the advent of Transformers and rise of pretrained language models, I considered it would be redundant mentioning them to Xavier.
 
 * __Deep Learning Platforms__: I'm a constant advisor of PyTorch. But at the same time, I couldn't avoid mandatory Tensorflow/Keras assignments in my Masters. I use FastAI toolkit for learning purposes.
-* NLP Libraries: I have used HuggingFace Transformers, AllenNLP, Flair, and OpenNMT. OpenNMT for building machine translation baselines for my undergrad thesis. HuggingFace Transformers is something I use in my most of the recent projects. AllenNLP for coreference resolution and Flair for sentiment analysis and NER.
-* NLP Architectures: I am up to date with the recent transformer variants and language models (Auto-regressive and Denoising based models) BERT, RoBERTa, DeBerta, XLNet, T5, BART, GPT-1,2,3, CLIP etc. And at the same time, if there is any need to use any of the older techniques, dating back to automata, I can do that too. Here's my [mini blog](https://gitlost-murali.github.io/blogs/python/data-science/nlp/foma) explaining how to use FOMA tool (automata library) for a downstream NLP task.
+* __NLP Libraries__: I have used HuggingFace Transformers, AllenNLP, Flair, and OpenNMT. OpenNMT for building machine translation baselines for my undergrad thesis. HuggingFace Transformers is something I use in my most of the recent projects. AllenNLP for coreference resolution and Flair for sentiment analysis and NER.
+* __NLP Architectures__: I am up to date with the recent transformer variants and language models (Auto-regressive and Denoising based models) BERT, RoBERTa, DeBerta, XLNet, T5, BART, GPT-1,2,3, CLIP etc. And at the same time, if there is any need to use any of the older techniques, dating back to automata, I can do that too. Here's my [mini blog](https://gitlost-murali.github.io/blogs/python/data-science/nlp/foma) explaining how to use FOMA tool (automata library) for a downstream NLP task.
 
 ## Techniques:
 
-* __Machine Translation__: I have built baselines for machine translation using OpenNMT. At the same time, my [thesis]() was on __unsupervised machine translation__. Here, on the top of standard back translation approach, we proposed that leveraging a lexicon built from cross-lingual embeddings would greatly impact the convergence of training. I have also used HuggingFace Transformers for fine-tuning the models for my recent college projects.
+* __Machine Translation__: I have built baselines for machine translation using OpenNMT. At the same time, my [thesis](https://gitlost-murali.github.io/blogs/thesis/Undergradthesis_Murali_Manohar.pdf) was on __unsupervised machine translation__. Here, on the top of standard back translation approach, we proposed that leveraging a lexicon built from cross-lingual embeddings would greatly impact the convergence of training. I have also used HuggingFace Transformers for fine-tuning the models for my recent college projects.
 
 Pharamacuetical giant, Novartis, wanted to have a in-house translation service as they didn't want to rely on Google Translate citing privacy concerns. So, I built a streamlit webapp around [HelsinkiNLP](https://github.com/Helsinki-NLP/Opus-MT) models and deployed it on their servers. This was also a great learning experience as I got to learn about the deployment of models in production.
 
 * __Text Classification__: This has been the most popular and common task in NLP. Starting from 2017, I have used different techniques for text classification. I have used CNNs, RNNs, LSTMs, GRUs, Transformers, etc. I have also used different techniques for feature engineering like TF-IDF, Word2Vec, GloVe, FastText, etc.
 
-There has been different variants to it. For example, in a course project of building __stance detection__ in Covid vaccine, we combined Twitter network features with text encoder features. Trust me on this, this is an interesting read (mainly, the user network features computation). Here's the [link](https://gitlost-murali.github.io/work/Apps_1_NLP_WriteUp.pdf). The professor, [Prof. Rodrigo Agerri](https://ragerri.github.io/) wanted me to publish this work with some tweaks but I was busy shifting to Netherlands for 2nd year of my Masters and couldn't work on it further.
+There has been different variants to it. For example, in a course project of building __stance detection__ in Covid vaccine, we combined Twitter network features with text encoder features. Trust me on this, this is an interesting read (mainly, the user network features computation). Here's the [link](https://gitlost-murali.github.io/blogs/work/Apps_1_NLP_WriteUp.pdf). The professor, [Prof. Rodrigo Agerri](https://ragerri.github.io/) wanted me to publish this work with some tweaks but I was busy shifting to Netherlands for 2nd year of my Masters and couldn't work on it further.
 
 There was also something called [__sentiment neuron__](https://openai.com/blog/unsupervised-sentiment-neuron/) from OpenAI, where they use one node's activation value to decide the sentiment value of text. I built a wrapper around it and passed it to the labeling team in my former company, Gramener.
 
@@ -65,7 +65,7 @@ Speaking about thesis advisors, I am working with [Prof. Eneko Agirre](https://e
 
 Before starting my masters, I maintained a technical blog where I wrote about my projects. I didn't highlight it in the interview. Here's the [link](https://gitlost-murali.github.io/blogs/). There are [medium posts](https://medium.com/@kmanoharmurali) on [Unsupervised Translation](https://medium.com/@kmanoharmurali/an-overview-of-unsupervised-machine-translation-mt-f3298dcd6206) and [Generative Adversarial Networks (GANs)](https://medium.com/@kmanoharmurali/friendly-introduction-to-gans-357cf0a99a6e).
 
-Here's my latest [course work paper](https://gitlost-murali.github.io/work/LfD_Final_Project.pdf).
+Here's my latest [course work paper](https://gitlost-murali.github.io/blogs/work/LfD_Final_Project.pdf).
 
 __Coding skills:__
 
