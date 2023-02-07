@@ -1,5 +1,5 @@
 ---
-title: Delineating my NLP experience considering Okra.ai's feedback
+title: Delineating my NLP experience
 excerpt: Talks about my experience in NLP - tools, techniques, and projects.
 tags: [data science, nlp, interviews]
 date: 2023-01-27 18:58:10 +0530
@@ -7,15 +7,6 @@ categories: python data-science nlp
 permalink: /:categories/:title
 toc: True
 ---
-
-Feedback from Okra.ai : _The main reason is that we believe you don't have enough NLP experience with the techniques and the tools we use, especially as we have very high standards when it comes to NLP exposure._
-
-
-Hi Yahya & Xavier,
-
-I have had a recent interaction with Xavier and the feedback was something unexpected - that I don't have enough NLP experience.  I believe that there has been a mistake from my end in not establishing my NLP projects/knowledge clearly and abstracting the details considering this is not a technical interview. While I could argue that the role is for a junior position, that would still doesn't undermine my NLP experience.
-
-It is said that there is "not enough NLP experience in techniques and tools.". I would like to answer this in two sections, tools and techniques.
 
 ## Tools:
 
