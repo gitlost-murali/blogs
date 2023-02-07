@@ -10,8 +10,7 @@ toc: True
 
 ## Tools:
 
-* __Foundational NLP tools__: I have used NLTK, Spacy, Gensim, Stanford CoreNLP suite. With the advent of Transformers and rise of pretrained language models, I considered it would be redundant mentioning them to Xavier.
-
+* __Foundational NLP tools__: I have used NLTK, Spacy, Gensim, Stanford CoreNLP suite. With the advent of Transformers and rise of pretrained language models, I consider it would be redundant mentioning them but anyway, here we go.
 * __Deep Learning Platforms__: I'm a constant advisor of PyTorch. But at the same time, I couldn't avoid mandatory Tensorflow/Keras assignments in my Masters. I use FastAI toolkit for learning purposes.
 * __NLP Libraries__: I have used HuggingFace Transformers, AllenNLP, Flair, and OpenNMT. OpenNMT for building machine translation baselines for my undergrad thesis. HuggingFace Transformers is something I use in my most of the recent projects. AllenNLP for coreference resolution and Flair for sentiment analysis and NER.
 * __NLP Architectures__: I am up to date with the recent transformer variants and language models (Auto-regressive and Denoising based models) BERT, RoBERTa, DeBerta, XLNet, T5, BART, GPT-1,2,3, CLIP etc. And at the same time, if there is any need to use any of the older techniques, dating back to automata, I can do that too. Here's my [mini blog](https://gitlost-murali.github.io/blogs/python/data-science/nlp/foma) explaining how to use FOMA tool (automata library) for a downstream NLP task.
