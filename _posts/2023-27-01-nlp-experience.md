@@ -47,9 +47,7 @@ I wrote a few project proposals to Netflix and Duolingo based on this idea. Here
 
 ## Reading skills:
 
-Since it is mentioned "we have very high standards", I believe I should point my ability to read research papers. As a proof, here's the [folder](https://drive.google.com/drive/folders/1gWj4l2rMof41c9vRaI0uMqVcNcMz0NqS?usp=share_link) with all the annotated research papers I read in the last month. Reading 23 research papers (with 4 survey papers) in a month would require some understanding of NLP techniques. I also summarize my papers visually for advisors. An example file is [here](https://drive.google.com/drive/folders/1gWj4l2rMof41c9vRaI0uMqVcNcMz0NqS?usp=share_link)
-
-Speaking about thesis advisors, I am working with [Prof. Eneko Agirre](https://eagirre.github.io/), who has been awarded ACL fellowship, a guest lecturer position at NYU, Spanish National Award in research. But that is about him. I do not want to bask in his reflected glory. After a cold email to him in 2019, he helped me in acquiring Masters admission in __Computational Linguistics__ with fully funded scholarship.
+I believe I should point my ability to read research papers. As a proof, here's the [folder](https://drive.google.com/drive/folders/1gWj4l2rMof41c9vRaI0uMqVcNcMz0NqS?usp=share_link) with all the annotated research papers I read in the last month. Reading 23 research papers (with 4 survey papers) in a month would require some understanding of NLP techniques. I also summarize my papers visually for advisors. An example file is [here](https://drive.google.com/drive/folders/1gWj4l2rMof41c9vRaI0uMqVcNcMz0NqS?usp=share_link)
 
 ## Writing skills:
 
