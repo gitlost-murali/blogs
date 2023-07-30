@@ -1,6 +1,6 @@
 ---
-title: QLoRA and LoRA - Revolutionizing Finetuning of Large Language Models
-excerpt: Delving into the innovative techniques of QLoRA and LoRA for efficient finetuning of large language models (LLMs)
+title: Demystifying LoRA and QLoRA - The Powerhouses of Efficient Finetuning in Large Language Models
+excerpt: Delving into the math behind LoRA and QLoRA 
 tags: [Machine Learning, Language Models, QLoRA, LoRA, Finetuning]
 date: 2023-07-27 05:28:10 +0530
 categories: machine-learning data-science
