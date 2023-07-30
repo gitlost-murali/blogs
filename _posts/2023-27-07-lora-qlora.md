@@ -166,56 +166,18 @@ If you have 32 bits to store information, you can store $ 2^{32} $ values. Howev
 
 __NF4__
 
-Let's break down the NF4 quantization process with a simple vector and some math.
+The paper says the following:
 
-Consider a vector v:
-```shell
-v = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-```
+1. 4-bit integers represent 16 levels which are evenly spaced in the [−1, 1] range. The levels would be
+-1.0, -0.8667, -0.7333, -0.6, -0.4667, -0.3333, -0.2, -0.0667, 0.0667, 0.2, 0.3333, 0.4667, 0.6, 0.7333, 0.8667, 1.0
+2. Let's say a weight in the big FP32 model is 0.23456.
+3. The closest value in the 16 levels is 0.2.
+4. So, we quantize the weight to 0.2.
+5. In our 4-bit representation, we store the value 10 (0.2 is the 10th value in the 16 levels).
+6. If we want to use this 4-bit weight in computation, we dequantize it back to FP32 using the index stored. (10th index = 0.2)
+7. The dequantization error is 0.23456 - 0.2 = 0.03456 (~1/4th of the quantization step size - 0.1333).
 
-The first step in the NF4 quantization process is to determine the minimum and maximum values of the vector. Let's denote these as v_min and v_max respectively.
-
-```shell
-v_min = min(v) = 0.1
-v_max = max(v) = 1.0
-```
-
-Next, we calculate the range of the vector, which is the difference between the maximum and minimum values.
-
-```shell
-range = v_max - v_min = 1.0 - 0.1 = 0.9
-```
-
-Since we are quantizing to 4 bits, we have 2^4 = 16 different levels that each value can be mapped to. We divide the range of the vector into 16 equal intervals to determine these levels.
-
-```shell
-interval = range / 16 = 0.9 / 16 = 0.05625
-```
-
-Here are the 16 levels represented as a vector with the interval as above:
-
-```shell
-levels = [0.1, 0.15625, 0.2125, 0.26875, 0.325, 0.38125, 0.4375, 0.49375, 0.55, 0.60625, 0.6625, 0.71875, 0.775, 0.83125, 0.8875, 0.94375]
-```
-
-
-Now, we map each value in the vector to the nearest quantization level. This involves subtracting the minimum value from each element, dividing by the interval size, and rounding to the nearest integer.
-
-```shell
-quantized_v = round((v - v_min) / interval) - 8
-```
-
-This will give us a new vector where each value is an integer between -8 and 7, represented by 4 bits. These are essentially indices that we are storing.
-
-Later, when we want to use the quantized data, we perform the dequantization process:
-
-```shell
-dequantized_v = (quantized_v + 8) * interval + v_min
-```
-In the dequantization process, we add 8 to the indices to shift the range back from -8-7 to 0-15. Then, we look up the corresponding value in the levels vector to get the original (or close to original) values. This completes the round-trip from quantization to dequantization.
-
-
-This is a simplified explanation of the process. In practice, the NF4 quantization technique involves other steps, such as bias correction and variance reduction, to ensure that the quantized values accurately represent the original data.
+This is a simplified explanation of the process. In practice, the NF4 quantization technique involves other steps, such as splitting 16 levels with quartiles, normalizing input tensor, etc. to ensure that the quantized values accurately represent the original data.
 
 Let's answer why we want to have FP32 precision for LoRa adapters. The quantization and de-quantization results in loss of information in the model weights. Maintaining the LoRa adapters in FP32 precision ensures that the loss of information is subdued and higher precision allows the low-rank adapters to capture subtle nuances in the downstream task they are trained for.
 
@@ -234,3 +196,7 @@ nf4_config = BitsAndBytesConfig(
 
 model_nf4 = AutoModelForCausalLM.from_pretrained(model_id, quantization_config=nf4_config)
 ```
+
+## Badum Tss
+
+This is the end of the blog. I hope you enjoyed reading it. If you have any questions, please feel free to reach out by clicking on the social media icons on the left. :)
