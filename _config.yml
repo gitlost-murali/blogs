@@ -82,7 +82,7 @@ analytics:
 # Site Author
 author:
   name             : "Murali Manohar"
-  avatar           : "/assets/images/displaypic.jpeg" # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
+  avatar           : "/assets/images/profile.jpg" # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
   bio              : "*Research ∩ Industry.*"
   location         : 
   email            : "kmanoharmurali@gmail.com"
