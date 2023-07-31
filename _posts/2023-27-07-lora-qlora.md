@@ -1,5 +1,5 @@
 ---
-title: Demystifying LoRA and QLoRA - The Powerhouses of Efficient Finetuning in Large Language Models
+title: Understanding LoRA and QLoRA - The Powerhouses of Efficient Finetuning in Large Language Models
 excerpt: Delving into the math behind LoRA and QLoRA 
 tags: [Machine Learning, Language Models, QLoRA, LoRA, finetuning, huggingface, transformers]
 date: 2023-07-27 05:28:10 +0530
