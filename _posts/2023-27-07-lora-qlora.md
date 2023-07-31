@@ -142,11 +142,10 @@ Here are some more details to the last statement:
 
 The section below explains the math behind NF4 quantization. You can skip to the code section if you're allergic to math.
 
-### NF4 Quantization
+## NF4 Quantization
 
 If you have 32 bits to store information, you can store $ 2^{32} $ values. However, if you can store the same information in 8 bits (range of -127 to 127), you can drastically reduce the memory requirements. What if it's only 4 bits?? 
 
-__NF4__
 
 The paper says the following:
 
