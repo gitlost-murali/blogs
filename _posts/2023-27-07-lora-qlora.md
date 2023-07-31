@@ -10,21 +10,9 @@ permalink: /:categories/:title
 
 ## Introduction
 
-LLMs are the buzz now. You are a ML Engineer in a company. Let's say your silicon valley CEO comes to you saying, "Hey, we got the GPUs and there are open-source LLMs like LLAMA/Falcon. Let's build tools for our customers". Each vendor/customer has a different need. You finetune your model for each customer. You are happy. CEO is happy. Customers are happy.
+Large Language Models (LLMs) are currently a hot topic in the field of machine learning. Imagine you're an ML Engineer and your company has access to GPUs and open-source LLMs like LLAMA/Falcon. You're tasked with building tools for your customers, each with unique needs. You finetune your model for each customer, and everyone is satisfied.
 
-<figure>
-    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/llora_blog/gbelson.jpg"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/llora_blog/gbelson.jpg"></a>
-    <figcaption><b>Figure 1:</b> <i>Let's get those hotcakes called LLMs</i></figcaption>
-</figure>
-
-End credits already? But, what if you have 1000s of customers? You can't deploy those 1000 clones of those GPU hungry LLMs. Unless you have a Gilfoyle in your team with loads of GPUs, you can't afford to do that.
-
-<figure>
-    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/llora_blog/gilfoyle_servers.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/llora_blog/gilfoyle_servers.png"></a>
-    <figcaption><b>Figure 2:</b> <i>Get Gilfoyle asap</i></figcaption>
-</figure>
-
-You need a better & lean strategy where the model can be finetuned for each customer but doesn't break your bank & storage. This is where QLoRA and LoRA come into the picture.
+But what happens when you have thousands of customers? Deploying thousands of GPU-hungry LLMs isn't feasible unless you have an extensive supply of GPUs. You need a strategy that allows the model to be finetuned for each customer without breaking the bank or overloading your storage. This is where QLoRA and LoRA come into play.
 
 ## QLoRA and LoRA
 
