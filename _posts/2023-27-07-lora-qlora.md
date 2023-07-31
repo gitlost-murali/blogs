@@ -140,7 +140,7 @@ Here are some more details to the last statement:
 
 6. In this approach, only the LoRa adapters are stored in FP32 format, while the rest remain in 4-bit format. This strategy results in a significant reduction in memory footprint.
 
-The section belows explains the math behind NF4 quantization. You can skip to the code section if you're allergic to math.
+The section below explains the math behind NF4 quantization. You can skip to the code section if you're allergic to math.
 
 ### NF4 Quantization
 
