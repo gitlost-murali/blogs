@@ -118,22 +118,20 @@ In the above, we are assigning the lora rank `r` to 16. `lora_alpha` is the scal
 
 While LoRA helps in reducing the storage requirements, you would still need a large GPU to load the model into the memory for LoRa training. This is where QLoRA, or Quantized LoRA, comes into the picture. QLoRA is a combination of LoRA and Quantization.
 
-Worry not. QLoRa to the rescue. Currently, we store the weight parameters in FP32. What does it mean? Each element in the matrix is stored in 32 bits. What if we can store the same information in 8 bits? 4 bits? This is where QLoRa comes into the picture. QLoRa is Quantized LoRa. It is a combination of LoRa and Quantization. Before I throw some math at you, let me give you a brief overview of QLoRa. 
+Currently, we store the weight parameters in FP32. What does it mean? Each element in the matrix is stored in 32 bits. What if we can store the same information in 8 bits? 4 bits? Before I throw some math at you, let me give you a brief overview of QLoRa. 
 
-__QLoRA:__ Well, first you quantize the LLM and then perform LoRa training. That's it.
+__QLoRA:__ Here, you first quantize the LLM and then perform LoRa training. That's it.
 
 Here are some more details to the last statement:
 
 1. Quantize the LLM to 4 bits (NF4). This means that each element in the matrix is stored in 4 bits. This is a huge reduction in memory footprint.
 2. __Next__, we perform LoRa training in 32 bit precision (FP32).
-3. Isn't that weird? We quantized the model to 4 bits and then we are performing LoRa training in 32 bits. How does that work? For us to train LoRa adapters in FP32, we need the __model weights back in FP32 too__. We will have to undo the quantization. __Step by Step__.
-4. But if you undo quantization, your GPU VRAM will explode? Not really. Think of your model as a big sheet of paper like below.
-
+3. At first glance, it may seem counterintuitive to quantize the model to 4 bits and then perform LoRa training in 32 bits. However, this is a necessary step. To train LoRa adapters in FP32, the model __weights must be returned to FP32__ as well. This process involves reversing the quantization (de-quantization), which is done in a step-by-step manner.
+4. One might assume that de-quantization to FP32 would cause an explosion in GPU VRAM. However, this is not the case. Consider the model as a large sheet of paper.
     <figure>
         <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/llora_blog/4bitqlora.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/llora_blog/4bitqlora.png"></a>
         <figcaption><b>Figure 4:</b> <i>Quantized model before computation. 4bit elements are model weights and 32 bits are LoRa weights (Wa and Wb)</i></figcaption>
     </figure>
-
 5. Now, think of the forward pass like a torchlight applied on a big sheet of paper. Wherever the torch is applied, the 4 bit elements are converted to 32 bit elements. We are __converting__ the 4 bit elements to 32 bit elements __only when we need them__. And once the computation is done, they are back to 4 bits.
 
     <figure>
@@ -141,7 +139,7 @@ Here are some more details to the last statement:
         <figcaption><b>Figure 5:</b> <i>Computation step: 4bit model weights are converted to 32 bits during forward pass and backpropagation steps</i></figcaption>
     </figure>
 
-6. In this approach, you only store the LoRA adapters in FP32 format and the rest in 4 bit format. This is a huge reduction in memory footprint.
+6. In this approach, only the LoRa adapters are stored in FP32 format, while the rest remain in 4-bit format. This strategy results in a significant reduction in memory footprint.
 
 The section belows explains the math behind NF4 quantization. You can skip to the code section if you're allergic to math.
 
