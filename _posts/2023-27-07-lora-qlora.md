@@ -14,7 +14,7 @@ Large Language Models (LLMs) are currently a hot topic in the field of machine l
 
 But what happens when you have thousands of customers? Deploying thousands of GPU-hungry LLMs isn't feasible unless you have an extensive supply of GPUs. You need a strategy that allows the model to be finetuned for each customer without breaking the bank or overloading your storage. This is where QLoRA and LoRA come into play.
 
-## QLoRA and LoRA
+## Background on Neural Nets
 
 On a very abstract level, An LLM is essentially a function that takes some input, processes it and outputs something. We can represent it as f(x, W) = y, where x is the input sequence, y is the output sequence, and W is the set of weights of the model that are learned during training. W is black box that is doing the magic. 
 
@@ -24,9 +24,9 @@ $$ W = W + \Delta W $$
 
 where $\Delta W$ is the change in weights. We do this for a lot of iterations until we get a good W.
 
-## LoRa
+## LoRA (Low-Rank Adapters)
 
-Instead of iteratively updating W in each step, what if we can store all those changes in $\Delta W$ and update W in one go? We can just store this $\Delta W$ for the finetuned task. And update W with $\Delta W$ when we want to do inference for the intended task.
+Instead of iteratively updating W in each step, what if we can store all those changes in $\Delta W$ and update W in one go? We can just store this $\Delta W$ for the finetuned task. When we want to perform inference for the intended task, we simply update W with $\Delta W$. Think of these $\Delta W$ as adaptable lenses that can be attached or detached to the base model as needed, allowing us to swiftly switch between tasks during inference.
 
 Now, if W is 10000 x 10000, it means $\Delta W$ is also 10000 x 10000. We are taking space equivalent to the original model (W) to store $\Delta W$. This is a lot of memory. This is where LoRA comes into the picture. LoRA is a technique to reduce the memory footprint of $\Delta W$. It does this by using a low-rank approximation of $\Delta W$. This is done by decomposing $\Delta W$ into two matrices $W_{a}$ and $W_{b}$.
 
@@ -64,7 +64,7 @@ Did you see what happened here? $W_{a} \times W_{b}$ gives you the original $100
 * Think of it this way, do we really think we need 175 billion parameters for a small task for summarization? No, right? We can do with a lot less. This is where the rank comes into the picture. We can reduce the rank to 1000 or 100 or 10. This will reduce the memory footprint of $\Delta W$.
 
 
-Ofcourse, there is a catch when we consider low rank. We are approximating the gradient $\Delta W$ here. Hence, the name Low-Rank approximation. Select your rank based on the downstream task. If you think that task requires less IQ, reduce the rank. Otherwise, increase the rank to hold more information.
+Of course, there is a catch when we consider low rank. We are approximating the gradient $\Delta W$ here. Hence, the name Low-Rank approximation. Select your rank based on the downstream task. If you think that task requires less IQ, reduce the rank. Otherwise, increase the rank to hold more information.
 
 The essence of LoRA is that we can freeze the W and just update     $W_{a}$ and $W_{b}$. $W_{a} \times W_{b}$ will give you the updated $\Delta W$. After finetuning, we can update the W with the new $\Delta W$.
 
