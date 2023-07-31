@@ -74,7 +74,7 @@ becomes
 
 $$ W = W +  W_{a} \times W_{b} $$
 
-We are bypassing the step of storing large $\Delta W$ (10000) into the memory. This is the benefit of using LoRA. Just store the matrices  $ W_{a} \& W_{b} $ into your disk, which would be maybe 1% of the original model weights. So, if you have 1000 customers and need 1000 tasks, we can just store 1000 $W_{a}$ and 1000 $W_{b}$ matrices, which are way smaller than the original model weights. For inference, load the original model weights once and then load the $W_{a}$ and $W_{b}$ matrices for each task. This is a huge reduction in memory footprint.
+We are bypassing the step of storing large $\Delta W$ into the memory. This is the benefit of using LoRA. Just store the matrices  $ W_{a} \& W_{b} $ into your disk, which would be maybe 1% of the original model weights (incase of $W$ being 175B params and $\Delta W$ being 1B params). So, if you have 1000 customers and need 1000 tasks, we can just store 1000 $W_{a}$ and 1000 $W_{b}$ matrices, which are way smaller than the original model weights. For inference, load the original model weights once and then load the $W_{a}$ and $W_{b}$ matrices for each task. This is a huge reduction in memory footprint.
 
 ## Let's bring it to code
 
@@ -174,6 +174,7 @@ nf4_config = BitsAndBytesConfig(
    bnb_4bit_quant_type="nf4",
    bnb_4bit_use_double_quant=True,
    bnb_4bit_compute_dtype=torch.bfloat16
+   #FP16 for faster tuning. You can also choose FP32 for higher precision
 )
 
 model_nf4 = AutoModelForCausalLM.from_pretrained(model_id, quantization_config=nf4_config)
@@ -181,4 +182,4 @@ model_nf4 = AutoModelForCausalLM.from_pretrained(model_id, quantization_config=n
 
 ## Badum Tss
 
-This is the end of the blog. I hope you enjoyed reading it. If you have any questions, please feel free to reach out by clicking on the social media icons on the left. :)
+This is the end of the blog. I hope you enjoyed reading it. If you have any questions, please feel free to reach out on [linkedin](https://www.linkedin.com/in/murali-manohar/), [twitter](https://twitter.com/gitlostmurali) or [mail](mailto:kmanoharmurali@gmail.com).
