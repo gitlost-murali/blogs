@@ -24,7 +24,7 @@ End credits already? But, what if you have 1000s of customers? You can't deploy 
     <figcaption><b>Figure 2:</b> <i>Get Gilfoyle asap</i></figcaption>
 </figure>
 
-You need a generic model that can be finetuned for each customer. This is where QLoRA and LoRA come into the picture.
+You need a better & lean strategy where the model can be finetuned for each customer but doesn't break your bank & hard disk. This is where QLoRA and LoRA come into the picture.
 
 ## QLoRA and LoRA
 
