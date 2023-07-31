@@ -181,4 +181,4 @@ model_nf4 = AutoModelForCausalLM.from_pretrained(model_id, quantization_config=n
 
 # Conclusion
 
-This is the end of the blog. I hope you enjoyed reading it. If you have any questions, please feel free to reach out on [linkedin](https://www.linkedin.com/in/murali-manohar/), [twitter](https://twitter.com/gitlostmurali) or [mail](mailto:kmanoharmurali@gmail.com).
+This is the end of the blog. I hope you enjoyed reading it. If you have any questions, please feel free to reach out on [Linkedin](https://www.linkedin.com/in/murali-manohar/), [Twitter](https://twitter.com/gitlostmurali) or [Mail](mailto:kmanoharmurali@gmail.com).
