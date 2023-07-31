@@ -53,7 +53,7 @@ $W_{a}$ = $100 \times 3$
 
 $W_{b}$ = $3 \times 100$. 
 
-Did you see what happened here? $W_{a} \times W_{b}$ gives you the original $100 \times 100$ matrix. Great!! This is a huge reduction in memory footprint. We are able to store the information of 10000 elements matrix with just two matrices 300 ($W_{a}$) & 300 ($W_{b}$), totalling just 600 elements ($W_{a} \times W_{b}$) in storage instead of 10000 elements.
+Did you see what happened here? $W_{a} \times W_{b}$ gives you the original $100 \times 100$ matrix. This is a significant reduction in memory footprint. We are able to store the information of 10000 elements matrix with just two matrices 300 ($W_{a}$) & 300 ($W_{b}$), totalling just 600 elements ($W_{a} \times W_{b}$) in storage instead of 10000 elements.
 
 * But how we did decide on 3? Why not 2, 1 or 68? Well, this is where the rank of a matrix comes into the picture.
 
@@ -61,11 +61,13 @@ Did you see what happened here? $W_{a} \times W_{b}$ gives you the original $100
 
 * What does linearly independent columns mean? Well, these represent factors of variation. In other words, these columns hold the most important factors that can help in uniquely representing the information. Let's say you have 10 x 10 matrix with 4 linearly independent columns, then there are 4 factors of variation in the matrix. If the rank is 4, it means we have 6 redundant columns.
 
-* Think of it this way, do you really think we need 175 billion parameters? Let's say it has AGI shit level knowledge in it. But if you are finetuning it for a downstream task/domain, only a few parameters are needed for downstream task.
+* Think of it this way, do we really think we need 175 billion parameters for a small task for summarization? No, right? We can do with a lot less. This is where the rank comes into the picture. We can reduce the rank to 1000 or 100 or 10. This will reduce the memory footprint of $\Delta W$.
 
-This is the essence of LoRA. Ofcourse, there is a catch when we consider low rank. We are approximating the gradient $\Delta W$ here. Hence, the name Low-Rank approximation. It is fine. Select your rank based on the downstream task. If you think that task requires less IQ, reduce the rank. Otherwise, increase the rank to hold more information.
 
-Now that we know this information, if we want to finetune the LLM on a downstream task, we can freeze the W and just update $W_{a}$ and $W_{b}$. $W_{a} \times W_{b}$ will give you the updated $\Delta W$. After finetuning, we can update the W with the new $\Delta W$.
+Ofcourse, there is a catch when we consider low rank. We are approximating the gradient $\Delta W$ here. Hence, the name Low-Rank approximation. Select your rank based on the downstream task. If you think that task requires less IQ, reduce the rank. Otherwise, increase the rank to hold more information.
+
+The essence of LoRA is that we can freeze the W and just update     $W_{a}$ and $W_{b}$. $W_{a} \times W_{b}$ will give you the updated $\Delta W$. After finetuning, we can update the W with the new $\Delta W$.
+
 
 $$ W = W + \Delta W $$
 
@@ -73,7 +75,7 @@ becomes
 
 $$ W = W +  W_{a} \times W_{b} $$
 
-How does this benefit us? well, we are bypassing the step of storing large $\Delta W$ (10000) into the memory. This is the essence of LoRA. Just store the matrices  $ W_{a} \& W_{b} $ into your disk, which would be maybe 1% of the original model weights. So, if you have 1000 customers and need 1000 tasks, we can just store 1000 $W_{a}$ and 1000 $W_{b}$ matrices, which are way smaller than the original model weights. For inference, load the original model weights once and then load the $W_{a}$ and $W_{b}$ matrices for each task. This is a huge reduction in memory footprint.
+We are bypassing the step of storing large $\Delta W$ (10000) into the memory. This is the benefit of using LoRA. Just store the matrices  $ W_{a} \& W_{b} $ into your disk, which would be maybe 1% of the original model weights. So, if you have 1000 customers and need 1000 tasks, we can just store 1000 $W_{a}$ and 1000 $W_{b}$ matrices, which are way smaller than the original model weights. For inference, load the original model weights once and then load the $W_{a}$ and $W_{b}$ matrices for each task. This is a huge reduction in memory footprint.
 
 ### Let's bring it to code
 
@@ -90,7 +92,7 @@ def lora_forward_matmul(x, W, W_A, W_B):
 return h
 ```
 
-Did you see what we did here? We added $x @ (W_A @ W_B)$ to the existing equation. Since we are freezing W, the only thing that needs gradient updates are $(W_A \& W_B)$. The final weights $ W_{a} \times W_{b} $ are the delta weights $\Delta W$ we need for our finetuned task.
+We just added $x @ (W_A @ W_B)$ to the existing equation. Since we are freezing W, the only thing that needs gradient updates are $(W_A \& W_B)$. The final weights $ W_{a} \times W_{b} $ are the delta weights $\Delta W$ we need for our finetuned task.
 
 ### LoRA in Transformers
 
@@ -114,12 +116,7 @@ In the above, we are assigning the lora rank `r` to 16. `lora_alpha` is the scal
 
 ## QLoRA
 
-Although you can store the finetuned weights of a 33B model in the disk, you would still need a big GPU to load the 33B model into the memory to perform LoRa training. You would have to be rich to save money. Bwahaha
-
-<figure>
-    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/llora_blog/jinyang_1.gif"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/llora_blog/jinyang_1.gif"></a>
-    <figcaption><b>Figure 5:</b> <i>Jian Yang says hello</i></figcaption>
-</figure>
+While LoRA helps in reducing the storage requirements, you would still need a large GPU to load the model into the memory for LoRa training. This is where QLoRA, or Quantized LoRA, comes into the picture. QLoRA is a combination of LoRA and Quantization.
 
 Worry not. QLoRa to the rescue. Currently, we store the weight parameters in FP32. What does it mean? Each element in the matrix is stored in 32 bits. What if we can store the same information in 8 bits? 4 bits? This is where QLoRa comes into the picture. QLoRa is Quantized LoRa. It is a combination of LoRa and Quantization. Before I throw some math at you, let me give you a brief overview of QLoRa. 
 
