@@ -32,12 +32,12 @@ Now, if W is 10000 x 10000, it means $\Delta W$ is also 10000 x 10000. We are ta
 
 <figure>
     <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/llora_blog/big_matrix.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/llora_blog/big_matrix.png"></a>
-    <figcaption><b>Figure 3:</b> <i> Big matrix <a href="https://www.youtube.com/watch?app=desktop&v=YVU5wAA6Txo">(Image Source)</a> </i></figcaption>
+    <figcaption><b>Figure 1:</b> <i> Big matrix <a href="https://www.youtube.com/watch?app=desktop&v=YVU5wAA6Txo">(Image Source)</a> </i></figcaption>
 </figure>
 
 <figure>
     <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/llora_blog/svdmatrix.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/llora_blog/svdmatrix.png"></a>
-    <figcaption><b>Figure 4:</b> <i> Big matrix decomposed into two matrices <a href="https://www.youtube.com/watch?app=desktop&v=YVU5wAA6Txo"> (Image Source)</a></i></figcaption>
+    <figcaption><b>Figure 2:</b> <i> Big matrix decomposed into two matrices <a href="https://www.youtube.com/watch?app=desktop&v=YVU5wAA6Txo"> (Image Source)</a></i></figcaption>
 </figure>
 
 Let's break down everything step-by-step:
@@ -129,13 +129,13 @@ Here are some more details to the last statement:
 4. One might assume that de-quantization to FP32 would cause an explosion in GPU VRAM. However, this is not the case. Consider the model as a large sheet of paper.
     <figure>
         <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/llora_blog/4bitqlora.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/llora_blog/4bitqlora.png"></a>
-        <figcaption><b>Figure 4:</b> <i>Quantized model before computation. 4bit elements are model weights and 32 bits are LoRa weights (Wa and Wb)</i></figcaption>
+        <figcaption><b>Figure 3:</b> <i>Quantized model before computation. 4bit elements are model weights and 32 bits are LoRa weights (Wa and Wb)</i></figcaption>
     </figure>
 5. Now, think of the forward pass like a torchlight applied on a big sheet of paper. Wherever the torch is applied, the 4 bit elements are converted to 32 bit elements. We are __converting__ the 4 bit elements to 32 bit elements __only when we need them__. And once the computation is done, they are back to 4 bits.
 
     <figure>
         <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/llora_blog/32bitqlora.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/llora_blog/32bitqlora.png"></a>
-        <figcaption><b>Figure 5:</b> <i>Computation step: 4bit model weights are converted to 32 bits during forward pass and backpropagation steps</i></figcaption>
+        <figcaption><b>Figure 4:</b> <i>Computation step: 4bit model weights are converted to 32 bits during forward pass and backpropagation steps</i></figcaption>
     </figure>
 
 6. In this approach, only the LoRa adapters are stored in FP32 format, while the rest remain in 4-bit format. This strategy results in a significant reduction in memory footprint.
