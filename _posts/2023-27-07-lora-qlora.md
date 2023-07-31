@@ -16,11 +16,9 @@ But what happens when you have thousands of customers? Deploying thousands of GP
 
 ## QLoRA and LoRA
 
-Let's get going. On a very abstract level, An LLM is essentially a function that takes some input, processes it and outputs something. For brevity, let's call it as $f(x, W) = y$, where x is the input sequence, y is the output sequence and W is black box that is doing the magic. Essentially, W is the set of weights of the model that are learned during training.
+On a very abstract level, An LLM is essentially a function that takes some input, processes it and outputs something. We can represent it as f(x, W) = y, where x is the input sequence, y is the output sequence, and W is the set of weights of the model that are learned during training. W is black box that is doing the magic. 
 
-These weights are matrices, big big bigggg matrices. For example, the weights of GPT-3 are 175 billion in number - meaning the total elements in all the matrices are 175 billion.
-
-What makes a perfect W? - I mean how do you find the perfect combination of parameters in W? You train the model on a dataset to __adjust the weights in W__ to minimize the difference between the output and expected output. This is called training.
+These weights are large matrices. For instance, the weights of GPT-3 number 175 billion. What makes a perfect W? - I mean how do you find the perfect combination of parameters in W? You train the model on a dataset to __adjust the weights in W__ to minimize the difference between the output and expected output.
 
 $$ W = W + \Delta W $$
 
@@ -28,7 +26,9 @@ where $\Delta W$ is the change in weights. We do this for a lot of iterations un
 
 ## LoRa
 
-Now, if W is 10000 x 10000, it means $\Delta W$ is also 10000 x 10000. This is a lot of memory. This is where LoRA comes into the picture. LoRA is a technique to reduce the memory footprint of $\Delta W$. It does this by using a low-rank approximation of $\Delta W$. This is done by decomposing $\Delta W$ into two matrices $W_{a}$ and $W_{b}$.
+Instead of iteratively updating W in each step, what if we can store all those changes in $\Delta W$ and update W in one go? We can just store this $\Delta W$ for the finetuned task. And update W with $\Delta W$ when we want to do inference for the intended task.
+
+Now, if W is 10000 x 10000, it means $\Delta W$ is also 10000 x 10000. We are taking space equivalent to the original model (W) to store $\Delta W$. This is a lot of memory. This is where LoRA comes into the picture. LoRA is a technique to reduce the memory footprint of $\Delta W$. It does this by using a low-rank approximation of $\Delta W$. This is done by decomposing $\Delta W$ into two matrices $W_{a}$ and $W_{b}$.
 
 <figure>
     <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/llora_blog/big_matrix.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/llora_blog/big_matrix.png"></a>
