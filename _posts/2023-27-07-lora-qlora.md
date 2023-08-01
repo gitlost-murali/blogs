@@ -42,7 +42,7 @@ Now, if W is 10000 x 10000, it means $\Delta W$ is also 10000 x 10000. We are ta
 
 Let's break down everything step-by-step:
 
-* If I have a matrix of size 2 x 2, it means 4 elements are stored in the memory. If the matrix is 100 x 100, it means alot of elements are stored in memory ($10000$). What if we there's a better way to store the same information?? Here comes some inspiration from [Singular Value Decomposition (SVD)](https://www.geeksforgeeks.org/singular-value-decomposition-svd/),
+* If I have a matrix of size 2 x 2, it means 4 elements are stored in the memory. If the matrix is 100 x 100, it means alot of elements are stored in memory ($10000$). What if there's a better way to store the same information?? Here comes some inspiration from [Singular Value Decomposition (SVD)](https://www.geeksforgeeks.org/singular-value-decomposition-svd/),
 
     $$ \Delta W = W_{a} \times W_{b} $$
 
@@ -110,7 +110,7 @@ model = AutoModelForSequenceClassification.from_pretrained("bert-base-uncased")
 lora_model = get_peft_model(model, config)
 ```
 
-In the above, we are assigning the lora rank `r` to 16. `lora_alpha` is the scaling factor that determines how much importance you want to give to the new updated $\Delta W$ i.e $ W_{a} \times W_{b}$ when adding it to the original pretrained weights $W$. The `target_modules` are the modules where we want to apply LoRA. In this case, we are applying LoRA to the query and value modules. The bias is the bias term in the linear layer. We can set it to none or true. If we set it to none, we are not using bias. If we set it to true, we are using bias. The modules_to_save are the additional modules we want to save. In this case, we are saving the classifier module. 
+In the above code, we are assigning the lora rank `r` to 16. `lora_alpha` is the scaling factor that determines how much importance you want to give to the new updated $\Delta W$ i.e $ W_{a} \times W_{b}$ when adding it to the original pretrained weights $W$. The `target_modules` are the modules where we want to apply LoRA. In this case, we are applying LoRA to the query and value modules. The bias is the bias term in the linear layer. We can set it to none or true. If we set it to none, we are not using bias. If we set it to true, we are using bias. The modules_to_save are the additional modules we want to save. In this case, we are saving the classifier module. 
 
 
 # QLoRA (Quantized LoRA)
