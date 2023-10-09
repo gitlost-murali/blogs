@@ -71,3 +71,5 @@ After finetuning the LLAMA2 model, we also integrated a retrieval augmentation s
 # Conclusion
 
 The integration of LLMs into our product development process at AskUI has encouraged us to invest in the LLM space. These models have not only accelerated our prototyping process but have also opened up new avenues for innovation. Whether it's translating natural language to DSL, automating workflow creation, or building domain-specific chatbots, the possibilities are endless. As we continue to explore and experiment, one thing is clear: LLMs are set to play a pivotal role in the future of product development.
+
+Follow my work on [GitHub](https://github.com/gitlost-murali/), [LinkedIn](https://www.linkedin.com/in/murali-manohar/), and [Twitter](https://twitter.com/gitlostmurali).
