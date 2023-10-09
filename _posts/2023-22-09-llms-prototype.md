@@ -21,15 +21,20 @@ The ability to rapidly prototype and test ideas is invaluable, especially in the
 One of the standout features of AskUI is its __intuitive__ Domain Specific Language (DSL). For instance, a command like `aui.click().button().withText("Hello World").exec();` is self-explanatory. However, as we aim to cater to a broader audience, including analysts at Goldman Sachs or a common man, we realized the need for a more natural interaction. The goal? Convert natural language commands into AskUI DSL.
 
 <figure>
-    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/intro2dsl.jpg"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/intro2dsl.jpg"></a>
+    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/askui_dsl.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/askui_dsl.png"></a>
     <figcaption><b>Figure 1:</b> AskUI framework DSL </figcaption>
+</figure>
+
+<figure>
+    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/intro2dsl.jpg"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/intro2dsl.jpg"></a>
+    <figcaption><b>Figure 2:</b> Translating Natural Language to DSL  </figcaption>
 </figure>
 
 Instead of diving straight into building a machine translation model, we turned to GPT and LLMs. By feeding them our documentation and list of commands, we were able to quickly prototype a system that translates natural language step into our DSL. We just had to provide the existing functions (like get, await, etc.), end goal, and GPT would generate the entire workflow. For instance, if the goal was to "click on the red button," GPT would generate the following DSL commands: `aui.click().button().withText("red").exec();`.
 
 <figure>
     <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/nli2dsl.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/nli2dsl.png"></a>
-    <figcaption><b>Figure 2:</b> Natural Language to DSL </figcaption>
+    <figcaption><b>Figure 3:</b> Natural Language to DSL Demo </figcaption>
 </figure>
 
 The results were beyond translation; GPT demonstrated its capability to plan and generate entire workflows based on an end goal. This was a game-changer for us. We could now leverage GPT to generate workflows for our users, who could then tweak them as needed. This approach not only saves time but also enables users to focus on the end goal rather than the steps required to achieve it.
@@ -40,7 +45,7 @@ Building on this idea, we envisioned a system where users wouldn't even need to 
 
 <figure>
     <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/click2command.jpg"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/click2command.jpg"></a>
-    <figcaption><b>Figure 3:</b> Easy Worflow: Click to command conversion </figcaption>
+    <figcaption><b>Figure 4:</b> Easy Worflow: Click to command conversion </figcaption>
 </figure>
 
 Specifically, AskUI inference engine detects all UI elements that are visible on the screen. By integrating AskUI's inference engine with GPT, we can automatically detect all elements on a screenshot and map the user clicks to specific elements. Specifically, the inference engine gives elements and their positions. We use the click coordinates and map them to the corresponding element's position. Using the result and the relevant product documentation as context, GPT can then generate the corresponding DSL command. This approach not only streamlined the workflow creation process but also showcased GPT's ability to understand positional information and generate context-aware commands.
@@ -49,7 +54,7 @@ Specifically, AskUI inference engine detects all UI elements that are visible on
 <video controls style="max-width: 100%; width: 100%; height: auto;">
     <source src="{{ site.url }}/{{ site.baseurl }}/assets/vids/llm_prototype/easyworkflow.mp4" type="video/mp4">
 </video>
-    <figcaption><b>Figure 2:</b> Easy Workflow Creation </figcaption>
+    <figcaption><b>Figure 5:</b> Easy Workflow Creation </figcaption>
 </figure>
 
 # Domain-Specific Finetuning with LLMs
@@ -63,7 +68,7 @@ To generate a synthetic chat dataset, we leveraged GPT to create question-answer
 
 <figure>
     <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/chat1.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/chat1.png"></a>
-    <figcaption><b>Figure 3:</b> Chat Interface of LLAMA2 chat finetuned on AskUI docs</figcaption>
+    <figcaption><b>Figure 6:</b> Chat Interface of LLAMA2 chat finetuned on AskUI docs</figcaption>
 </figure>
 
 After finetuning the LLAMA2 model, we also integrated a retrieval augmentation system. This system fetches relevant documents for each user query, providing the chatbot with the exact context it needs to generate a response. For the debate on RAG vs finetuning, here is a relevant [post by LlamaIndex](https://www.linkedin.com/posts/llamaindex_we-added-a-lot-of-new-fine-tuning-features-activity-7116229026754543616-i-Ab?utm_source=share&utm_medium=member_ios). For more details on RAG vs long context windows, you can checkout the recent paper, [Retrieval Meets Long Context Large Language Models](https://arxiv.org/pdf/2310.03025.pdf).
