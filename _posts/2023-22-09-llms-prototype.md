@@ -14,19 +14,20 @@ The ability to rapidly prototype and test ideas is invaluable, especially in the
 
 ## Target Enterprise
 
-[__AskUI__](https://www.askui.com/) is a UI automation tool. While many might think of Selenium when they hear "user automation," AskUI goes beyond. Traditional tools like Selenium are dependent on the underlying website's code. But what happens when the code changes? Or when you need to automate tasks on desktop applications? Enter AskUI, which leverage vision-based techniques, similar to human perception, to identify elements. So, it sees things like a human and you can ask it like you ask your testing team to click on a red button or signup button. Through object detection and other advanced methods, we've created a robust automation tool that's not just limited to web applications.
+[__AskUI__](https://www.askui.com/) is a UI automation tool. While many might think of Selenium when they hear "user automation," AskUI goes beyond it. Traditional tools like Selenium are dependent on the underlying website's code. But what happens when the code changes? Or when you need to automate tasks on desktop applications? Enter AskUI, which leverage vision-based techniques, similar to human perception, to identify elements. So, it sees things like a human and you can ask it like you ask your testing team to click on a red button or signup button. Through object detection and other advanced methods, the team has created a robust automation tool that's not just limited to web applications.
 
 ## Natural Language to Actions
 
 One of the standout features of AskUI is its __intuitive__ Domain Specific Language (DSL). For instance, a command like `aui.click().button().withText("Hello World").exec();` is self-explanatory. However, as we aim to cater to a broader audience, including analysts at Goldman Sachs or a common man, we realized the need for a more natural interaction. The goal? Convert natural language commands into AskUI DSL.
 
-Instead of diving straight into building a machine translation model, we turned to GPT and LLMs. By feeding them our documentation and list of commands, we were able to quickly prototype a system that translates natural language into our DSL. The results were beyond translation; GPT demonstrated its capability to plan and generate entire workflows based on an end goal.
+Instead of diving straight into building a machine translation model, we turned to GPT and LLMs. By feeding them our documentation and list of commands, we were able to quickly prototype a system that translates natural language step into our DSL. We just had to provide the existing functions (like get, await, etc.), end goal, and GPT would generate the entire workflow. For instance, if the goal was to "click on the red button," GPT would generate the following DSL commands: `aui.click().button().withText("red").exec();`.
 
 <figure>
     <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/nli2dsl.png/"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/nli2dsl.png/"></a>
     <figcaption><b>Figure 1:</b> Natural Language to DSL </figcaption>
 </figure>
 
+The results were beyond translation; GPT demonstrated its capability to plan and generate entire workflows based on an end goal. This was a game-changer for us. We could now leverage GPT to generate workflows for our users, who could then tweak them as needed. This approach not only saves time but also enables users to focus on the end goal rather than the steps required to achieve it.
 
 ## Streamlining Workflows with Vision
 
