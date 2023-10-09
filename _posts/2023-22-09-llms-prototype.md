@@ -43,7 +43,7 @@ Building on this idea, we envisioned a system where users wouldn't even need to 
     <figcaption><b>Figure 3:</b> Easy Worflow: Click to command conversion </figcaption>
 </figure>
 
-Specifically, AskUI inference engine detects all UI elements that are visible on the screen. By integrating AskUI's inference engine with GPT, we can automatically detect all elements on a screenshot and map the user clicks to specific elements. Using the relevant product documentation as context, GPT can then generate the corresponding DSL command. This approach not only streamlines the workflow creation process but also showcases GPT's ability to understand positional information and generate context-aware commands.
+Specifically, AskUI inference engine detects all UI elements that are visible on the screen. By integrating AskUI's inference engine with GPT, we can automatically detect all elements on a screenshot and map the user clicks to specific elements. Specifically, the inference engine gives elements and their positions. We use the click coordinates and map them to the corresponding element's position. Using the relevant product documentation as context, GPT can then generate the corresponding DSL command. This approach not only streamlines the workflow creation process but also showcases GPT's ability to understand positional information and generate context-aware commands.
 
 <figure style="max-width: 100%; width: 100%;">
 <video controls style="max-width: 100%; width: 100%; height: auto;">
