@@ -2,7 +2,7 @@
 title: Rapid Prototyping with LLMs - The Journey from Notebook Musings to Real-World Enterprise Solutions
 excerpt: Talks about how LLMs enabled me to rapidly prototype and test ideas and how they are enabling a new era of Product Integration. 
 tags: [Machine Learning, Language Models, GPT, LLM, Product Development, Prototyping, huggingface, transformers]
-date: 2023-09-22 05:28:10 +0530
+date: 2023-10-07 05:28:10 +0530
 categories: machine-learning product-development
 toc: true
 permalink: /:categories/:title
