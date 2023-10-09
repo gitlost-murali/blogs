@@ -23,7 +23,7 @@ One of the standout features of AskUI is its __intuitive__ Domain Specific Langu
 Instead of diving straight into building a machine translation model, we turned to GPT and LLMs. By feeding them our documentation and list of commands, we were able to quickly prototype a system that translates natural language step into our DSL. We just had to provide the existing functions (like get, await, etc.), end goal, and GPT would generate the entire workflow. For instance, if the goal was to "click on the red button," GPT would generate the following DSL commands: `aui.click().button().withText("red").exec();`.
 
 <figure>
-    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/nli2dsl.png/"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/nli2dsl.png/"></a>
+    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/nli2dsl.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/nli2dsl.png"></a>
     <figcaption><b>Figure 1:</b> Natural Language to DSL </figcaption>
 </figure>
 
@@ -38,7 +38,7 @@ Specifically, AskUI inference engine detects all UI elements that are visible on
 
 <figure style="max-width: 100%; width: 100%;">
 <video controls style="max-width: 100%; width: 100%; height: auto;">
-    <source src="{{ site.url }}/{{ site.baseurl }}/assets/vids/llm_prototype/easyworkflow.mp4/" type="video/mp4">
+    <source src="{{ site.url }}/{{ site.baseurl }}/assets/vids/llm_prototype/easyworkflow.mp4" type="video/mp4">
 </video>
     <figcaption><b>Figure 2:</b> Easy Workflow Creation </figcaption>
 </figure>
@@ -53,7 +53,7 @@ To generate a synthetic chat dataset, we leveraged GPT to create question-answer
 
 
 <figure>
-    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/chat1.png/"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/chat1.png/"></a>
+    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/chat1.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/chat1.png"></a>
     <figcaption><b>Figure 3:</b> Chat Interface of LLAMA2 chat finetuned on AskUI docs</figcaption>
 </figure>
 
