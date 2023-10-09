@@ -34,9 +34,7 @@ The results were beyond translation; GPT demonstrated its capability to plan and
 Building on this idea, we envisioned a system where users wouldn't even need to type commands. With AskUI's workflows, users can define a series of steps using screenshots. For each step, they specify the action, and our engine executes it. But what if we could automate this specification process?
 
 
-Specifically, AskUI inference engine gives out bounding box 
-
-By integrating GPT with AskUI's inference engine, we can automatically detect all elements on a screenshot and map user clicks to specific elements. Using the relevant product documentation as context, GPT can then generate the corresponding DSL command. This approach not only streamlines the workflow creation process but also showcases GPT's ability to understand positional information and generate context-aware commands.
+Specifically, AskUI inference engine detects all UI elements that are visible on the screen. By integrating AskUI's inference engine with GPT, we can automatically detect all elements on a screenshot and map the user clicks to specific elements. Using the relevant product documentation as context, GPT can then generate the corresponding DSL command. This approach not only streamlines the workflow creation process but also showcases GPT's ability to understand positional information and generate context-aware commands.
 
 <figure style="max-width: 100%; width: 100%;">
 <video controls style="max-width: 100%; width: 100%; height: auto;">
@@ -51,9 +49,15 @@ Having a dedicated DSL requires users to be aware of all the functions. Even if 
 
 While GPT is capable of being a potential chatbot, there are instances where the input text limit can be a constraint, especially when dealing with extensive documentation. It is not possible to fit the entire documentation into the input context limit. This is where the open-source LLMs like LLAMA-2 come into play. By finetuning these models on our domain-specific data, we can create a chatbot that's well-versed in our domain.
 
-To generate a synthetic chat dataset, we leveraged GPT to create question-answer (QA) pairs based on our documentation. Specifically, we parse through each document and ask GPT to generate possible QA pairs, simulating conversations of users asking questions about debugging, tools, etc. In addition to just passing the current document, we also pass the last _k_ QA pairs generated for more context to GPT for improved QA pair generation. 
+To generate a synthetic chat dataset, we leveraged GPT to create question-answer (QA) pairs based on our documentation. Specifically, we parse through each document and ask GPT to generate possible QA pairs, simulating conversations of users asking questions about debugging, tools, etc. In addition to just passing the current document, we also pass the last _k_ QA pairs generated for more context to GPT for improved QA pair generation. After creating the synthetic chat dataset, we trained LLAMA2-7B-chat model on it using [LoRA](https://gitlostmurali.com/machine-learning/data-science/lora-qlora) finetuning approach.
 
-After finetuning the LLAMA2 model, we also integrated a retrieval augmentation system. This system fetches relevant documents for each user query, providing the chatbot with the exact context it needs to generate a response.
+
+<figure>
+    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/chat1.png/"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/chat1.png/"></a>
+    <figcaption><b>Figure 3:</b> Chat Interface of LLAMA2 chat finetuned on AskUI docs</figcaption>
+</figure>
+
+After finetuning the LLAMA2 model, we also integrated a retrieval augmentation system. This system fetches relevant documents for each user query, providing the chatbot with the exact context it needs to generate a response. For the debate on RAG vs finetuning, here is a relevant [post by LlamaIndex](https://www.linkedin.com/posts/llamaindex_we-added-a-lot-of-new-fine-tuning-features-activity-7116229026754543616-i-Ab?utm_source=share&utm_medium=member_ios). For more details on RAG vs long context windows, you can checkout the recent paper, [RETRIEVAL MEETS LONG CONTEXT LARGE LANGUAGE MODELS](https://arxiv.org/pdf/2310.03025.pdf).
 
 ## Conclusion
 
