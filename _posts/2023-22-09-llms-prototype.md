@@ -21,13 +21,13 @@ The ability to rapidly prototype and test ideas is invaluable, especially in the
 One of the standout features of AskUI is its __intuitive__ Domain Specific Language (DSL). For instance, a command like `aui.click().button().withText("Hello World").exec();` is self-explanatory. However, as we aim to cater to a broader audience, including analysts at Goldman Sachs or a common man, we realized the need for a more natural interaction. The goal? Convert natural language commands into AskUI DSL.
 
 <figure>
-    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/askui_dsl.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/askui_dsl.png"></a>
-    <figcaption><b>Figure 1:</b> AskUI framework DSL </figcaption>
+    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/intro2dsl.jpg"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/intro2dsl.jpg"></a>
+    <figcaption><b>Figure 1:</b> Translating Natural Language to DSL  </figcaption>
 </figure>
 
 <figure>
-    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/intro2dsl.jpg"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/intro2dsl.jpg"></a>
-    <figcaption><b>Figure 2:</b> Translating Natural Language to DSL  </figcaption>
+    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/askui_dsl.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/askui_dsl.png"></a>
+    <figcaption><b>Figure 2:</b> AskUI framework DSL </figcaption>
 </figure>
 
 Instead of diving straight into building a machine translation model, we turned to GPT and LLMs. By feeding them our documentation and list of commands, we were able to quickly prototype a system that translates natural language step into our DSL. We just had to provide the existing functions (like get, await, etc.), end goal, and GPT would generate the entire workflow. For instance, if the goal was to "click on the red button," GPT would generate the following DSL commands: `aui.click().button().withText("red").exec();`.
