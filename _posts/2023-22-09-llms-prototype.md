@@ -20,19 +20,28 @@ The ability to rapidly prototype and test ideas is invaluable, especially in the
 
 One of the standout features of AskUI is its __intuitive__ Domain Specific Language (DSL). For instance, a command like `aui.click().button().withText("Hello World").exec();` is self-explanatory. However, as we aim to cater to a broader audience, including analysts at Goldman Sachs or a common man, we realized the need for a more natural interaction. The goal? Convert natural language commands into AskUI DSL.
 
+<figure>
+    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/intro2dsl.jpg"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/intro2dsl.jpg"></a>
+    <figcaption><b>Figure 1:</b> AskUI framework DSL </figcaption>
+</figure>
+
 Instead of diving straight into building a machine translation model, we turned to GPT and LLMs. By feeding them our documentation and list of commands, we were able to quickly prototype a system that translates natural language step into our DSL. We just had to provide the existing functions (like get, await, etc.), end goal, and GPT would generate the entire workflow. For instance, if the goal was to "click on the red button," GPT would generate the following DSL commands: `aui.click().button().withText("red").exec();`.
 
 <figure>
     <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/nli2dsl.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/nli2dsl.png"></a>
-    <figcaption><b>Figure 1:</b> Natural Language to DSL </figcaption>
+    <figcaption><b>Figure 2:</b> Natural Language to DSL </figcaption>
 </figure>
 
 The results were beyond translation; GPT demonstrated its capability to plan and generate entire workflows based on an end goal. This was a game-changer for us. We could now leverage GPT to generate workflows for our users, who could then tweak them as needed. This approach not only saves time but also enables users to focus on the end goal rather than the steps required to achieve it.
 
 # Streamlining Workflows with Vision
 
-Building on this idea, we envisioned a system where users wouldn't even need to type commands. With AskUI's workflows, users can define a series of steps using screenshots. For each step, they specify the action, and our engine executes it. But what if we could automate this specification process?
+Building on this idea, we envisioned a system where users wouldn't even need to type commands. With AskUI's workflows, users can define a series of steps using screenshots. For each step, they specify the action, and our engine executes it. But what if we could automate this specification process? What if they can just click on what action is supposed to happen and the corresponding askui command is stored internally.
 
+<figure>
+    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/click2command.jpg"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/click2command.jpg"></a>
+    <figcaption><b>Figure 3:</b> Easy Worflow: Click to command conversion </figcaption>
+</figure>
 
 Specifically, AskUI inference engine detects all UI elements that are visible on the screen. By integrating AskUI's inference engine with GPT, we can automatically detect all elements on a screenshot and map the user clicks to specific elements. Using the relevant product documentation as context, GPT can then generate the corresponding DSL command. This approach not only streamlines the workflow creation process but also showcases GPT's ability to understand positional information and generate context-aware commands.
 
