@@ -30,7 +30,7 @@ One of the standout features of AskUI is its __intuitive__ Domain Specific Langu
     <figcaption><b>Figure 2:</b> AskUI framework DSL </figcaption>
 </figure>
 
-Instead of diving straight into building a machine translation model, we turned to GPT and LLMs. By feeding them our documentation and list of commands, we were able to quickly prototype a system that translates natural language step into our DSL. We just had to provide the existing functions (like get, await, etc.), end goal, and GPT would generate the entire workflow. For instance, if the goal was to "click on the red button," GPT would generate the following DSL commands: `aui.click().button().withText("red").exec();`.
+Instead of diving straight into building a machine translation model, we turned to GPT and LLMs. By feeding them our documentation and list of commands, we were able to quickly prototype a system that translates natural language step into our DSL. We just had to provide the existing functions (like get, await, etc.), end goal, and GPT would generate the entire workflow. For instance, if the goal was to "click on the SignUp button," GPT would generate the following DSL commands: `aui.click().button().withText("SignUp").exec();`.
 
 <figure>
     <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/nli2dsl.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/blog-llm-prototype/nli2dsl.png"></a>
