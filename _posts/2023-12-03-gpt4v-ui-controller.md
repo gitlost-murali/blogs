@@ -3,7 +3,7 @@ title: Creating an Automated UI controller with GPT agents & GPT-4v
 excerpt: Talks about how we can build an automated UI controller with GPT agents
 tags: [Machine Learning, Language Models, GPT, LLM, Product Development, Prototyping, huggingface, transformers, OpenAI, GPT4, GPT3, agents, vision, ui, automation]
 date: 2023-12-03 05:28:10 +0530
-categories: machine-learning product-development gpt ai
+categories: machine-learning product-development gpt4v automation
 toc: true
 permalink: /:categories/:title
 ---
