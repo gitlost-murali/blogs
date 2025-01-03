@@ -174,6 +174,7 @@ Future research directions include:
 
 - Investigating the composition of multiple ICVs
 - Developing techniques for automatic λ parameter tuning
+
 # Conclusion
 
 In-Context Vectors represent a promising approach to controlling language model behavior through direct manipulation of hidden states. While the technique is still in its early stages, it offers a compelling balance of simplicity, efficiency, and effectiveness. As language models continue to evolve, techniques like ICVs may become increasingly important for ensuring these tools behave in alignment with our intentions.
