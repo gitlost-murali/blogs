@@ -1,5 +1,5 @@
 ---
-title: In-Context Vectors: Controlling Language Models Through Latent Space Steering
+title: In-Context Vectors - Controlling Language Models Through Latent Space Steering
 excerpt: In-Context Vectors represent a promising approach to controlling language model behavior through direct manipulation of hidden states. Talk about making In Context Learning More Effective and Controllable Through Latent Space Steering.
 tags: [Machine Learning, Language Models, In-Context Vectors, ICV, hidden states, transformers]
 date: 2025-01-03 05:28:10 +0530
