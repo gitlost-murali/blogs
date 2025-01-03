@@ -12,7 +12,7 @@ permalink: /:categories/:title
 
 Language models have become increasingly powerful, but controlling their behavior remains a significant challenge. Whether it's ensuring consistent brand mentions in commercial applications, maintaining professional tone in workplace communications, or enforcing safety constraints, the ability to guide these models' outputs is crucial. Traditional approaches like prompt engineering and fine-tuning each have their limitations - prompt engineering can be brittle and token-intensive, while fine-tuning requires significant computational resources and can potentially degrade performance on other tasks.
 
-In this blog post, we'll explore In-Context Vectors (ICV), an innovative yet straightforward approach to steering language model outputs by manipulating their hidden states. We'll dive deep into how ICVs work, implement them, and see them in action through practical examples.
+In this blog post, we'll explore [In-Context Vectors (ICV)](https://arxiv.org/abs/2311.06668), an innovative yet straightforward approach to steering language model outputs by manipulating their hidden states. We'll dive deep into how ICVs work, implement them, and see them in action through practical examples.
 
 # Background: From Single Neurons to Vector Spaces
 
