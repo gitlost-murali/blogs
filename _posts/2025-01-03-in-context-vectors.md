@@ -2,7 +2,7 @@
 title: In-Context Vectors - Controlling Language Models Through Latent Space Steering
 excerpt: In-Context Vectors represent a promising approach to controlling language model behavior through direct manipulation of hidden states. Talk about making In Context Learning More Effective and Controllable Through Latent Space Steering.
 tags: [Machine Learning, Language Models, In-Context Vectors, ICV, hidden states, transformers]
-date: 2025-01-03 05:28:10 +0530
+date: 2025-01-01 05:28:10 +0530
 categories: machine-learning data-science
 toc: true
 permalink: /:categories/:title
@@ -10,7 +10,7 @@ permalink: /:categories/:title
 
 # Introduction
 
-Language models have become increasingly powerful, but controlling their behavior remains a significant challenge. Whether it's ensuring consistent brand mentions in commercial applications, maintaining professional tone in workplace communications, or enforcing safety constraints, the ability to guide these models' outputs is crucial. Traditional approaches like prompt engineering and fine-tuning each have their limitations - prompt engineering can be brittle and token-intensive, while fine-tuning requires significant computational resources and can potentially degrade performance on other tasks.
+Language models have become increasingly powerful, but controlling their behavior remains a significant challenge. Whether it's maintaining professional tone in workplace communications, or enforcing safety constraints, the ability to guide these models' outputs is crucial. Traditional approaches like prompt engineering and fine-tuning each have their limitations - prompt engineering can be brittle and token-intensive, while fine-tuning requires significant computational resources and can potentially degrade performance on other tasks.
 
 In this blog post, we'll explore [In-Context Vectors (ICV)](https://arxiv.org/abs/2311.06668), an innovative yet straightforward approach to steering language model outputs by manipulating their hidden states. We'll dive deep into how ICVs work, implement them, and see them in action through practical examples.
 
