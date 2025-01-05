@@ -59,3 +59,4 @@ Above code executes the notebooks by injecting parameters. You can look at the `
     <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/pm-injectedparams.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/pm-injectedparams.png"></a>
     <figcaption><b>Figure 5:</b> <i> Injected Parameters by papermill </i></figcaption>
 </figure>
+
