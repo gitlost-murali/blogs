@@ -10,13 +10,11 @@ permalink: /:categories/:title
 
 # Background
 
-Recent events in the machine learning community have highlighted a critical yet often overlooked aspect of ML systems: model serialization security. A particularly striking incident involved an ex-TikTok intern who managed to sabotage their LLM training process by embedding malicious code directly within the model weights. What makes this case fascinating is that the code wasn't hidden in the repository where it might have been caught by code reviews - **it was concealed within the model itself**.
+Recent events in the machine learning community have highlighted a critical yet often overlooked aspect of ML systems: model serialization security. A particularly concerning incident at TikTok demonstrated just how vulnerable our current practices are. An ex-intern managed to sabotage their LLM training process by embedding malicious code directly within the model weights, leading to months of debugging efforts and millions of dollars in wasted resources.
 
-This incident, which resulted in months of debugging and millions of dollars in wasted resources, serves as a wake-up call for the ML community. It raises important questions about how we store and distribute our models, and why the popular PyTorch `.pt` format might not be as secure as we need it to be.
+What makes this case particularly notable wasn't just the scale of disruption, but the method of attack. The malicious code wasn't hidden in the repository where it might have been caught by code reviews - **it was concealed within the model itself**. The sabotage manifested in various ways: introducing random delays, killing training runs unexpectedly, and even reversing training progress. These issues persisted undetected for months, partly due to fundamental weaknesses in how we handle model serialization.
 
-Recently, an ex-TikTok intern sabotaged their LLM training by introducing random sleeps to slow down training during work hours or killing the runs randomly or reversing the training steps. This made news in the tech world considering the millions of dollars and time that went in vain debugging the issues. The important thing to note is that he didn't ship the malicious code in the code repository but __inside the model__.
-
-In this article, let's explore how such malicious intentions were uncaught for several months due to the broken model serialization and why `safetensors` format was made. This blogpost is also slightly inspired by the silent consensus on the `safetensors` format at work. We had to implement some extra features for supporting `safetensors` format. 
+This incident raises important questions about how we store and distribute our models, and why the popular PyTorch .pt format might not be as secure as we need it to be. In this article, we'll explore how such malicious code remained undetected for so long due to broken model serialization practices, and why the safetensors format was developed as a solution. This discussion is particularly relevant given the growing industry consensus around adopting safetensors, including our own recent implementation of additional features to support this format.
 
 # What's broken with the current model serialization?
 
@@ -82,12 +80,21 @@ pid = os.getpid() # get program-id of the current program
 os.kill(pid, 9) # kill the current program
 """
 ```
+<figure>
+    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/safetensors/pikachu.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/safetensors/pikachu.png"></a>
+    <figcaption><b>Figure 1:</b> <i> Developers when they realize that the training is not corrupted</i></figcaption>
+</figure>
 
 In the context of ML models, this vulnerability becomes even more concerning. An attacker could modify model weights to include malicious code that executes during model loading. Since model loading is such a common operation - happening during training, evaluation, and deployment - this creates numerous opportunities for exploitation.
 
-## Real-World Impact: Analyzing the TikTok Incident
+## Anatomy of a Model-Based Attack
 
 The TikTok incident provides a masterclass in how serialization vulnerabilities can be exploited to sabotage training processes. Let's break down different types of attacks that can be embedded in model weights, starting with simple examples and building up to more sophisticated ones.
+
+<figure>
+    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/safetensors/trojan.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/safetensors/trojan.png"></a>
+    <figcaption><b>Figure 2:</b> <i> Trojan Tensors: Malicious code embedded in model weights</i></figcaption>
+</figure>
 
 ### Example 1: Basic Training Disruption
 
@@ -281,7 +288,7 @@ This final example represents the pinnacle of training sabotage because it:
 3. Is extremely difficult to detect without detailed gradient analysis
 4. Produces failures that appear to be legitimate optimization challenges
 
-## Detection Challenges
+## Why Traditional Security Measures Fail?
 
 What made these attacks particularly elusive at TikTok was their implementation within the model weights themselves. Traditional security measures like:
 
@@ -297,7 +304,13 @@ Would all miss these issues because the malicious code is:
 3. Designed to mimic common training issues
 4. Implemented with random triggers to avoid detection
 
-## Enter Safetensors: A Secure Alternative
+<figure>
+    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/safetensors/gru.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/safetensors/gru.png"></a>
+    <figcaption><b>Figure 3:</b> <i> Training issues that are hard to debug</i></figcaption>
+</figure>
+
+
+# Enter Safetensors: A Secure Alternative
 
 The `safetensors` format was created specifically to address these security concerns while also providing additional benefits for large-scale machine learning operations. Here's what makes it special:
 
