@@ -82,7 +82,7 @@ os.kill(pid, 9) # kill the current program
 ```
 <figure>
     <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/safetensors/pikachu.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/safetensors/pikachu.png"></a>
-    <figcaption><b>Figure 1:</b> <i> Developers when they realize that the training is not corrupted</i></figcaption>
+    <figcaption><b>Figure 1:</b> <i> Developers when they realize that the training is corrupted</i></figcaption>
 </figure>
 
 In the context of ML models, this vulnerability becomes even more concerning. An attacker could modify model weights to include malicious code that executes during model loading. Since model loading is such a common operation - happening during training, evaluation, and deployment - this creates numerous opportunities for exploitation.
