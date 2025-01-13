@@ -337,6 +337,7 @@ The beauty of this approach is that it maintains a memory mapping of the file st
 - Analyzing or debugging particular components
 - Fine-tuning specific layers of a large model
 - Deploying models in memory-constrained environments
+
 ### 2. Improved Serialization
 
 Unlike pickle, which needs to store additional Python object information, Safetensors uses a straightforward header-data format. The header contains metadata about tensor shapes, data types, and locations, while the data section contains the raw tensor values.
