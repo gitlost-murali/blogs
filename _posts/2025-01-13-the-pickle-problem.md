@@ -392,10 +392,10 @@ The combination of zero-copy architecture, efficient storage, and simplified loa
 The TikTok incident serves as a wake-up call for the machine learning community about the importance of secure model serialization. While pickle-based formats like `.pt` files have served us well, they carry significant security risks that can be exploited in sophisticated ways. The `safetensors` format represents a modern, secure, and efficient alternative that addresses these concerns while providing additional benefits for large-scale machine learning operations.
 
 As the field continues to grow and models become larger and more complex, adopting secure practices like using `safetensors` becomes increasingly important. The extra effort required to implement support for this format is a small price to pay for the security and performance benefits it provides.
+
 # References
 
-https://franklee.xyz/blogs/2024-10-19-safetensor
-
-https://dev.to/stacklok/understanding-safetensors-a-secure-alternative-to-pickle-for-ml-models-o71
-
-https://medium.com/@mandalsouvik/safetensors-a-simple-and-safe-way-to-store-and-distribute-tensors-d9ba1931ba04
+1. [Hacker News Post on TikTok Incident](https://news.ycombinator.com/item?id=41900402)
+2. [Relevant blog post 1](https://franklee.xyz/blogs/2024-10-19-safetensor)
+3. [Relevant blog post 2](https://dev.to/stacklok/understanding-safetensors-a-secure-alternative-to-pickle-for-ml-models-o71)
+4. [Relevant blog post 3](https://medium.com/@mandalsouvik/safetensors-a-simple-and-safe-way-to-store-and-distribute-tensors-d9ba1931ba04)
