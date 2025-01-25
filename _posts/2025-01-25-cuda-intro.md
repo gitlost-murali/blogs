@@ -15,15 +15,16 @@ After reading this blogpost, you will understand:
 - How to think about your ML problems in terms of parallel operations
 - How to convert a simple Python operation into a CUDA kernel
 - The basic building blocks of CUDA programming (threads, blocks, grids)
-## Why Another CUDA Tutorial?
+
+# Why Another CUDA Tutorial?
 
 As an ML engineer diving into CUDA, I found myself asking questions that weren't addressed in standard tutorials, including the excellent ones from [gpu-mode](https://github.com/gpu-mode/lectures). This guide aims to fill that gap, focusing on building intuition and making the journey into CUDA kernel programming less intimidating. We'll work through a simple example that demonstrates the key concepts you need to know. While reading this blog, I suggest you open this [notebook](https://github.com/gpu-mode/lectures/blob/main/lecture_003/pmpp.ipynb) in google colab and play with it as we go.
 
-## Understanding GPU Architecture
+# Understanding GPU Architecture
 
 Think of CPUs and GPUs as two different specialists working together. Your CPU excels at complex sequential tasks, like a highly skilled individual worker. In contrast, a GPU shines when performing the same operation thousands or millions of times simultaneously, like having an army of workers each doing one simple task. For instance, a modern GPU has over 2³⁰ cores, making it perfect for parallel processing. Neither approach is inherently better—they're suited for different challenges.
 
-### Key Components and Concepts
+# Key Components and Concepts
 
 When we write CUDA code, we're essentially orchestrating several key components:
 
@@ -35,7 +36,7 @@ When we write CUDA code, we're essentially orchestrating several key components:
    - Registers: The fastest memory, private to each thread
    - L1/L2 Cache: Automatic caching layers that help speed up memory access
 
-### Task and Data Parallelism
+# Task and Data Parallelism
 
 Let's consider a simple example of how GPUs leverage parallelism. Suppose you have two independent operations:
    - Multiplying numbers a and b
@@ -49,7 +50,7 @@ The key to understanding CUDA programming is to **adopt an output-first mindset
 
 Here's why this matters: Modern GPUs can handle up to 1,024 threads per block and more than 2³⁰ blocks in total. That's an enormous amount of parallel computing power. But how do you harness it effectively? Let's explore through it through the following example:
 
-## Practial Implementation: Image Grayscale Conversion (1D Grid)
+# Practial Implementation: Image Grayscale Conversion (1D Grid)
 
 Let's start with a simple but practical example: converting an RGB image to grayscale. This is a perfect introduction to CUDA because each output pixel can be computed independently.
 
@@ -272,7 +273,7 @@ Let's break down the key differences from our Python implementation:
 4. The `<<<num_blocks, threads_per_block>>>` syntax is CUDA's way of specifying the grid and block dimensions. This replaces our Python implementation's explicit loops over blocks and threads.
 
 
-## Next Steps
+# Conclusion
 
 This implementation serves as a foundation for understanding CUDA programming. In the next post, we'll explore:
 - 2D grid implementations for the grayscale conversion and matrix operations
