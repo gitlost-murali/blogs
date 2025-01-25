@@ -1,5 +1,5 @@
 ---
-title: "CUDA Studylog #1 - Getting a taste of CUDA kernels"
+title: "CUDA Studylog 1 - Getting a taste of CUDA kernels"
 excerpt: "A Introduction Guide for ML Engineers. Learn the fundamentals and practical implementations needed to get started with CUDA kernels"
 tags: [CUDA, GPU, ML, Optimization, Performance]
 date: 2025-01-25 05:28:10 +0530
