@@ -227,3 +227,9 @@ As we can see, our implementation, while functional, is about 3x slower than PyT
 In our next post, we'll explore how to optimize this implementation using shared memory tiling and other advanced techniques to bridge this performance gap. We'll see how techniques like memory coalescing, shared memory usage, and other tricks can help us get closer to PyTorch's performance.
 
 Stay tuned to learn how we can transform this naive implementation into a high-performance matrix multiplication kernel!
+
+# References
+
+- [J-Howard - GPU Mode - Getting Started with CUDA](https://www.youtube.com/watch?v=nOxKexn3iBo)
+- [Simon - Matmul in CUDA](https://www.youtube.com/watch?v=sRpWrTBOXCc&list=PL5XwKDZZlwaY7t0M5OLprpkJUIrF8Lc9j&index=3)
+- [0Mean1Sigma - CUDA matmul tutorial](https://www.youtube.com/watch?v=Q3GgbfGTnVc&list=PLU0zjpa44nPXddA_hWV1U8oO7AevFgXnT&index=4)
