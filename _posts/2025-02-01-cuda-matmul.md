@@ -127,6 +127,8 @@ int y = blockIdx.y * blockDim.y + threadIdx.y;
 int z = blockIdx.z * blockDim.z + threadIdx.z;
 ```
 
+> Note that `blockIdx` and `threadIdx` are built-in variables in CUDA that store the block and thread indices respectively. The grid dimensions defined inside `<<<>>>` are passed as follows: the second parameter (block size) becomes available as `blockDim` inside the kernel, while the first parameter (grid size) determines how many blocks will be launched. `blockDim` is particularly important as it's used to calculate global thread positions from local indices.
+
 ## 2. Using 2D Grid (The Natural Approach)
 
 Now that we understand how to organize threads in multiple dimensions using `dim3`, let's see how we can use it to implement matrix multiplication in a more natural way. CUDA's 2D grid structure aligns perfectly with our matrix computation:
