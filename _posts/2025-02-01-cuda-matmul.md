@@ -73,6 +73,8 @@ __global__ void matmul_1d_kernel(float* A, float* B, float* C, int M, int N, int
 }
 ```
 
+> Note: All code snippets in this post are available in the [following notebook](https://colab.research.google.com/drive/1YJRS7ot-T9ldLTt1Me_ZarG_NkaaIfWn?usp=sharing)..
+
 However, this 1D approach has several limitations:
 1. It makes our code less intuitive and harder to reason about
 2. It can lead to less efficient memory access patterns
@@ -233,3 +235,4 @@ Stay tuned to learn how we can transform this naive implementation into a high-p
 - [J-Howard - GPU Mode - Getting Started with CUDA](https://www.youtube.com/watch?v=nOxKexn3iBo)
 - [Simon - Matmul in CUDA](https://www.youtube.com/watch?v=sRpWrTBOXCc&list=PL5XwKDZZlwaY7t0M5OLprpkJUIrF8Lc9j&index=3)
 - [0Mean1Sigma - CUDA matmul tutorial](https://www.youtube.com/watch?v=Q3GgbfGTnVc&list=PLU0zjpa44nPXddA_hWV1U8oO7AevFgXnT&index=4)
+- [Colab notebook](https://colab.research.google.com/drive/1YJRS7ot-T9ldLTt1Me_ZarG_NkaaIfWn?usp=sharing)
