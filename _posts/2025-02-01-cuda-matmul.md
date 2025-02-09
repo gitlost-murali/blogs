@@ -1,5 +1,5 @@
 ---
-title: "CUDA Studylog 2 - Matrix Multiplication and Memory Optimization (Part 1)"
+title: "CUDA Studylog 2 - Matrix Multiplication and 2D Grid Organization"
 excerpt: "Deep dive into implementing efficient matrix multiplication using CUDA, with a focus on memory optimization techniques"
 tags: [CUDA, GPU, ML, Optimization, Performance]
 date: 2025-02-08 05:28:10 +0530
