@@ -1,6 +1,6 @@
 ---
-title: "CUDA Studylog 3 - Matrix Multiplication and Memory Optimization (Part 2)"
-excerpt: "Deep dive into implementing efficient matrix multiplication using CUDA, focusing on advanced optimization techniques"
+title: "CUDA Studylog 3 - Tiling and Shared Memory for Matrix Multiplication Optimization"
+excerpt: "Optimizing CUDA matrix multiplication using tiling and shared memory, with detailed explanations of memory access patterns and performance improvements"
 tags: [CUDA, GPU, ML, Optimization, Performance]
 date: 2025-02-15 05:28:10 +0530
 categories: machine-learning data-science
