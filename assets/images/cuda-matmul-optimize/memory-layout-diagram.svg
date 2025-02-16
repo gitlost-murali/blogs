@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300">
+    <!-- Background -->
+    <rect width="800" height="300" fill="white"/>
+    
+    <!-- Title -->
+    <text x="400" y="30" font-size="16" font-weight="bold" text-anchor="middle">Linear Memory Layout</text>
+    
+    <!-- Matrix A Memory Layout -->
+    <g transform="translate(50,80)">
+        <text x="0" y="-20" font-size="14" font-weight="bold">Matrix A in Memory:</text>
+        
+        <!-- Memory blocks -->
+        <g>
+            <!-- Row 0 -->
+            <rect x="0" y="0" width="40" height="30" fill="#90CDF4" stroke="black"/>
+            <rect x="40" y="0" width="40" height="30" fill="#90CDF4" stroke="black"/>
+            <rect x="80" y="0" width="40" height="30" fill="#90CDF4" stroke="black"/>
+            <rect x="120" y="0" width="40" height="30" fill="#90CDF4" stroke="black"/>
+            
+            <!-- Row 1 -->
+            <rect x="180" y="0" width="40" height="30" fill="white" stroke="black"/>
+            <rect x="220" y="0" width="40" height="30" fill="white" stroke="black"/>
+            <rect x="260" y="0" width="40" height="30" fill="white" stroke="black"/>
+            <rect x="300" y="0" width="40" height="30" fill="white" stroke="black"/>
+            
+            <!-- Labels -->
+            <text x="20" y="20" font-size="12" text-anchor="middle">a00</text>
+            <text x="60" y="20" font-size="12" text-anchor="middle">a01</text>
+            <text x="100" y="20" font-size="12" text-anchor="middle">a02</text>
+            <text x="140" y="20" font-size="12" text-anchor="middle">a03</text>
+            
+            <text x="200" y="20" font-size="12" text-anchor="middle">a10</text>
+            <text x="240" y="20" font-size="12" text-anchor="middle">a11</text>
+            <text x="280" y="20" font-size="12" text-anchor="middle">a12</text>
+            <text x="320" y="20" font-size="12" text-anchor="middle">a13</text>
+            
+            <!-- Access pattern -->
+            <path d="M 20,45 H 140" stroke="#2B6CB0" stroke-width="2" marker-end="url(#arrowhead2)"/>
+            <text x="80" y="65" font-size="12" fill="#2B6CB0">Coalesced Access (Single Transaction)</text>
+        </g>
+    </g>
+    
+    <!-- Matrix B Memory Layout -->
+    <g transform="translate(50,180)">
+        <text x="0" y="-20" font-size="14" font-weight="bold">Matrix B in Memory:</text>
+        
+        <!-- Memory blocks -->
+        <g>
+            <!-- First part -->
+            <rect x="0" y="0" width="40" height="30" fill="#FEB2B2" stroke="black"/>
+            <rect x="40" y="0" width="40" height="30" fill="white" stroke="black"/>
+            <rect x="80" y="0" width="40" height="30" fill="white" stroke="black"/>
+            <rect x="120" y="0" width="40" height="30" fill="white" stroke="black"/>
+            
+            <!-- Second part -->
+            <rect x="180" y="0" width="40" height="30" fill="#FEB2B2" stroke="black"/>
+            <rect x="220" y="0" width="40" height="30" fill="white" stroke="black"/>
+            <rect x="260" y="0" width="40" height="30" fill="white" stroke="black"/>
+            <rect x="300" y="0" width="40" height="30" fill="white" stroke="black"/>
+            
+            <!-- Labels -->
+            <text x="20" y="20" font-size="12" text-anchor="middle">b00</text>
+            <text x="60" y="20" font-size="12" text-anchor="middle">b01</text>
+            <text x="100" y="20" font-size="12" text-anchor="middle">b02</text>
+            <text x="140" y="20" font-size="12" text-anchor="middle">b03</text>
+            
+            <text x="200" y="20" font-size="12" text-anchor="middle">b10</text>
+            <text x="240" y="20" font-size="12" text-anchor="middle">b11</text>
+            <text x="280" y="20" font-size="12" text-anchor="middle">b12</text>
+            <text x="320" y="20" font-size="12" text-anchor="middle">b13</text>
+            
+            <!-- Access pattern -->
+            <path d="M 20,45 V 45 M 200,45 V 45" stroke="#C53030" stroke-width="2" marker-end="url(#arrowhead2)"/>
+            <path d="M 20,-15 V 45" stroke="#C53030" stroke-width="2" stroke-dasharray="4"/>
+            <path d="M 200,-15 V 45" stroke="#C53030" stroke-width="2" stroke-dasharray="4"/>
+            <text x="160" y="65" font-size="12" fill="#C53030">Non-coalesced Access (Multiple Transactions)</text>
+        </g>
+    </g>
+    
+    <!-- Arrow marker definition -->
+    <defs>
+        <marker id="arrowhead2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#000"/>
+        </marker>
+    </defs>
+</svg>
