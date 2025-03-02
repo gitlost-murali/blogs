@@ -157,28 +157,6 @@ Let's start by taking standard matrix multiplication kernel from [Triton tutoria
   </figcaption>
 </figure>
 
-```python
-@triton.jit
-def matmul_kernel(
-        # Standard matrix multiply parameters
-        a_ptr, b_ptr, c_ptr,
-        M, N, K,
-        # New parameter: mask of allowed tokens
-        allowed_cols_mask_ptr,
-        # Other parameters...
-):
-    # Calculate block indices as usual
-    # ...
-    
-    # Check if this block contains any allowed tokens
-    allowed_cols_mask = tl.load(allowed_cols_mask_ptr + offs_bn, mask=offs_bn < N, other=0)
-    block_has_valid_columns = tl.sum(allowed_cols_mask)
-    
-    # Skip block if no allowed tokens
-    if block_has_valid_columns == 0:
-        return
-```
-
 What's happening in the code:
 
 1. We first determine which output matrix block is being computed by this CUDA block using `pid_m` and `pid_n`
@@ -289,7 +267,7 @@ The efficiency of our approach depends heavily on how the allowed tokens are dis
 We've explored different strategies for optimizing constrained decoding:
 
 1. Compressing the FSM provides a simple optimization with significant speedup
-2. Optimized matrix multiplication offers performance gains
+2. Slicing the final layer weights provides good performance gains
 3. CUDA implementation delivers performance gains and can handle complex cases
 
 Remember that these optimizations are complementary to the core benefits of structured generation. 
@@ -297,6 +275,6 @@ Remember that these optimizations are complementary to the core benefits of stru
 ## Future Work
 
 It would be interesting to explore additional optimizations:
-1. Batched CUDA kernels for multi-sequence generation
+1. Batching the CUDA kernel for handling batched sequences
 2. Hybrid approaches that combine different optimization strategies
 
