@@ -21,7 +21,7 @@ Constrained decoding ensures language models generate outputs that follow specif
 However, there's a significant computational inefficiency in standard constrained decoding:
 
 <figure>
-  <img src="{{ site.url }}/assets/images/struct-gen-triton-kernel/simple-logits-masking.svg/" alt="Structured Generation Teaser">
+  <img src="{{ site.url }}/{{ site.baseurl }}/assets/images/struct-gen-triton-kernel/simple-logits-masking.svg/" alt="Structured Generation Teaser">
   <figcaption>
     <p>
       <strong>Figure 1:</strong> Constrained decoding involves generating tokens that follow a specific schema or pattern.
@@ -60,7 +60,7 @@ Consider a simple binary classifier that outputs either "true", "false" or "NA".
 The constrained decoding library [`outlines`](https://github.com/dottxt-ai/outlines) would convert this to an FSM graph:
 
 <figure>
-  <img src="{{ site.url }}/assets/images/struct-gen-triton-kernel/sentence_automaton.png/" alt="Structured Generation Teaser">
+  <img src="{{ site.url }}/{{ site.baseurl }}/assets/images/struct-gen-triton-kernel/sentence_automaton.png/" alt="Structured Generation Teaser">
   <figcaption>
     <p>
       <strong>Figure 2:</strong> The FSM for a binary classifier output.
@@ -83,7 +83,7 @@ Let's take another example from [SGLang paper](https://arxiv.org/pdf/2312.07104)
 > The constant text sequence `{"summary": "` spans multiple tokens in the normal decoding process as shown in Fig. 3 (c), requiring multiple decoding stages, even though there is only one valid next token when decoding it. Therefore, the whole sequence can be decoded in a single step (i.e., forward pass). ([SGLang paper](https://arxiv.org/pdf/2312.07104))
 
 <figure>
-  <img src="{{ site.url }}/assets/images/struct-gen-triton-kernel/sglang_fsm_compression.png/" alt="Structured Generation Teaser">
+  <img src="{{ site.url }}/{{ site.baseurl }}/assets/images/struct-gen-triton-kernel/sglang_fsm_compression.png/" alt="Structured Generation Teaser">
   <figcaption>
     <p>
       <strong>Figure 3:</strong> The decoding process of normal and compressed FSMs (the underscore_ means a space). <a href="https://arxiv.org/pdf/2312.07104">Source</a>
@@ -94,7 +94,7 @@ Let's take another example from [SGLang paper](https://arxiv.org/pdf/2312.07104)
 By the way, if you want to see how a pydantic schema is converted to an FSM, you can use the following code based on [`outlines`](https://github.com/dottxt-ai/outlines):
 
 <figure>
-  <img src="{{ site.url }}/assets/images/struct-gen-triton-kernel/outlines-fsm-generation.png/" alt="Structured Generation Teaser">
+  <img src="{{ site.url }}/{{ site.baseurl }}/assets/images/struct-gen-triton-kernel/outlines-fsm-generation.png/" alt="Structured Generation Teaser">
   <figcaption>
     <p>
       <strong>Figure 4:</strong> FSM generation script using outlines.<a href="https://arxiv.org/pdf/2312.07104">Source</a>
@@ -149,7 +149,7 @@ The first level of optimization can be done at the block level:
 Let's start by taking standard matrix multiplication kernel from [Triton tutorial](https://triton-lang.org/main/getting-started/tutorials/03-matrix-multiplication.html#final-result) and modify it to support the filtering of allowed tokens. In a way, this can be compared to Sparse Matrix Multiplication across columns of final layer weights `[768 x 128k]`.
 
 <figure>
-  <img src="{{ site.url }}/assets/images/struct-gen-triton-kernel/block-level-filter.png/" alt="Structured Generation Teaser">
+  <img src="{{ site.url }}/{{ site.baseurl }}/assets/images/struct-gen-triton-kernel/block-level-filter.png/" alt="Structured Generation Teaser">
   <figcaption>
     <p>
       <strong>Figure 5:</strong> Block-level filtering.
@@ -224,7 +224,7 @@ For matrices, A & B of size `[1, 3072]` and `[3072, 128k]` respectively, we can 
 > The current kernel is only written for batch size 1. I will work on it later to support batching.
 
 <figure>
-  <img src="{{ site.url }}/assets/images/struct-gen-triton-kernel/block-level-speed-ups.png/" alt="Structured Generation Teaser">
+  <img src="{{ site.url }}/{{ site.baseurl }}/assets/images/struct-gen-triton-kernel/block-level-speed-ups.png/" alt="Structured Generation Teaser">
   <figcaption>
     <p>
       <strong>Figure 6:</strong> Block-level filtering speedups.
@@ -233,7 +233,7 @@ For matrices, A & B of size `[1, 3072]` and `[3072, 128k]` respectively, we can 
 </figure>
 
 <figure>
-  <img src="{{ site.url }}/assets/images/struct-gen-triton-kernel/thread-level-speed-ups.png/" alt="Structured Generation Teaser">
+  <img src="{{ site.url }}/{{ site.baseurl }}/assets/images/struct-gen-triton-kernel/thread-level-speed-ups.png/" alt="Structured Generation Teaser">
   <figcaption>
     <p>
       <strong>Figure 7:</strong> Thread-level filtering speedups.
