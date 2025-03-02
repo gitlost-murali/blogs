@@ -1,5 +1,5 @@
 ---
-title: "CUDA Study Log 4: Tweaking a CUDA Kernel for Constrained Decoding"
+title: "CUDA Study Log 4: Optimizing Constrained Decoding with CUDA"
 excerpt: "Update traditional CUDA matrix multiplication kernel for constrained decoding"
 date: 2025-02-27
 categories:
@@ -9,15 +9,16 @@ tags:
   - CUDA
   - Optimization
   - Constrained Decoding
+toc: true
 header:
   teaser: "assets/images/struct-gen-triton-kernel/simple-logits-masking.svg"
 ---
 
-# Motivation
+# The Problem: Inefficient Computation in Constrained Decoding
 
-Constrained decoding constrains language model outputs to follow specific patterns or schemas. By defining a formal grammar or schema (like JSON Schema), we can ensure the model only generates valid outputs. This is particularly useful for tasks like API response generation, data structure creation, or any scenario where we need guaranteed syntactic correctness.
+Constrained decoding ensures language models generate outputs that follow specific patterns or schemas. This is crucial for tasks like API response generation or structured data creation where we need guaranteed syntactic correctness.
 
-However, there's a computational inefficiency at the heart of constrained decoding. Consider what happens during each generation step:
+However, there's a significant computational inefficiency in standard constrained decoding:
 
 <figure>
   <img src="{{ site.url }}/assets/images/struct-gen-triton-kernel/simple-logits-masking.svg/" alt="Structured Generation Teaser">
@@ -28,235 +29,249 @@ However, there's a computational inefficiency at the heart of constrained decodi
   </figcaption>
 </figure>
 
-1. The model computes logits (scores) for every token in its vocabulary (typically 50k+ tokens)
+During each generation step:
+
+1. The model computes scores (logits) for every token in its vocabulary (typically 50k+ tokens)
 2. We filter out tokens that would violate our schema/grammar
 3. Only then do we sample from the allowed tokens
 
 
-This means we're doing a lot of unnecessary computation. For example, in the image above, if we're generating a boolean field that can only be "true" or "false", we still compute scores for all 50,000+ tokens in the vocabulary, only to use just two of them! This inefficiency compounds across every token we generate.
+This means we're wasting computation on tokens we'll never use. For example, if we only need to generate "true" or "false", we still compute scores for all 50,000+ tokens in the vocabulary, only to use just two of them!
 
 
-Let's explore three increasingly sophisticated approaches to optimize this process, starting from the simplest case where we know all possible tokens upfront, to a fully dynamic CUDA-accelerated solution.
+Let's explore three increasingly sophisticated approaches to optimize this process, starting from the simplest case to a fully dynamic CUDA-accelerated solution.
 
-## The Three Levels of Optimization
+# The Three Levels of Optimization
 
-1. **Fixed Structure Optimization**: The simplest case where we know all possible outputs at initialization
-2. **Dynamic Structure**: Runtime adaptation of allowed tokens based on state
-3. **CUDA-Accelerated Dynamic Structure**: Parallel processing for maximum performance
+Let's explore three increasingly sophisticated approaches to optimize this process:
 
-Let's explore each approach in detail, examining their tradeoffs and implementation complexities.
+1. **Compressing Finite State Machine**: Compress the FSM into a compact representation for faster state transitions
+2. **Optimized Matrix Multiplication**: Only compute logits for allowed tokens
+3. **Kernel Optimization**: Use Kernel to parallelize the logit computation
 
-## 1. Fixed Structure Optimization
 
-The simplest optimization case occurs when we have a fixed structure with a limited set of possible values. Consider this example:
+
+## 1. Compressing the Finite State Machine (FSM)
+
+### Understanding Automata for Constrained Generation
+
+Consider a simple binary classifier that outputs either "true", "false" or "NA".
+
+The constrained decoding library [`outlines`](https://github.com/dottxt-ai/outlines) would convert this to an FSM graph:
+
+<figure>
+  <img src="{{ site.url }}/assets/images/struct-gen-triton-kernel/sentence_automaton.png/" alt="Structured Generation Teaser">
+  <figcaption>
+    <p>
+      <strong>Figure 2:</strong> The FSM for a binary classifier output.
+    </p>
+  </figcaption>
+</figure>
+
+In this automaton:
+
+- Each state represents a step in the generation process
+- The initial state (q0) has one transition: `"`
+- The second state (q1) has three transitions: `true`, `false`, and `NA`
+- The final state (q3) has one transition: `"`
+
+__Key Optimization__: When states have only one possible transition (like q0 and q3), we can skip the generation step entirely and directly emit that token.
+This reduces our generation steps from 3 to just 1, as we only need to actually generate at state q1.
+
+Let's take another example from [SGLang paper](https://arxiv.org/pdf/2312.07104):
+
+> The constant text sequence `{"summary": "` spans multiple tokens in the normal decoding process as shown in Fig. 3 (c), requiring multiple decoding stages, even though there is only one valid next token when decoding it. Therefore, the whole sequence can be decoded in a single step (i.e., forward pass). ([SGLang paper](https://arxiv.org/pdf/2312.07104))
+
+<figure>
+  <img src="{{ site.url }}/assets/images/struct-gen-triton-kernel/sglang_fsm_compression.png/" alt="Structured Generation Teaser">
+  <figcaption>
+    <p>
+      <strong>Figure 3:</strong> The decoding process of normal and compressed FSMs (the underscore_ means a space). <a href="https://arxiv.org/pdf/2312.07104">Source</a>
+    </p>
+  </figcaption>
+</figure>
+
+By the way, if you want to see how a pydantic schema is converted to an FSM, you can use the following code based on [`outlines`](https://github.com/dottxt-ai/outlines):
+
+<figure>
+  <img src="{{ site.url }}/assets/images/struct-gen-triton-kernel/outlines-fsm-generation.png/" alt="Structured Generation Teaser">
+  <figcaption>
+    <p>
+      <strong>Figure 4:</strong> FSM generation script using outlines.<a href="https://arxiv.org/pdf/2312.07104">Source</a>
+    </p>
+  </figcaption>
+</figure>
+
+## 2. Optimized Matrix Multiplication
+Once we have an FSM, we can identify the allowed tokens for each state and only compute logits for those tokens.
+Instead of the standard computation:
 
 ```python
-from enum import Enum
-from pydantic import BaseModel
-
-class Name(str, Enum):
-    john = "John"
-    paul = "Paul"
-
-class Age(int, Enum):
-    twenty = 20
-    thirty = 30
-
-class Character(BaseModel):
-    name: Name
-    age: Age
+logits = final_layer @ token_embeddings.T
 ```
 
-In this scenario, we know exactly what values are allowed at each position:
-- `name` can only be "John" or "Paul"
-- `age` can only be 20 or 30
-
-The key optimization here is that we can pre-compute the allowed token indices during model initialization:
+We can optimize to:
 
 ```python
-import json
-from outlines.fsm.json_schema import convert_json_schema_to_str
-from outlines_core.fsm.json_schema import build_regex_from_schema
-import interegular
-
-# Convert schema to FSM
-json_schema = Character.model_json_schema()
-json_schema_str = convert_json_schema_to_str(json_schema)
-regex_str = build_regex_from_schema(json_schema_str)
-pattern = interegular.parse_pattern(regex_str)
-fsm = pattern.to_fsm()
-
-# Create deterministic FSM and index
-from outlines.fsm.regex import make_deterministic_fsm, create_fsm_index_tokenizer
-new_fsm, _ = make_deterministic_fsm(fsm)
-index, _ = create_fsm_index_tokenizer(new_fsm, tokenizer)
+allowed_indices = fsm_index.get_allowed_tokens(fsm_state)
+logits = final_layer @ token_embeddings[allowed_indices].T
 ```
 
-The optimization comes from modifying the model's final layer to only compute logits for the allowed tokens. Instead of the standard computation:
+__Performance Benefits__:
+
+- __Memory reduction__: Only use embedding weights of allowed tokens. Reduced memory transfers between GRAM and processors/threads.
+- __Computation reduction__: Matrix multiplication size dramatically reduced
+
+## 3. Kernel based optimization
+
+Instead of modifying the model architecture, we can implement dynamic filtering directly in the matrix multiplication kernel. This approach:
+
+- Maintains the model's final layer unchanged
+- Uses a CUDA kernel to filter logits during computation
+- Reduces memory transfers between GPU memory and processors/threads
+
+
+When implementing constrained decoding in CUDA, we need an efficient way to filter out tokens that aren't allowed by our finite state machine. Instead of computing logits for all tokens and then applying a mask (which wastes computation), we can filter at different levels of granularity during the matrix multiplication itself.
+
+
+### 3.1 Block-level filtering
+
+The first level of optimization can be done at the block level:
+
+1. We maintain a binary mask of vocabulary size (128k) to indicate allowed tokens (1) and non-allowed tokens (0)
+2. Before computing the matrix multiplication for a block, we check if any tokens in that block are allowed
+3. If no tokens in the block are allowed, we skip the entire block's computation
+4. This dramatically reduces unnecessary work for constrained generation
+
+Let's start by taking standard matrix multiplication kernel from [Triton tutorial](https://triton-lang.org/main/getting-started/tutorials/03-matrix-multiplication.html#final-result) and modify it to support the filtering of allowed tokens. In a way, this can be compared to Sparse Matrix Multiplication across columns of final layer weights `[768 x 128k]`.
+
+<figure>
+  <img src="{{ site.url }}/assets/images/struct-gen-triton-kernel/block-level-filter.png/" alt="Structured Generation Teaser">
+  <figcaption>
+    <p>
+      <strong>Figure 5:</strong> Block-level filtering.
+    </p>
+  </figcaption>
+</figure>
 
 ```python
-logits = final_layer @ token_embeddings.T  # Shape: [batch_size, vocab_size]
-```
-
-We can use:
-
-```python
-allowed_indices = index.all_possible_indices  # Pre-computed during init
-allowed_embeddings = token_embeddings[allowed_indices]
-logits = final_layer @ allowed_embeddings.T  # Shape: [batch_size, len(allowed_indices)]
-```
-
-This reduces the matrix multiplication from O(vocab_size) to O(num_allowed_tokens), which in our example is just 4 tokens (2 names × 2 ages).
-
-### Performance Impact
-
-For this fixed structure case, we see significant speedups:
-
-1. Memory reduction: We only need to store embeddings for allowed tokens
-2. Computation reduction: Matrix multiplication size is drastically reduced
-3. No runtime overhead: Token filtering is done once during initialization
-
-Here's a simple benchmark comparing standard vs. optimized generation:
-
-```python
-import time
-
-def benchmark_generation(model, prompt, n_runs=1000):
-    times = []
-    for _ in range(n_runs):
-        start = time.perf_counter()
-        _ = model.generate(prompt)
-        times.append(time.perf_counter() - start)
-    return sum(times) / len(times)
-
-# Results (average generation time per token):
-# Standard: 2.3ms
-# Optimized: 0.4ms
-```
-
-## 2. Dynamic Structure
-
-The dynamic case is more complex because the allowed tokens change based on the current state in the FSM. Let's extend our example to handle nested structures:
-
-```python
-class Inventory(BaseModel):
-    items: List[str]
-    capacity: int
+@triton.jit
+def matmul_kernel(
+        # Standard matrix multiply parameters
+        a_ptr, b_ptr, c_ptr,
+        M, N, K,
+        # New parameter: mask of allowed tokens
+        allowed_cols_mask_ptr,
+        # Other parameters...
+):
+    # Calculate block indices as usual
+    # ...
     
-class Character(BaseModel):
-    name: Name
-    age: Age
-    inventory: Inventory
-```
-
-Now the allowed tokens depend on the current position:
-- At the start of an item list: Opening bracket
-- Inside the list: String tokens or comma
-- After the list: Closing bracket
-- For capacity: Integer tokens
-
-The optimization approach changes to:
-
-```python
-class OptimizedStructuredGeneration:
-    def forward(self, hidden_states, fsm_state):
-        # Get allowed tokens for current state
-        allowed_indices = self.index.get_allowed_tokens(fsm_state)
-        
-        # Only compute logits for allowed tokens
-        allowed_embeddings = self.token_embeddings[allowed_indices]
-        logits = hidden_states @ allowed_embeddings.T
-        
-        return logits, allowed_indices
-
-    def update_state(self, current_state, token):
-        return self.fsm.next_state(current_state, token)
-```
-
-This dynamic approach maintains the core optimization of reduced matrix multiplication while adapting to changing constraints. The tradeoff is the additional overhead of state tracking and token filtering at each step.
-
-## 3. CUDA-Accelerated Dynamic Structure
-
-For maximum performance, we can move the dynamic token filtering to CUDA. The key insight is that we can parallelize both the state transitions and the logit computations.
-
-Here's a simplified version of the CUDA kernel:
-
-```cuda
-__global__ void compute_allowed_logits(
-    float* hidden_states,      // [batch_size, hidden_dim]
-    float* token_embeddings,   // [vocab_size, hidden_dim]
-    int* fsm_states,          // [batch_size]
-    int* allowed_tokens,       // [batch_size, max_allowed_tokens]
-    float* output_logits,      // [batch_size, max_allowed_tokens]
-    int batch_size,
-    int hidden_dim,
-    int max_allowed_tokens
-) {
-    int batch_idx = blockIdx.x;
-    int token_idx = threadIdx.x;
+    # Check if this block contains any allowed tokens
+    allowed_cols_mask = tl.load(allowed_cols_mask_ptr + offs_bn, mask=offs_bn < N, other=0)
+    block_has_valid_columns = tl.sum(allowed_cols_mask)
     
-    if (batch_idx < batch_size && token_idx < max_allowed_tokens) {
-        int token_id = allowed_tokens[batch_idx * max_allowed_tokens + token_idx];
-        if (token_id >= 0) {  // Valid token
-            float sum = 0.0f;
-            for (int i = 0; i < hidden_dim; i++) {
-                sum += hidden_states[batch_idx * hidden_dim + i] * 
-                       token_embeddings[token_id * hidden_dim + i];
-            }
-            output_logits[batch_idx * max_allowed_tokens + token_idx] = sum;
-        }
-    }
-}
+    # Skip block if no allowed tokens
+    if block_has_valid_columns == 0:
+        return
 ```
 
-The Python wrapper:
+What's happening in the code:
 
-```python
-class CUDAStructuredGeneration:
-    def __init__(self, model, fsm_index):
-        self.cuda_module = load_cuda_kernels()
-        self.model = model
-        self.fsm_index = fsm_index
-        
-    def forward(self, hidden_states, fsm_states):
-        # Get allowed tokens for all states in parallel
-        allowed_tokens = self.fsm_index.batch_allowed_tokens(fsm_states)
-        
-        # Launch CUDA kernel
-        output_logits = torch.zeros(
-            hidden_states.shape[0],
-            allowed_tokens.shape[1],
-            device='cuda'
-        )
-        
-        self.cuda_module.compute_allowed_logits(
-            hidden_states,
-            self.model.token_embeddings,
-            fsm_states,
-            allowed_tokens,
-            output_logits
-        )
-        
-        return output_logits, allowed_tokens
-```
-### Performance Comparison
+1. We first determine which output matrix block is being computed by this CUDA block using `pid_m` and `pid_n`
+2. We calculate the row indices of A (offs_am) and column indices of B (offs_bn) for the current block in the output matrix C
+3. Block filtering step: From the token mask, we load a portion of the mask corresponding to the current block using `tl.load(allowed_cols_mask_ptr + offs_bn)`
+4. We check if any tokens in this block are allowed by summing the mask values
+5. If no tokens are allowed (block_has_valid_columns == 0), we skip the entire block computation by returning early
+6. Otherwise, we proceed with the standard matrix multiplication for this block
 
-Here's a benchmark comparing all three approaches:
+This optimization allows us to skip entire blocks of computation when none of the tokens in that block are allowed by our FSM. For example, if each block has `BLOCK_SIZE_N = 32` and our allowed tokens are only [1, 5, 6, 20], only the first block will be active while all other blocks' computation will be skipped entirely. 
 
-```python
-def benchmark_all(prompt, n_runs=1000):
-    results = {}
-    for method in ['standard', 'fixed', 'dynamic', 'cuda']:
-        model = get_model(method)
-        results[method] = benchmark_generation(model, prompt, n_runs)
-    return results
+Ideally, out of the 32 threads in this block, only 4 threads should be active (corresponding to the allowed tokens) and the rest must be idle. However, for brevity, let's just go ahead and compute the entire block. Later, we will see how to handle this efficiently.
 
-# Results (average generation time per token):
-# Standard:    2.30ms
-# Fixed:       0.40ms
-# Dynamic:     0.85ms
-# CUDA:        0.15ms
-```
+#### Filtering at the output level
+
+Since we are computing the entire block of output, (32 columns instead of just 4), we need to filter the output at the end. This is done by using the mask `allowed_cols_mask` to filter the output.
+
+<!-- Custom diff styling for code -->
+<style>
+  .diff-container {
+    background-color: rgb(30, 29, 29);
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    font-family: "Source Code Pro", monospace;
+    font-size: 0.4em; /* Uses relative sizing based on parent element */
+    line-height: 1.5;
+  }
+  .diff-container pre {
+    margin: 0;
+    white-space: pre-wrap;
+    color: white;
+  }
+  .inserted {
+    background-color: #ddffdd;
+    color: #333;
+  }
+</style>
+
+<div class="diff-container">
+  <pre><code>c_mask = (offs_cm[:, None] < M) & (offs_cn[None, :] < N) <span class="inserted">& (allowed_cols_mask[None, :] > 0)</span></code></pre>
+</div>
+
+
+### 3.2 Column-level/Thread-level filtering
+
+Now that we have a kernel that can filter the output at the block level, we can extend it to filter the output at the column level. To address this, we can implement column-level filtering within each block:
+
+1. We use the same allowed token mask but apply it at a finer granularity
+2. When loading input data for each column, we check if that column corresponds to an allowed token
+3. We only perform computations for the allowed columns. Others are set to 0, which is equivalent to skipping the computation.
+
+
+<div class="diff-container">
+  <pre><code>b = tl.load(b_ptrs, mask=((offs_k[:, None] < K - k * BLOCK_SIZE_K) <span class="inserted">& (allowed_cols_mask[None, :] != 0)</span>), other=0.0)</code></pre>
+</div>
+
+In the code above, we modify the mask condition when loading input data (b) to include `(allowed_cols_mask[None, :] != 0)`. This ensures we only load data for allowed columns, saving time on loading data for non-allowed columns.
+
+
+### 3.3 The benchmarks
+
+<figure>
+  <img src="{{ site.url }}/assets/images/struct-gen-triton-kernel/block-level-speed-ups.png/" alt="Structured Generation Teaser">
+  <figcaption>
+    <p>
+      <strong>Figure 6:</strong> Block-level filtering speedups.
+    </p>
+  </figcaption>
+</figure>
+
+<figure>
+  <img src="{{ site.url }}/assets/images/struct-gen-triton-kernel/thread-level-speed-ups.png/" alt="Structured Generation Teaser">
+  <figcaption>
+    <p>
+      <strong>Figure 7:</strong> Thread-level filtering speedups.
+    </p>
+  </figcaption>
+</figure>
+
+
+Based on the benchmarks, we can see that the block-level filtering provides the most significant speedup, followed by the thread-level filtering. The column-level filtering provides a modest speedup. The reason for this is that the block-level filtering is more efficient at reducing the number of computations, while the thread-level filtering is more efficient at reducing the number of memory transfers.
+
+#### 3.3.1 Memory layout considerations
+
+The efficiency of our approach depends heavily on how the allowed tokens are distributed. If allowed tokens are scattered randomly across the vocabulary, we might still need to process many blocks. However, in practice:
+- For many constrained decoding scenarios, the number of allowed tokens is small compared to the vocabulary size.
+- We can potentially reorder the vocabulary to cluster commonly allowed tokens together, improving block-level filtering efficiency. But this can get messy when we have multiple constraints.
+
+### 3.4 Performance Comparison
+
+The performance benefits of this approach are most significant when:
+- The number of allowed tokens is small compared to the vocabulary size
+- The allowed tokens are clustered together in the vocabulary
+- The computation is memory-bound rather than compute-bound
+
 
 ## Conclusion
 

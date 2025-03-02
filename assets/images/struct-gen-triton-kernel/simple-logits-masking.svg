@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400">
+  <!-- Background -->
+  <rect width="800" height="400" fill="#f8f9fa" rx="10" ry="10"/>
+  
+  <!-- Title -->
+  <text x="400" y="40" font-family="Arial, sans-serif" font-size="20" text-anchor="middle" font-weight="bold">Structured Generation: Logits Vector and Masking</text>
+  
+  <!-- Original Logits Vector Section -->
+  <g transform="translate(50, 80)">
+    <!-- Label -->
+    <text x="0" y="0" font-family="Arial, sans-serif" font-size="16" font-weight="bold">Original Logits Vector (all tokens):</text>
+    
+    <!-- Vector Visualization -->
+    <rect x="0" y="15" width="700" height="50" fill="#e3f2fd" stroke="#2196F3" stroke-width="2" rx="5" ry="5"/>
+    
+    <!-- Sample logit values - simplified numeric representation -->
+    <text x="30" y="45" font-family="Courier, monospace" font-size="14" text-anchor="middle">0.021</text>
+    <text x="90" y="45" font-family="Courier, monospace" font-size="14" text-anchor="middle">0.003</text>
+    <text x="150" y="45" font-family="Courier, monospace" font-size="14" text-anchor="middle">0.157</text>
+    <text x="210" y="45" font-family="Courier, monospace" font-size="14" text-anchor="middle" fill="#4CAF50" font-weight="bold">0.629</text>
+    <text x="270" y="45" font-family="Courier, monospace" font-size="14" text-anchor="middle">0.045</text>
+    <text x="330" y="45" font-family="Courier, monospace" font-size="14" text-anchor="middle">0.001</text>
+    <text x="390" y="45" font-family="Courier, monospace" font-size="14" text-anchor="middle" fill="#4CAF50" font-weight="bold">0.413</text>
+    <text x="450" y="45" font-family="Courier, monospace" font-size="14" text-anchor="middle">0.082</text>
+    <text x="510" y="45" font-family="Courier, monospace" font-size="14" text-anchor="middle">0.007</text>
+    <text x="570" y="45" font-family="Courier, monospace" font-size="14" text-anchor="middle">0.110</text>
+    <text x="630" y="45" font-family="Courier, monospace" font-size="14" text-anchor="middle">0.042</text>
+    <text x="670" y="45" font-family="Courier, monospace" font-size="14" text-anchor="middle">...</text>
+    
+    <!-- Token ID Labels -->
+    <text x="30" y="75" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">ID: 1024</text>
+    <text x="90" y="75" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">ID: 3872</text>
+    <text x="150" y="75" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">ID: 8291</text>
+    <text x="210" y="75" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#4CAF50" font-weight="bold">ID: 12580</text>
+    <text x="270" y="75" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">ID: 15692</text>
+    <text x="330" y="75" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">ID: 19043</text>
+    <text x="390" y="75" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#4CAF50" font-weight="bold">ID: 23789</text>
+    <text x="450" y="75" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">ID: 28546</text>
+    <text x="510" y="75" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">ID: 33712</text>
+    <text x="570" y="75" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">ID: 38291</text>
+    <text x="630" y="75" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">ID: 45127</text>
+    
+    <!-- Token Text Labels -->
+    <text x="210" y="95" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#4CAF50" font-weight="bold">"true"</text>
+    <text x="390" y="95" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#4CAF50" font-weight="bold">"false"</text>
+  </g>
+  
+  <!-- Masking Process Section -->
+  <g transform="translate(50, 190)">
+    <!-- Label -->
+    <text x="0" y="0" font-family="Arial, sans-serif" font-size="16" font-weight="bold">Apply Schema Mask:</text>
+    
+    <!-- Mask visualization -->
+    <rect x="0" y="15" width="700" height="50" fill="#fff3e0" stroke="#FF9800" stroke-width="2" rx="5" ry="5"/>
+    
+    <!-- Masked logit values -->
+    <text x="30" y="45" font-family="Courier, monospace" font-size="14" text-anchor="middle" fill="#9E9E9E">0.021</text>
+    <text x="90" y="45" font-family="Courier, monospace" font-size="14" text-anchor="middle" fill="#9E9E9E">0.003</text>
+    <text x="150" y="45" font-family="Courier, monospace" font-size="14" text-anchor="middle" fill="#9E9E9E">0.157</text>
+    <text x="210" y="45" font-family="Courier, monospace" font-size="14" text-anchor="middle" fill="#4CAF50" font-weight="bold">0.629</text>
+    <text x="270" y="45" font-family="Courier, monospace" font-size="14" text-anchor="middle" fill="#9E9E9E">0.045</text>
+    <text x="330" y="45" font-family="Courier, monospace" font-size="14" text-anchor="middle" fill="#9E9E9E">0.001</text>
+    <text x="390" y="45" font-family="Courier, monospace" font-size="14" text-anchor="middle" fill="#4CAF50" font-weight="bold">0.413</text>
+    <text x="450" y="45" font-family="Courier, monospace" font-size="14" text-anchor="middle" fill="#9E9E9E">0.082</text>
+    <text x="510" y="45" font-family="Courier, monospace" font-size="14" text-anchor="middle" fill="#9E9E9E">0.007</text>
+    <text x="570" y="45" font-family="Courier, monospace" font-size="14" text-anchor="middle" fill="#9E9E9E">0.110</text>
+    <text x="630" y="45" font-family="Courier, monospace" font-size="14" text-anchor="middle" fill="#9E9E9E">0.042</text>
+    <text x="670" y="45" font-family="Courier, monospace" font-size="14" text-anchor="middle" fill="#9E9E9E">...</text>
+    
+    <!-- Mask indicator - strike through or X for invalid tokens -->
+    <line x1="15" y1="60" x2="45" y2="30" stroke="#9E9E9E" stroke-width="1" />
+    <line x1="75" y1="60" x2="105" y2="30" stroke="#9E9E9E" stroke-width="1" />
+    <line x1="135" y1="60" x2="165" y2="30" stroke="#9E9E9E" stroke-width="1" />
+    <line x1="255" y1="60" x2="285" y2="30" stroke="#9E9E9E" stroke-width="1" />
+    <line x1="315" y1="60" x2="345" y2="30" stroke="#9E9E9E" stroke-width="1" />
+    <line x1="435" y1="60" x2="465" y2="30" stroke="#9E9E9E" stroke-width="1" />
+    <line x1="495" y1="60" x2="525" y2="30" stroke="#9E9E9E" stroke-width="1" />
+    <line x1="555" y1="60" x2="585" y2="30" stroke="#9E9E9E" stroke-width="1" />
+    <line x1="615" y1="60" x2="645" y2="30" stroke="#9E9E9E" stroke-width="1" />
+    <line x1="655" y1="60" x2="685" y2="30" stroke="#9E9E9E" stroke-width="1" />
+    
+    <!-- Token ID Labels, only for valid tokens -->
+    <text x="210" y="75" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#4CAF50" font-weight="bold">ID: 12580</text>
+    <text x="390" y="75" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#4CAF50" font-weight="bold">ID: 23789</text>
+    
+    <!-- Token Text Labels -->
+    <text x="210" y="95" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#4CAF50" font-weight="bold">"true"</text>
+    <text x="390" y="95" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#4CAF50" font-weight="bold">"false"</text>
+  </g>
+  
+  <!-- Final Filtered Vector Section -->
+  <g transform="translate(50, 300)">
+    <!-- Label -->
+    <text x="0" y="0" font-family="Arial, sans-serif" font-size="16" font-weight="bold">Resulting Logits Vector (valid tokens only):</text>
+    
+    <!-- Vector visualization - just the valid tokens -->
+    <rect x="250" y="15" width="200" height="50" fill="#e8f5e9" stroke="#4CAF50" stroke-width="2" rx="5" ry="5"/>
+    
+    <!-- Valid token values -->
+    <text x="300" y="45" font-family="Courier, monospace" font-size="14" text-anchor="middle" fill="#4CAF50" font-weight="bold">0.629</text>
+    <text x="400" y="45" font-family="Courier, monospace" font-size="14" text-anchor="middle" fill="#4CAF50" font-weight="bold">0.413</text>
+    
+    <!-- Valid token IDs -->
+    <text x="300" y="75" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#4CAF50" font-weight="bold">ID: 12580</text>
+    <text x="400" y="75" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#4CAF50" font-weight="bold">ID: 23789</text>
+    
+    <!-- Valid token text -->
+    <text x="300" y="95" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#4CAF50" font-weight="bold">"true"</text>
+    <text x="400" y="95" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#4CAF50" font-weight="bold">"false"</text>
+  </g>
+  
+  <!-- Arrows connecting sections -->
+  <line x1="400" y1="140" x2="400" y2="180" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="400" y1="255" x2="400" y2="290" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>
+  
+  <!-- Arrowhead definition -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#666"/>
+    </marker>
+  </defs>
+</svg>
