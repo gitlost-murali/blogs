@@ -11,7 +11,7 @@ tags:
   - Constrained Decoding
 toc: true
 header:
-  teaser: "assets/images/struct-gen-triton-kernel/simple-logits-masking.svg"
+  teaser: "assets/images/struct-gen-triton-kernel/block-level-speed-ups.png"
 ---
 
 # The Problem: Inefficient Computation in Constrained Decoding
