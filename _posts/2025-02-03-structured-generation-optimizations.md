@@ -262,7 +262,7 @@ The efficiency of our approach depends heavily on how the allowed tokens are dis
 - We can potentially reorder the vocabulary to cluster commonly allowed tokens together, improving block-level filtering efficiency. But this can get messy when we have multiple constraints.
 
 
-## Conclusion
+# Conclusion
 
 We've explored different strategies for optimizing constrained decoding:
 
@@ -272,7 +272,7 @@ We've explored different strategies for optimizing constrained decoding:
 
 Remember that these optimizations are complementary to the core benefits of structured generation. 
 
-## Future Work
+# Future Work
 
 It would be interesting to explore additional optimizations:
 1. Batching the CUDA kernel for handling batched sequences
