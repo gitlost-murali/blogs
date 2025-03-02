@@ -1,7 +1,7 @@
 ---
 title: "CUDA Study Log 4: Optimizing Constrained Decoding with CUDA"
 excerpt: "Update traditional CUDA matrix multiplication kernel for constrained decoding"
-date: 2025-02-27
+date: 2025-03-02
 categories:
   - Blog
 tags:
