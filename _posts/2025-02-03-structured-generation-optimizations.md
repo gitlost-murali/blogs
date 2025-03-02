@@ -103,6 +103,7 @@ By the way, if you want to see how a pydantic schema is converted to an FSM, you
 </figure>
 
 ## 2. Optimized Matrix Multiplication
+
 Once we have an FSM, we can identify the allowed tokens for each state and only compute logits for those tokens.
 Instead of the standard computation:
 
@@ -122,9 +123,11 @@ __Performance Benefits__:
 - __Memory reduction__: Only use embedding weights of allowed tokens. Reduced memory transfers between GRAM and processors/threads.
 - __Computation reduction__: Matrix multiplication size dramatically reduced
 
+__Limitations for Batching__: My only chagrin with this approach is its inflexibility during batching. When processing batches of sequences with different FSMs, the optimization becomes problematic. Each sequence in the batch may have different allowed tokens based on its current state, which prevents efficient slicing of embedding weights across the entire batch. The need for sequence-specific token filtering reduces parallelism and computational efficiency. Consequently, this approach doesn't scale well for batched processing in production environments.
+
 ## 3. Kernel based optimization
 
-Instead of modifying the model architecture, we can implement dynamic filtering directly in the matrix multiplication kernel. This approach:
+Instead of modifying/slicing the final layer, we can implement dynamic filtering directly in the matrix multiplication kernel. This approach:
 
 - Maintains the model's final layer unchanged
 - Uses a CUDA kernel to filter logits during computation
@@ -233,10 +236,14 @@ Now that we have a kernel that can filter the output at the block level, we can 
   <pre><code>b = tl.load(b_ptrs, mask=((offs_k[:, None] < K - k * BLOCK_SIZE_K) <span class="inserted">& (allowed_cols_mask[None, :] != 0)</span>), other=0.0)</code></pre>
 </div>
 
-In the code above, we modify the mask condition when loading input data (b) to include `(allowed_cols_mask[None, :] != 0)`. This ensures we only load data for allowed columns, saving time on loading data for non-allowed columns.
+In the code above, we modify the mask condition when loading input data (b) to include `(allowed_cols_mask[None, :] != 0)`. This ensures we only load data for allowed columns, saving time (*hopefully ;) *) on loading data for non-allowed columns.
 
 
 ### 3.3 The benchmarks
+
+For matrices, A & B of size `[1, 3072]` and `[3072, 128k]` respectively, we can see the speedups for different filtering strategies:
+
+> The current kernel is only written for batch size 1. I will work on it later to support batching.
 
 <figure>
   <img src="{{ site.url }}/assets/images/struct-gen-triton-kernel/block-level-speed-ups.png/" alt="Structured Generation Teaser">
@@ -257,43 +264,39 @@ In the code above, we modify the mask condition when loading input data (b) to i
 </figure>
 
 
-Based on the benchmarks, we can see that the block-level filtering provides the most significant speedup, followed by the thread-level filtering. The column-level filtering provides a modest speedup. The reason for this is that the block-level filtering is more efficient at reducing the number of computations, while the thread-level filtering is more efficient at reducing the number of memory transfers.
+As shown in the figures above, we can see that the custom CUDA kernel provides better speedups as the number of allowed tokens decreases. However, the `block+thread-level` filtering performs worse than the `block-level` only filtering. Let's explore why this happens and what it means for optimization strategies.
 
-#### 3.3.1 Memory layout considerations
+### 3.3.1 Understanding Thread-Level Filtering Performance
+
+Despite our initial expectation that finer-grained filtering would yield better performance, thread-level filtering often underperforms block-level filtering alone. This performance regression can be attributed to several GPU architecture characteristics:
+
+- __Warp Divergence:__ When using thread-level filtering, threads within the same warp execute different code paths based on whether their column is allowed or not. This creates warp divergence, where the GPU must serialize execution of different paths, reducing parallelism.
+- __Memory Access Patterns:__ GPUs are optimized for coalesced memory access, where threads in a warp access contiguous memory locations. Thread-level filtering disrupts this pattern, leading to suboptimal memory bandwidth utilization.
+- __Computation vs. Memory Throughput:__ Modern GPUs can perform computations much faster than they can fetch data from memory. By trying to skip computations at the thread level, we might be optimizing for compute (which isn't the bottleneck) while introducing memory access inefficiencies (which is often the bottleneck).
+
+These factors explain why the seemingly more precise thread-level filtering actually degrades performance. The overhead of the additional masking operations and the resulting inefficiencies in GPU execution outweigh the benefits of skipping computations for individual columns.
+
+#### 3.3.2 Memory layout considerations
 
 The efficiency of our approach depends heavily on how the allowed tokens are distributed. If allowed tokens are scattered randomly across the vocabulary, we might still need to process many blocks. However, in practice:
+
 - For many constrained decoding scenarios, the number of allowed tokens is small compared to the vocabulary size.
 - We can potentially reorder the vocabulary to cluster commonly allowed tokens together, improving block-level filtering efficiency. But this can get messy when we have multiple constraints.
-
-### 3.4 Performance Comparison
-
-The performance benefits of this approach are most significant when:
-- The number of allowed tokens is small compared to the vocabulary size
-- The allowed tokens are clustered together in the vocabulary
-- The computation is memory-bound rather than compute-bound
 
 
 ## Conclusion
 
-We've explored three levels of structured generation optimization:
+We've explored different strategies for optimizing constrained decoding:
 
-1. Fixed structure provides the simplest optimization with significant speedup
-2. Dynamic structure offers flexibility with moderate performance gains
-3. CUDA implementation delivers maximum performance for complex cases
+1. Compressing the FSM provides a simple optimization with significant speedup
+2. Optimized matrix multiplication offers performance gains
+3. CUDA implementation delivers performance gains and can handle complex cases
 
-The choice between these approaches depends on your specific needs:
-- For simple schemas with limited options, the fixed structure approach is sufficient
-- For complex but predictable schemas, the dynamic approach provides a good balance
-- For high-performance requirements or complex schemas, the CUDA implementation is optimal
-
-Remember that these optimizations are complementary to the core benefits of structured generation: improved reliability and reduced hallucination. By making structured generation faster, we remove one of the main barriers to its adoption in production systems.
+Remember that these optimizations are complementary to the core benefits of structured generation. 
 
 ## Future Work
 
-We're continuing to explore additional optimizations:
+It would be interesting to explore additional optimizations:
 1. Batched CUDA kernels for multi-sequence generation
-2. Pruning impossible states during initialization
-3. Caching common state transitions
-4. Hybrid approaches that combine different optimization strategies
+2. Hybrid approaches that combine different optimization strategies
 
-Stay tuned for more updates as we push the boundaries of structured generation performance! 
