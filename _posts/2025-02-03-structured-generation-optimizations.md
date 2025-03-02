@@ -1,5 +1,5 @@
 ---
-title: "CUDA Study Log 4: Optimizing Constrained Decoding with CUDA"
+title: "CUDA Study Log 4: Optimizing Constrained Decoding with triton kernel"
 excerpt: "Update traditional CUDA matrix multiplication kernel for constrained decoding"
 date: 2025-03-02
 categories:
