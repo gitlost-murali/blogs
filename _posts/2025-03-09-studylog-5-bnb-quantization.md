@@ -18,10 +18,6 @@ header:
 
 # The Need for Speed (and Memory): Why Quantization Matters
 
-Large Language Models (LLMs) are powerful but notoriously resource-hungry. Training and even just running inference with models boasting billions of parameters require significant GPU memory (GRAM) and computational power. Storing weights in standard 32-bit floating-point (FP32) format consumes vast amounts of memory (e.g., a 7B parameter model needs ~28GB just for weights!), and performing matrix multiplications with these large tensors is computationally expensive.
-
-This is where **quantization** comes in. It's a technique to reduce the memory footprint and potentially accelerate the computation of neural networks by representing weights and/or activations with lower-precision data types, such as 8-bit integers (INT8), instead of the usual FP32 or 16-bit formats (FP16, BF16).
-
 In this post, we'll dive into 8-bit quantization, specifically exploring how the popular `bitsandbytes` library implements it, setting the stage for potentially optimizing it further with custom CUDA kernels using Triton.
 
 # Level 1: 8-bit Quantization with `bitsandbytes`
@@ -37,30 +33,9 @@ The fundamental idea behind 8-bit quantization is to map the range of FP32 or FP
 
 `bitsandbytes` employs **vector-wise quantization** for linear layers. This means that instead of using a single scaling factor for the entire weight matrix, it calculates a separate scaling factor for each row (or column, depending on the operation). This finer granularity helps preserve more information and maintain model accuracy compared to simpler per-tensor quantization.
 
-# Mathematical Notation for Vector-wise Quantization
+## Row-wise quantization with example
 
-The vector-wise quantization process can be expressed mathematically as follows:
-
-Given an input tensor $\mathbf{X} \in \mathbb{R}^{m \times n}$ with $m$ rows, the quantization to $b$ bits produces:
-- A quantized tensor $\mathbf{Q} \in \mathbb{Z}^{m \times n}$ 
-- A scale vector $\mathbf{s} \in \mathbb{R}^{m \times 1}$
-
-## Equations
-
-For each row vector $\mathbf{X}_i$ (where $i \in \{1,2,...,m\}$):
-
-1. **Scale computation**: $s_i = \max(|\mathbf{X}_i|)$
-
-2. **Quantization formula**: $Q_{i,j} = \text{round}\left(\frac{X_{i,j} \cdot N}{s_i}\right)$
-   where $N = 2^{b-1}-1$ (127 for 8-bit)
-
-3. **Clamping**: $Q_{i,j} = \text{clamp}(Q_{i,j}, -N-1, N)$
-
-4. **Dequantization** (to recover approximated values): $\hat{X}_{i,j} = \frac{Q_{i,j} \cdot s_i}{N}$
-
-## Example
-
-Let's quantize a simple 2×3 tensor to 8 bits:
+Let's quantize a simple 2×3 tensor row-wise to 8 bits:
 
 ```
 X = [[2.5,  -6.1,  1.0],
@@ -241,7 +216,7 @@ except Exception as e:
 
 # Note: Direct comparison of quantized values might show small differences due to specifics
 # of implementation (e.g., exact rounding methods, handling of edge cases).
-
+```
 # The Forward Pass: Where Does De-quantization Happen?
 
 This is the crucial part. We have INT8 weights and scaling factors sitting in GRAM. Neural network computations, especially matrix multiplications (GEMM), typically require FP16 or FP32 operands. So, how do we perform `output = activation @ weight.T + bias`?
