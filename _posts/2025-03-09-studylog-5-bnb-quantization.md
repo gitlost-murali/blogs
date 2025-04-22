@@ -37,6 +37,67 @@ The fundamental idea behind 8-bit quantization is to map the range of FP32 or FP
 
 `bitsandbytes` employs **vector-wise quantization** for linear layers. This means that instead of using a single scaling factor for the entire weight matrix, it calculates a separate scaling factor for each row (or column, depending on the operation). This finer granularity helps preserve more information and maintain model accuracy compared to simpler per-tensor quantization.
 
+# Mathematical Notation for Vector-wise Quantization
+
+The vector-wise quantization process can be expressed mathematically as follows:
+
+Given an input tensor $\mathbf{X} \in \mathbb{R}^{m \times n}$ with $m$ rows, the quantization to $b$ bits produces:
+- A quantized tensor $\mathbf{Q} \in \mathbb{Z}^{m \times n}$ 
+- A scale vector $\mathbf{s} \in \mathbb{R}^{m \times 1}$
+
+## Equations
+
+For each row vector $\mathbf{X}_i$ (where $i \in \{1,2,...,m\}$):
+
+1. **Scale computation**: $s_i = \max(|\mathbf{X}_i|)$
+
+2. **Quantization formula**: $Q_{i,j} = \text{round}\left(\frac{X_{i,j} \cdot N}{s_i}\right)$
+   where $N = 2^{b-1}-1$ (127 for 8-bit)
+
+3. **Clamping**: $Q_{i,j} = \text{clamp}(Q_{i,j}, -N-1, N)$
+
+4. **Dequantization** (to recover approximated values): $\hat{X}_{i,j} = \frac{Q_{i,j} \cdot s_i}{N}$
+
+## Example
+
+Let's quantize a simple 2×3 tensor to 8 bits:
+
+```
+X = [[2.5,  -6.1,  1.0],
+     [0.3,   0.2, -0.1]]
+```
+
+### Step 1: Calculate scales (max absolute value per row)
+- Row 1: 
+$s_1 = \max(|2.5|, |-6.1|, |1.0|) = 6.1$
+- Row 2:
+$s_2 = \max(|0.3|, |0.2|, |-0.1|) = 0.3$
+
+### Step 2: Quantize each element
+For 8-bit, $N = 127$
+
+Row 1:
+- $Q_{1,1} = \text{round}(\frac{2.5 \times 127}{6.1}) = \text{round}(52.05) = 52$
+- $Q_{1,2} = \text{round}(\frac{-6.1 \times 127}{6.1}) = \text{round}(-127) = -127$
+- $Q_{1,3} = \text{round}(\frac{1.0 \times 127}{6.1}) = \text{round}(20.82) = 21$
+
+Row 2:
+- $Q_{2,1} = \text{round}(\frac{0.3 \times 127}{0.3}) = \text{round}(127) = 127$
+- $Q_{2,2} = \text{round}(\frac{0.2 \times 127}{0.3}) = \text{round}(84.67) = 85$
+- $Q_{2,3} = \text{round}(\frac{-0.1 \times 127}{0.3}) = \text{round}(-42.33) = -42$
+
+Resulting in quantized tensor:
+```
+Q = [[52, -127, 21],
+     [127, 85, -42]]
+```
+
+With scales:
+```
+s = [[6.1],
+     [0.3]]
+```
+
 So, after quantization, a linear layer's weights are stored in GRAM as:
 
 *   An INT8 tensor (`weight.data`, also known as `weight.CB`).
@@ -44,56 +105,142 @@ So, after quantization, a linear layer's weights are stored in GRAM as:
 
 ## A Simple Example (Conceptual Code)
 
-Let's illustrate how you might apply this using `bitsandbytes` (leveraging the Hugging Face Transformers integration for simplicity):
+Let's illustrate using a layer from a small model loaded via `transformers` and compare the `bitsandbytes` quantization with a conceptual "from-scratch" approach.
 
 ```python
 import torch
+import torch.nn as nn
 from transformers import AutoModelForCausalLM, BitsAndBytesConfig
+import bitsandbytes as bnb # We still need this to check the layer type
 
-# Define the 8-bit quantization configuration
+# --- Conceptual From-Scratch Quantization ---
+# Note: This is simplified for illustration and doesn't include
+# optimizations like outlier handling found in bnb.
+def quantize_vectorwise(tensor, bits=8):
+    if bits != 8: raise NotImplementedError("Only 8-bit supported")
+    # Calculate scale (absolute max) per row (vector)
+    # We use FP32 for scale calculation stability
+    # Ensure tensor is on CPU for .float() if it's quantized
+    tensor_float = tensor.cpu().float() if tensor.device.type != 'cpu' else tensor.float()
+    scale = tensor_float.abs().max(dim=1, keepdim=True).values
+    # Avoid division by zero
+    scale = torch.where(scale == 0, torch.tensor(1.0, dtype=torch.float32), scale)
+    scale = scale.to(tensor.device) # Move scale back to original device
+    
+    # Quantization formula: int_val = round(float_val * (max_int / scale))
+    max_int = (2**(bits - 1)) - 1 # For INT8, this is 127
+    
+    # Ensure scale is broadcastable for the division
+    # Perform calculation in FP32 for stability before converting to INT8
+    quantized_tensor = (tensor.float() * max_int / scale.float()).round().clamp(-max_int-1, max_int).to(torch.int8)
+    
+    # Return INT8 weights and FP16 scale (common practice)
+    return quantized_tensor, scale.half()
+
+def dequantize_vectorwise(quantized_tensor, scale):
+    # Dequantization formula: float_val = int_val * scale / max_int
+    max_int = 127.0 # For INT8
+    # Ensure scale is broadcastable and on correct device/dtype
+    if scale.dim() == 1:
+        scale = scale.unsqueeze(1)
+    scale = scale.to(quantized_tensor.device).float()
+    
+    # Perform dequantization to FP16 (matching common practice)
+    dequantized_tensor = (quantized_tensor.float() * scale / max_int).half()
+    return dequantized_tensor
+
+# --- Example Setup ---
+model_name = "EleutherAI/gpt-neo-125M"
+layer_to_inspect = "transformer.h.0.mlp.c_fc" # Example layer
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using device: {device}")
+print(f"Loading model: {model_name}")
+
+# --- Load Original FP16 Weights ---
+# Load the model in its original precision (likely FP16 or FP32)
+try:
+    original_model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16).to(device)
+    # Extract the original weights for the layer we want to inspect
+    layer_path = layer_to_inspect.split('.')
+    original_layer = original_model
+    for part in layer_path:
+        original_layer = getattr(original_layer, part)
+    original_weights = original_layer.weight.data.clone()
+    print(f"Successfully loaded original FP16 weights for layer: {layer_to_inspect}")
+except Exception as e:
+    print(f"Could not load original model or extract layer: {e}")
+    original_weights = None # Set to None if loading fails
+
+# --- Apply From-Scratch Quantization (if original weights loaded) ---
+if original_weights is not None:
+    scratch_quantized_weights, scratch_scale = quantize_vectorwise(original_weights)
+    print("--- From-Scratch Quantization --- ")
+    print(f"  Weight dtype: {scratch_quantized_weights.dtype}")
+    print(f"  Weight shape: {scratch_quantized_weights.shape}")
+    print(f"  Scale dtype: {scratch_scale.dtype}")
+    print(f"  Scale shape: {scratch_scale.shape}")
+    print(f"  Example quantized weights (first 5 of first row):
+{scratch_quantized_weights[0, :5]}")
+    print(f"  Example scale (first 5 rows): {scratch_scale[:5].flatten()}")
+else:
+    print("Skipping from-scratch quantization as original weights couldn't be loaded.")
+
+# --- Load bitsandbytes Quantized Model ---
+print("\nLoading model with bitsandbytes 8-bit quantization...")
 quantization_config = BitsAndBytesConfig(load_in_8bit=True)
 
-# Load a model (e.g., a small dummy model for illustration)
-# Replace "gpt2" with a relevant small model if needed
-model_name = "gpt2" 
-model = AutoModelForCausalLM.from_pretrained(
-    model_name,
-    quantization_config=quantization_config,
-    # device_map="auto" helps distribute large models, useful but not essential for small ones
-    # For actual use, ensure CUDA is available
-    device_map="auto" 
-)
-
-# Now, linear layers within 'model' have been replaced with bnb.nn.Linear8bitLt
-# The weights are stored in INT8 format with scaling factors on the GPU
-
-# Example: Accessing a quantized layer (structure might vary by model)
-# Note: Direct access like this is for illustration; typically you just use the model.
 try:
-    quantized_layer = model.transformer.h[0].mlp.c_fc # Example path in GPT-2
-    if isinstance(quantized_layer, bnb.nn.Linear8bitLt):
-        print(f"Layer {quantized_layer} quantized.")
-        print(f"  Weight data type: {quantized_layer.weight.dtype}") # Should be torch.int8
-        print(f"  Weight shape: {quantized_layer.weight.shape}")
-        if hasattr(quantized_layer.weight, 'SCB'):
-             print(f"  Scaling factor shape: {quantized_layer.weight.SCB.shape}")
+    bnb_model = AutoModelForCausalLM.from_pretrained(
+        model_name,
+        quantization_config=quantization_config,
+        device_map="auto" # Handles placing layers on devices
+    )
+    
+    # Access the quantized layer
+    layer_path = layer_to_inspect.split('.')
+    bnb_layer = bnb_model
+    for part in layer_path:
+        bnb_layer = getattr(bnb_layer, part)
+        
+    print(f"\n--- bitsandbytes Quantization (via transformers) ---")
+    if isinstance(bnb_layer, bnb.nn.Linear8bitLt):
+        # Access quantized weights (CB) and scaling factors (SCB)
+        # Note: Weights might be on 'meta' device until first forward pass if using accelerate
+        # We might need to move them explicitly for inspection if device_map was used.
+        # Let's try accessing state if CB/SCB aren't directly on the weight
+        if hasattr(bnb_layer.weight, 'CB') and bnb_layer.weight.CB is not None:
+            bnb_quantized_weights = bnb_layer.weight.CB
+            bnb_scale = bnb_layer.weight.SCB
+        elif hasattr(bnb_layer, 'state') and hasattr(bnb_layer.state, 'CB') and bnb_layer.state.CB is not None:
+             bnb_quantized_weights = bnb_layer.state.CB
+             bnb_scale = bnb_layer.state.SCB
+             print("  (Accessed CB/SCB via layer.state)")
         else:
-             # SCB might be in state if not fully initialized/quantized yet
-             print(f"  Scaling factor shape (from state): {quantized_layer.state.SCB.shape}")
+            print("  Could not find CB/SCB directly or via state.")
+            bnb_quantized_weights = None
+            bnb_scale = None
+
+        if bnb_quantized_weights is not None and bnb_scale is not None:
+            # Ensure weights are on the expected device for printing
+            bnb_quantized_weights = bnb_quantized_weights.to(device)
+            bnb_scale = bnb_scale.to(device)
+            
+            print(f"  Layer Type: {type(bnb_layer)}")
+            print(f"  Weight dtype: {bnb_quantized_weights.dtype}")
+            print(f"  Weight shape: {bnb_quantized_weights.shape}")
+            print(f"  Scale dtype: {bnb_scale.dtype}")
+            print(f"  Scale shape: {bnb_scale.shape}")
+            print(f"  Example quantized weights (first 5 of first row):
+{bnb_quantized_weights[0, :5]}")
+            print(f"  Example scale (first 5 rows): {bnb_scale[:5].flatten()}")
+    else:
+        print(f"  Layer {layer_to_inspect} is not a bnb.nn.Linear8bitLt instance. Type: {type(bnb_layer)}")
 
 except Exception as e:
-    print(f"Could not access example layer: {e}")
+    print(f"Could not load quantized model or access layer: {e}")
 
-# You can now perform inference as usual
-# inputs = tokenizer("Hello, world!", return_tensors="pt").to(model.device)
-# outputs = model.generate(**inputs)
-# print(tokenizer.decode(outputs[0]))
-
-print(f"Original model memory footprint: {model.get_memory_footprint(return_buffers=True) / (1024**3):.2f} GB") 
-# Note: get_memory_footprint might need adjustment for accurate quantized size view
-```
-
-This code snippet demonstrates loading a model with 8-bit quantization enabled. Under the hood, `transformers` uses `bitsandbytes` to replace standard `torch.nn.Linear` layers with `bnb.nn.Linear8bitLt`. The quantization itself typically happens when the model parameters are moved to the GPU (`.to(device)` or via `device_map`).
+# Note: Direct comparison of quantized values might show small differences due to specifics
+# of implementation (e.g., exact rounding methods, handling of edge cases).
 
 # The Forward Pass: Where Does De-quantization Happen?
 
