@@ -15,6 +15,8 @@ header:
   teaser: "assets/images/interactive-evals/thisisfine_wo_evals.png"
 ---
 
+> This piece grew out of a conversation with [Niklas Finken](https://www.linkedin.com/in/niklas-finken/).
+
 ## About
 
 In this post, let's talk about  "interactive evaluations" — a lightweight, automated way to test multi-turn chatbots at scale.
