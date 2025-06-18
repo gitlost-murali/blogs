@@ -41,7 +41,7 @@ However, a few days later, you notice something troubling - the chat assista
 
 ## Why Evaluations are Essential?
 
-Evaluations are the compass guiding development. They systematically track how each incremental change impacts performance, highlighting any unintended consequences. Rather than relying solely on intuition or anecdotal feedback, structured evaluations provide actionable insights and clear accountability, making it easier for teams to make informed decisions confidently. In short, evaluations are essential for maintaining and improving conversational experiences over time.
+Evaluations systematically track how each incremental change impacts performance, highlighting any unintended consequences. Rather than relying solely on intuition or anecdotal feedback, evals provide actionable insights and clear accountability, making it easier for teams to make informed decisions confidently.
 
 As someone who often threatened or bribed LLMs to get work done, it was quite difficult to know which warnings/rewards got hold of the LLM without evals.
 
