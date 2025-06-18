@@ -55,10 +55,10 @@ Yet, despite their clear importance, current chatbot evaluation methods are sign
 Let me show you what I mean with a real conversation:
 
 ```
-User: Who founded Facebook?
-Chatbot: Mark
-User: Mark who? Provide the full name.
-Chatbot: Mark Zuckerberg
+User: Can you share the outcomes of NVIDIA's board meeting?
+Chatbot: Ofcourse, can you let me know which year board meeting are you looking for?
+User: 2024
+Chatbot: Based on my search, I found that .....
 ```
 
 In this scenario, the chatbot demonstrates context-awareness by correctly engaging in follow-up interactions. However, traditional evaluation methods would penalize this exchange for not immediately providing complete information in the first response. This oversight highlights a fundamental flaw: conventional metrics simply cannot accurately assess performance across natural, evolving multi-turn conversations.
