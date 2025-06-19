@@ -1,7 +1,7 @@
 ---
 title: "CUDA Study Log 5: Demystifying 8-bit Quantization with bitsandbytes"
 excerpt: "Understanding the mechanics of 8-bit quantization and the role of CUDA kernels in bitsandbytes for efficient LLM inference."
-date: 2025-03-09
+date: 2025-06-19
 categories:
   - Blog
 tags:
