@@ -21,7 +21,7 @@ Building agents means juggling data, developers, and the agents themselves. Shan
 
 ## Background & Motivation
 
-LLM adoption is rocketing ahead of our ability to systematically track regressions. I once asked an engineer shipping an “agentic hot‑shot” product how they benchmarked. The answer: “We use VIBES—Very Intelligent Business Evaluation Score.” Cool acronym, zero rigor.
+LLM adoption is rocketing ahead of our ability to systematically track regressions. I once asked an engineer shipping an “agentic hot‑shot” product how they benchmarked it. The answer: “We use VIBES—Very Intelligent Business Evaluation Score.”
 
 Agents aren’t just fancy prompts; they’re an orchestration of LLMs, tools, memory, and business logic. As soon as you wire in a calculator tool, a single query like 24 + 28 can fork three ways:
 
@@ -35,34 +35,40 @@ Agents aren’t just fancy prompts; they’re an orchestration of LLMs, tools, m
 
 
 
-That non‑determinism makes traditional integration tests crumble. Enter the Three Gulfs model—a map of where evaluation pain creeps in.
+That non‑deterministic behavior makes traditional integration tests crumble. Enter the Three Gulfs model—a map of where evaluation pain creeps in.
 
 
 ---
 
 ## Gulf #1 — Data ↔ Developer (Gulf of Comprehension)
 
-When devs stare at dashboards, they’re really peeking through a keyhole. Example:
+When devs stare at evaluation dashboards, they’re really peeking through a keyhole. Example:
 
-Grammarly‑style next‑sentence suggestion
+### 1. Next‑sentence suggestion system
 
-UX metric · Acceptance Rate: % of suggestions a user accepts.
+1. To evaluate the model's performance in real time, we can use a UX (User experience) metric like Acceptance rate of the suggestions. 
 
-Observation: Users who write shaky English often edit good suggestions into worse ones.
+Metric-1; Acceptance Rate: % of suggestions a user accepts.
+
+Another metric can be checking nuances like making changes to the accepted suggestions. 
+
+Metric-2; Edit Distance: Number of edits made by the User to an accepted suggestion. 
+
+When the system is deployed and tracked, users often edited the suggestions. This would mean the model is bad. BUT, in reality, Users who write shaky English often edit good suggestions into worse ones.
 
 Outcome: Acceptance Rate tanks, devs panic—until manual review shows the model was fine, the users weren’t.
 
 
-Cursor IDE memory prompts
+### 2. Cursor IDE memory prompts
 
-The model nails relevant recommendations.
+Cursor launched a new feature where it tries to infer the Latent user preferences and store them as preferences. 
 
-I keep smashing “Deny” because of privacy nerves.
+The model nails relevant recommendations but I keep clicking “Deny” because of privacy concerns or I don't want project specific preferences to be applied over all projects.
 
 The metric signals failure; reality says otherwise.
 
 
-Takeaway: Dashboards lie. Schedule routine manual error dives to ground‑truth what the data really means.
+**Takeaway:** Eval Dashboards cannot faithfully reflect the failure modes. Schedule routine manual error dives to ground‑truth what the data really means. Manual error analysis is a pill every Developer must consume. 
 
 
 ---
@@ -77,8 +83,8 @@ Humans are awful at giving precise instructions. Picture a recipe chatbot where 
 
 One‑pot only?
 
-
-Because you were vague, the agent rambles—burning 3× more chain‑of‑thought tokens as it wrestles with contradictions in your prompt.
+From recent performance regression checks ainst an agent, I observed the token usage to spike by 300% or 3x purely because the instructions were vague and contradictory.
+Because you were vague, the agent rambles—burning more chain‑of‑thought tokens as it goes into self-monologue to de-clutter the contradictions in your prompt. 
 
 Fixes:
 
