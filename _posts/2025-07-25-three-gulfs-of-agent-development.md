@@ -12,11 +12,6 @@ Tags:
 toc: true
 ---
 
-Bridging the Three Gulfs of Agentic Evaluation
-
-> Agentic systems are the new hot‑shot in town—but evaluating them without losing your mind is still an unsolved puzzle.
----
-
 TL;DR
 
 Building agents means juggling data, developers, and the agents themselves. Shankar et al. (2024) call the mismatches between those three players the Three Gulfs. If you can spot and bridge each gulf, your eval game levels up fast.
