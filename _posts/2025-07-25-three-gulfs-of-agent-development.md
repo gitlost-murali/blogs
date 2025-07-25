@@ -15,10 +15,6 @@ toc: true
 Bridging the Three Gulfs of Agentic Evaluation
 
 > Agentic systems are the new hot‑shot in town—but evaluating them without losing your mind is still an unsolved puzzle.
-
-
-
-
 ---
 
 TL;DR
