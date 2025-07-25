@@ -1,4 +1,3 @@
-
 ---
 title: "Bridging the Three Gulfs of Agentic Evaluation"
 excerpt: "A practical framework for spotting and fixing evaluation blind spots in agentic LLM pipelines, based on Shankar et al.’s Three Gulfs model."
