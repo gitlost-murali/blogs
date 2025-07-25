@@ -46,17 +46,17 @@ When devs stare at evaluation dashboards, they’re really peeking through a key
 
 ### 1. Next‑sentence suggestion system
 
-1. To evaluate the model's performance in real time, we can use a UX (User experience) metric like Acceptance rate of the suggestions. 
+* To evaluate the model's performance in real time, we can use a UX (User experience) metric like Acceptance rate of the suggestions. 
 
 Metric-1; Acceptance Rate: % of suggestions a user accepts.
 
-Another metric can be checking nuances like making changes to the accepted suggestions. 
+* Another metric can be checking nuances like making changes to the accepted suggestions. 
 
 Metric-2; Edit Distance: Number of edits made by the User to an accepted suggestion. 
 
-When the system is deployed and tracked, users often edited the suggestions. This would mean the model is bad. BUT, in reality, Users who write shaky English often edit good suggestions into worse ones.
+When the system is deployed and tracked, users often edited the suggestions. This would mean the model is bad. BUT, in reality, users who write shaky English often edit good suggestions into worse ones.
 
-Outcome: Acceptance Rate tanks, devs panic—until manual review shows the model was fine, the users weren’t.
+**Outcome:** Acceptance Rate tanks, devs panic—until manual review shows the model was fine, the users weren’t.
 
 
 ### 2. Cursor IDE memory prompts
@@ -97,25 +97,13 @@ Fixes:
 3. Track token usage per request; it’s a cheap regression alarm.
 
 
-
-
 ---
 
 ## Gulf #3 — Data ↔ Agent (Gulf of Generalization)
 
-No matter how solid your alignment stack, clever users will jailbreak and coax the model into toxicity, policy leaks, or worse. Edge‑cases evolve faster than guardrails.
+No matter how solid your system prompt is, clever users will jailbreak and coax the model into toxicity, policy leaks, or worse. Edge‑cases evolve faster than guardrails. This applies to any downstream tasks. We cannot generalize a model to handle 100% cases.
 
-**Remedies:**
-
-Keep an adversarial eval suite that grows with every jailbreak you spot.
-
-Rotate prompts + policies; static shields get reverse‑engineered.
-
-Monitor distribution drift—who is using your product and how.
-
-
-The gulf will never fully close, but you can narrow it.
-
+The Gulf of Generalization will never fully close, but you can narrow it. Monitor distribution drift—who is using your product and how. And iteratively fix your agent. 
 
 ---
 
