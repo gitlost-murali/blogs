@@ -40,7 +40,7 @@ Agents are an orchestration of LLMs, tools, memory, and business logic. As soon 
 3. It decides doing math is “small potatoes,” skips the tool, and still answers.
 
 
-Because this non-determinism makes failures hard to localize, it helps to frame agent development as a three-party juggle-data, developers, and LLMs-and to look for misalignments across them, the *Three Gulfs* ([Shankar et al. (2024)](https://arxiv.org/abs/2504.14764)).
+Because this non-determinism makes failures hard to localize, it helps to frame agent development as a three-party juggle (data, developers, and LLMs) and to look for misalignments across them, the *Three Gulfs* ([Shankar et al. (2024)](https://arxiv.org/abs/2504.14764)).
 
 ---
 
