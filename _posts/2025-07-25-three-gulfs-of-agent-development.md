@@ -16,6 +16,14 @@ TL;DR
 
 Building agents means juggling data, developers, and the agents themselves. Shankar et al. (2024) call the mismatches between those three players the Three Gulfs. If you can spot and bridge each gulf, your eval game levels up fast.
 
+<figure>
+  <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/regression_evals.jpg">  <img src="{{ site.url }}/{{ site.baseurl }}/assets/images/regression_evals.jpg" alt="Meme on regression"></a>
+  <figcaption>
+    <p>
+      <strong>Figure 1:</strong> How adding new features without regression looks like. 
+    </p>
+  </figcaption>
+</figure>
 
 ---
 
