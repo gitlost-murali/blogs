@@ -12,10 +12,6 @@ Tags:
 toc: true
 ---
 
-TL;DR
-
-Building agents means juggling data, developers, and the agents themselves. Shankar et al. (2024) call the mismatches between those three players the Three Gulfs. If you can spot and bridge each gulf, your eval game levels up fast.
-
 <figure>
   <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/regression_evals.jpg">  <img src="{{ site.url }}/{{ site.baseurl }}/assets/images/regression_evals.jpg" alt="Meme on regression"></a>
   <figcaption>
@@ -31,7 +27,7 @@ Building agents means juggling data, developers, and the agents themselves. Shan
 
 LLM adoption is rocketing ahead of our ability to systematically track regressions. I once asked an engineer shipping an “agentic hot‑shot” product how they benchmarked it. The answer: “We use VIBES—Very Intelligent Business Evaluation Score.”
 
-Agents aren’t just fancy prompts; they’re an orchestration of LLMs, tools, memory, and business logic. As soon as you wire in a calculator tool, a single query like 24 + 28 can fork three ways:
+Agents are an orchestration of LLMs, tools, memory, and business logic. As soon as you wire in a calculator tool, a single query like 24 + 28 can fork three ways:
 
 1. The agent calls the tool and returns 52—nice.
 
@@ -43,7 +39,9 @@ Agents aren’t just fancy prompts; they’re an orchestration of LLMs, tools, m
 
 
 
-That non‑deterministic behavior makes traditional integration tests crumble. Enter the Three Gulfs model—a map of where evaluation pain creeps in.
+This non‑deterministic behavior makes traditional integration tests crumble,  making it hard to identify the exact failure point.
+
+Agents development involves juggling data, developers, and the LLMs. [Shankar et al. (2024)](https://arxiv.org/abs/2504.14764) call the misalignment between those three players the Three Gulfs.
 
 
 ---
