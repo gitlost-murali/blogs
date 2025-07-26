@@ -58,21 +58,21 @@ Metric-1; Acceptance Rate: % of sentence suggestions a user accepts.
 
 Metric-2; Edit Distance: Number of edits made by the User to an accepted suggestion. 
 
-When the system is deployed and tracked, users often edited the suggestions. This would mean the model is bad. BUT, in reality, users who write shaky English often edit good suggestions into worse ones.
+When the system is deployed and tracked, users often edited the suggestions. This would mean the model is bad. BUT, in reality, users who write shaky English **often edit good suggestions into worse ones.**
 
 **Outcome:** Acceptance Rate tanks, devs panic—until manual review shows the model was fine, the users weren’t.
 
 
 ### 2. Cursor IDE memory prompts
 
-Cursor launched a new feature where it tries to infer the Latent user preferences and store them as preferences. 
+Cursor launched a new feature where it tries to infer the latent user preferences and store them as preferences. 
 
 The model nails relevant recommendations but I keep clicking “Deny” because of privacy concerns or I don't want project specific preferences to be applied over all projects.
 
 The metric signals failure; reality says otherwise.
 
 
-**Takeaway:** Eval Dashboards cannot faithfully reflect the failure modes. Schedule routine manual error dives to ground‑truth what the data really means. Manual error analysis is a pill every Developer must consume. 
+**Takeaway:** Eval Dashboards cannot faithfully reflect the failure modes. Schedule routine manual error dives to ground‑truth what the data really means. **Manual error analysis is a pill every developer must consume.**
 
 
 ---
