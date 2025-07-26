@@ -46,7 +46,7 @@ Because this non-determinism makes failures hard to localize, it helps to frame 
 
 ## Gulf #1 — Data ↔ Developer (Gulf of Comprehension)
 
-When devs stare at evaluation dashboards, they’re really peeking through a keyhole. Example:
+When devs stare at numbers on the evaluation dashboards, they’re really just peeking through a keyhole. Let's go through a few examples to understand why numbers alone can't provide a narrative of failure modes:
 
 ### 1. Next‑sentence suggestion system
 
