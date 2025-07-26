@@ -25,7 +25,9 @@ toc: true
 
 ## Background & Motivation
 
-LLM adoption is rocketing ahead of our ability to systematically track regressions. I once asked an engineer shipping an “agentic hot‑shot” product how they benchmarked it. The answer: “We use VIBES—Very Intelligent Business Evaluation Score.”
+LLM adoption is rocketing ahead of our ability to systematically track regressions. I once asked an engineer shipping an “agentic hot‑shot” product how they benchmarked it. The answer: “We use VIBES—Very Intelligent Business Evaluation Score.” A manual inspection like vibe-check may work in the initial phases but isn't suffice in the development cycle. There's a need for identifying the active players in the development cycle and bridging gaps between them.
+
+## Agents' Non-Deterministic Behavior
 
 Agents are an orchestration of LLMs, tools, memory, and business logic. As soon as you wire in a calculator tool, a single query like 24 + 28 can fork three ways:
 
