@@ -50,11 +50,11 @@ When devs stare at numbers on the evaluation dashboards, they’re really just p
 
 ### 1. Next‑sentence suggestion system
 
-* To evaluate the model's performance in real time, we can use a UX (User experience) metric like Acceptance rate of the suggestions. 
+* To evaluate the recommendation model's performance in real time, we can use a UX (User experience) metric like User Acceptance rate of the sentence suggestions. 
 
-Metric-1; Acceptance Rate: % of suggestions a user accepts.
+Metric-1; Acceptance Rate: % of sentence suggestions a user accepts.
 
-* Another metric can be checking nuances like making changes to the accepted suggestions. 
+* Another metric can be more nuanced like tracking the number of changes to the accepted suggestions. 
 
 Metric-2; Edit Distance: Number of edits made by the User to an accepted suggestion. 
 
