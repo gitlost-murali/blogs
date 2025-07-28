@@ -16,7 +16,7 @@ toc: true
   <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/regression_evals.jpg">  <img src="{{ site.url }}/{{ site.baseurl }}/assets/images/regression_evals.jpg" alt="Meme on regression"></a>
   <figcaption>
     <p>
-      <strong>Figure 1:</strong> How adding new features without regression looks like. 
+      <strong>Figure 1:</strong> How adding new features without regression check looks like. 
     </p>
   </figcaption>
 </figure>
