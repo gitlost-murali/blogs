@@ -135,5 +135,3 @@ Rinse, repeat.
 
 The Three Gulfs frame doesn’t magically grade your agent, but it tells you where to look when things go sideways. In the next post we’ll dig into prompt‑engineering recipes and eval metrics you can steal.
 
-Got your own war stories? Drop ’em—let’s compare scars.
-
