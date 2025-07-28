@@ -87,7 +87,7 @@ Humans are awful at giving precise instructions. Picture a recipe chatbot where 
 
 One‑pot only?
 
-From recent performance regression checks ainst an agent, I observed the token usage to spike by 300% or 3x purely because the instructions were vague and contradictory.
+From recent performance regression checks against an agent, I observed the token usage to spike by 300% or 3x purely because the instructions were vague and contradictory.
 Because you were vague, the agent rambles—burning more chain‑of‑thought tokens as it goes into self-monologue to de-clutter the contradictions in your prompt. 
 
 Fixes:
