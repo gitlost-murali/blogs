@@ -133,5 +133,5 @@ Rinse, repeat.
 
 ## Closing Thoughts & What’s Next
 
-The Three Gulfs frame doesn’t magically grade your agent, but it tells you where to look when things go sideways. In the next post we’ll dig into prompt‑engineering recipes and eval metrics you can steal.
+We spoke about the Three Gulfs framework which helps in identifying the possible failure modes and bridging gaps between the three entities (data, developers and LLMs). In the next post, let's talk about a basic LLM prompting schema and error analysis paradigms.
 
