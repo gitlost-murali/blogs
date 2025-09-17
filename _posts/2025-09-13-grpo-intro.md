@@ -11,6 +11,8 @@ Tags:
 - Policy Optimization
 
 toc: true
+header:
+  teaser: "assets/images/grpo-intro/grpo-overview-horizontal.png"
 ---
 
 ## Background & Motivation
