@@ -31,7 +31,10 @@ GRPO works on the FAFO principle - Fool Around and Find Out. Here's a brief over
 </figure>
 
 
-Think of it this way: instead of having a teacher grade each essay individually, GRPO has the teacher rank a batch of essays against each other. This relative ranking is often easier and more reliable than absolute scoring.
+### Why Advantages? 
+
+Although reward is already signalling if a specific response is better, you want to know how better is the current response compared to other responses for the same query. This is where advantages come in. Advantage is calculated by normalizing the rewards with mean and standard deviation.
+
 
 The core GRPO objective function is:
 
