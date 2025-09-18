@@ -214,7 +214,7 @@ loss = torch.min(loss_unclipped, loss_clipped)
 
 ## Why Not Just Generate New Data Every Step?
 
-YYou might wonder: why go through all this complexity with importance sampling and clipping? Why not just generate fresh answers for every gradient step?
+You might wonder: why go through all this complexity with importance sampling and clipping? Why not just generate fresh answers for every gradient step?
 
 This touches on a fundamental concept in reinforcement learning: **on-policy vs off-policy training**.
 
