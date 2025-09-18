@@ -69,7 +69,9 @@ $$\mathcal{L}_{GRPO} = \frac{1}{G} \sum_{i=1}^{G} \frac{1}{|o_i|} \sum_{t=1}^{|o
     <figcaption><b>Figure 3:</b> <i>Code Implementation of GRPO Loss Calculation</i></figcaption>
 </figure> -->
 
-Basically, we are looping over all generated answers i = 1 to G. And within each answer, we are looping over all tokens t = 1 to |o_i|. So, it's a two-nested for-loop.
+Basically, we are looping over all generated answers $i = 1$ to $G$. And within each answer, we are looping over all tokens $t = 1$ to $\lvert o_i \rvert$, where $\lvert o_i \rvert$ is the number of tokens in the $i$-th generated answer. So, it's a two-nested for-loop.
+
+<!-- to $$|o\_i|$$ -->
 
 ```python
 for each_generated_answer_i in generated_answers: # G in the equation
