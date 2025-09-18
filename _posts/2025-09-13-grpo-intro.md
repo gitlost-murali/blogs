@@ -216,7 +216,7 @@ loss = torch.min(loss_unclipped, loss_clipped)
 
 You might wonder: why go through all this complexity with importance sampling and clipping? Why not just generate fresh answers for every gradient step?
 
-This touches on a fundamental concept in reinforcement learning: **on-policy vs off-policy training**.
+This touches on a fundamental concept in reinforcement learning: **on-policy vs off-policy training**. Let's understand what they mean.
 
 ### On-Policy Training (The "Ideal" Approach)
 
@@ -234,7 +234,7 @@ for step in range(training_steps):
     current_model.update(loss)
 ```
 
-This is much simpler and mathematically "pure" - your gradients are always calculated with respect to data that your current model actually produced. No distribution shift, no stale data problems.
+This is much simpler and mathematically cleaner - your gradients are always calculated with respect to data that your current model actually produced. No distribution shift, no stale data problems.
 
 ### Off-Policy Training (The "Economic" Approach)
 
