@@ -62,20 +62,22 @@ Alright, it's big and scary. Let's focus on the atomic unit from above i.e
 
 $$\mathcal{L}_{GRPO} = \frac{1}{G} \sum_{i=1}^{G} \frac{1}{|o_i|} \sum_{t=1}^{|o_i|} \pi_\theta(o_{i,t}|q, o_{i,<t}) \hat{A}_{i,t}$$
 
-Now, let's convert this to code.
+### Now, let's convert this to code.
 
 <!-- <figure>
     <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/grpo-intro/loss_overview_code.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/grpo-intro/loss_overview_code.png"></a>
     <figcaption><b>Figure 3:</b> <i>Code Implementation of GRPO Loss Calculation</i></figcaption>
 </figure> -->
 
-```python
-for each_generated_answer_G in generated_answers: # G in the equation
-    advantage = calculate_advantage(each_generated_answer_G)
-    for each_token_o_i in each_generated _answer: # |o_i| in the equation
-        token_loss = pi_theta(each_token_o_i) * advantage
+Basically, we are looping over all generated answers i = 1 to G. And within each answer, we are looping over all tokens t = 1 to |o_i|. So, it's a two-nested for-loop.
 
-    loss_of_each_answer = sum(tokens_loss_in_answer) / len(each_generated_answer )
+```python
+for each_generated_answer_i in generated_answers: # G in the equation
+    advantage = calculate_advantage(each_generated_answer_i)
+    for each_token_o_t in each_generated_answer_i: # |o_i| in the equation
+        token_loss = pi_theta(each_token_o_t) * advantage
+
+    loss_of_each_answer = sum(tokens_loss_in_answer_i) / len(each_generated_answer_i)
 
 final_loss = sum(loss_of_all_answers) / len (generated_answers) # G in the equation
 ```
