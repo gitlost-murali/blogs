@@ -69,8 +69,11 @@ $$\mathcal{L}_{GRPO} = \frac{1}{G} \sum_{i=1}^{G} \frac{1}{|o_i|} \sum_{t=1}^{|o
     <figcaption><b>Figure 3:</b> <i>Code Implementation of GRPO Loss Calculation</i></figcaption>
 </figure> -->
 
-Basically, we are looping over all generated answers $i = 1$ to $G$. And within each answer, we are looping over all tokens $t = 1$ to $\lvert o_i \rvert$, where $\lvert o_i \rvert$ is the number of tokens in the $i$-th generated answer. So, it's a two-nested for-loop.
+Basically, we are looping over all generated answers $i = 1$ to $G$. And within each answer, we are looping over all tokens $t = 1$ to $\lvert o_i \rvert$, where $\lvert o_i \rvert$ is the number of tokens in the $i$-th generated answer. So, it's a two-nested for-loop over $i$ and $t$ against $\pi_\theta$. 
 
+And the $\pi_\theta$ in the equation simply refers to the log probabilities of the token $$o_{i,t}$$ given the query $q$ and the previous tokens $o_{i,<t}$.
+
+Here's the code equivalent of the above equation:
 <!-- to $$|o\_i|$$ -->
 
 ```python
@@ -93,8 +96,6 @@ for each_generated_answer_G in generated_answers: # G in the equation
 
 final_loss = sum(loss_of_each_answer) / len(generated_answers)
 ``` -->
-
-Here, the `pi_theta` simply refers to the log probabilities of the token $$o_{i,t}$$ given the query $q$ and the previous tokens $o_{i,<t}$.
 
 
 From the figure 3 below (same as figure 2), we can see that the advantage is calculated at sequence level or answer level. So, for each token, the loss is calculated as the product of the log probability of the token $o_{i,t}$ and the advantage ($\hat{A}_{i,t}$):
