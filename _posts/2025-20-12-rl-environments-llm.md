@@ -10,7 +10,12 @@ permalink: /:categories/:title
 
 # Background
 
-If you've ever played a video game, you already understand the core concept behind reinforcement learning environments. Consider a car racing game: your keyboard inputs (up/down/left/right) go into the game engine, which performs a step with your action (keyboard input) and returns an outcome - whether you crashed, crossed the finish line, or are still racing. This interaction loop is the foundation of RL environments for LLM training.
+Reinforcement learning follows the FAFO principle—Fool Around and Find Out ([more on this here]({{ site.url }}/{{ site.baseurl }}/grpo-intro/)). But to fool around, LLMs need a playground: an *environment* where they can take actions, observe outcomes, and learn from their mistakes. If you've ever played a video game, you already grasp the core idea. Think of a car racing game: your keyboard inputs (up/down/left/right) feed into the game engine, which executes a step and returns an outcome - did you crash, cross the finish line, or are you still racing? This action → outcome loop is exactly what RL environments provide for LLM training.
+
+<figure style="max-width: 400px; margin: 0 auto;">
+    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/environments/car_arrows.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/environments/car_arrows.png" style="width: 100%; height: auto;"></a>
+    <figcaption><b>Figure 1:</b> <i>A car racing game illustrating the RL loop: actions (arrows for up/left/right) lead to observations (track state) and rewards (progress towards finish line)</i></figcaption>
+</figure>
 
 In this post, we'll explore how to design environments that teach language models through trial and error, from simple single-turn math problems to complex multi-turn coding agents.
 
@@ -45,7 +50,19 @@ For LLM environments:
 - **Done**: Whether the task is complete or max turns reached
 - **Info**: Execution traces, intermediate states
 
-The environment can have its own stopping conditions beyond task completion. In the car racing game, this could be a timer. In text environments, this could be maximum number of turns, token limits, or timeout constraints.
+```
+┌────────────────────────────────────────────────────────────────────────────┐
+│                              RL ENVIRONMENT                                │
+├────────────────────────────┬───────────────────────────────────────────────┤
+│         CAR RACING         │               LLM TRAINING                    │
+├────────────────────────────┼───────────────────────────────────────────────┤
+│ Action: ↑ ↓ ← →            │ Action: Generated text/code/toolcalls         │
+│ Observation: Track state   │ Observation: Prompt + history + tool outputs  │
+│ Reward: +1 forward         │ Reward: Verifier score                        │
+│ Done: Finish/Crash         │ Done: Task complete / max turns               │
+│ Info: Lap time             │ Info: Execution trace + tool outputs          │
+└────────────────────────────┴───────────────────────────────────────────────┘
+```
 
 # Single-Turn Environments
 
@@ -228,6 +245,32 @@ reward = 0.1 * moved_forward + 0.5 * avoided_obstacle + 1.0 * finished
 
 The model exploits the reward structure rather than solving the actual task. This is particularly problematic in environments where looping or repetitive behavior can accumulate rewards.
 
+```
+Expected behavior:          Reward-hacked behavior:
+                            
+   START                       START
+     │                           │
+     ▼                           ▼
+  ┌─────┐                     ┌─────┐
+  │Move │ +0.1                │Move │ +0.1
+  │Fwd  │                     │Fwd  │
+  └──┬──┘                     └──┬──┘
+     │                           │
+     ▼                           ▼
+  ┌─────┐                     ┌─────┐
+  │Avoid│ +0.5                │Turn │ ◄─────┐
+  │Obst │                     │Left │       │
+  └──┬──┘                     └──┬──┘       │
+     │                           │          │
+     ▼                           ▼          │
+  ┌─────┐                     ┌─────┐       │
+  │Finish│ +1.0               │Move │ +0.1  │
+  │ Race │                    │Fwd  │───────┘
+  └─────┘                     └─────┘
+                              
+Total: 1.6                    Total: ∞ (loops forever!)
+```
+
 ## Curriculum Training
 
 One effective solution: start with easier tasks and gradually increase difficulty. Prime Intellect maintains difficulty levels in their benchmarks, primarily based on solvability by smaller models like Qwen-4B:
@@ -252,7 +295,13 @@ class CurriculumScheduler:
 
 Similar to curriculum training, but the environment itself evolves. Instead of manual difficulty levels, use an LLM to update rubrics and task parameters based on training progress.
 
-<!-- TODO: Add paper citations for adaptive curriculum methods -->
+Recent research has formalized these approaches:
+
+- **AdaRFT** ([Shi et al., 2025](https://arxiv.org/abs/2504.05520)): Adaptive Reinforcement Finetuning dynamically adjusts training problem difficulty based on the model's recent reward signals. If the model is struggling, it sees easier problems; if it's succeeding, difficulty increases automatically.
+
+- **AdaCuRL** ([Li et al., 2025](https://arxiv.org/abs/2511.09478)): Integrates coarse-to-fine difficulty estimation with adaptive curriculum scheduling. It also incorporates a data revisitation mechanism to mitigate catastrophic forgetting—the model periodically revisits easier problems to retain earlier capabilities.
+
+- **CAPO** ([Yang et al., 2025](https://arxiv.org/abs/2512.02580)): Curriculum Advantage Policy Optimization bootstraps imitation learning with positive-only advantage samples, using curriculum mechanisms to improve generalization across complex reasoning tasks.
 
 # Sandboxing: The Unsung Hero
 
@@ -322,7 +371,11 @@ generated_code = model.generate("Write code that passes these tests")
 
 This bidirectional approach can help "robustify" both code generation and test generation capabilities.
 
-<!-- TODO: Search for and cite the paper on this approach -->
+Related research in this area:
+
+- **CodeRL** ([Le et al., 2022](https://arxiv.org/abs/2207.01780)): Uses execution feedback from unit tests as reward signals, training a critic model to predict functional correctness and guide code generation.
+
+- **Self-Training for Tool Use** ([Luo et al., 2024](https://arxiv.org/abs/2401.12999)): Shows that LLMs can learn to use tools without human demonstrations by generating their own training data through exploration—the model generates tool-use traces and learns from successful executions.
 
 ## Environment Groups
 
@@ -350,13 +403,14 @@ class EnvironmentGroup:
 
 # Synthetic Tools and Data
 
-The KimiK2 blog highlights an important insight: the diversity and quality of synthetic tool-use data matters enormously for tool proficiency.
+The [Kimi K1.5 technical report](https://arxiv.org/abs/2501.12599) highlights an important insight: the diversity and quality of synthetic tool-use data matters enormously for tool proficiency. Moonshot AI invested heavily in generating massive amounts of synthetic tool interactions for training.
 
 Key considerations:
-- **Tool diversity**: Expose the model to many different tool interfaces
+- **Tool diversity**: Expose the model to many different tool interfaces (Kimi trained on thousands of unique tool signatures)
 - **Error cases**: Include examples where tool calls fail or return unexpected results
-- **Composition**: Multi-step tool use patterns
+- **Composition**: Multi-step tool use patterns where the output of one tool feeds into another
 - **Edge cases**: Unusual parameter combinations, empty results, timeouts
+- **Realistic distributions**: Tool usage patterns should mirror real-world applications
 
 ## LLMs as Tool Mocks
 
@@ -365,13 +419,25 @@ An interesting research direction: using LLMs to simulate tool behavior during t
 - Generating diverse tool responses
 - Simulating edge cases and errors
 
-<!-- TODO: Cite papers on LLM tool mocking -->
+Research in this space:
+
+- **ToolLLM** ([Qin et al., 2023](https://arxiv.org/abs/2307.16789)): Created a benchmark with 16,000+ real-world APIs across 49 categories. They used ChatGPT to generate diverse tool-use scenarios and demonstrated that training on synthetic API interactions transfers to real tool use.
+
+- **APIGen** ([Liu et al., 2024](https://arxiv.org/abs/2406.18518)): An automated pipeline for generating verifiable, diverse function-calling datasets. Uses multi-stage verification (format checking, execution validation, semantic verification) to ensure quality of synthetic tool-use data.
 
 ## Tool Collection and MCP Servers
 
 The ecosystem is growing with collections of tools and MCP (Model Context Protocol) servers that provide standardized interfaces for various capabilities.
 
-<!-- TODO: Cite papers on tool collection and standardization -->
+Notable work in this area:
+
+- **ToolBench** ([Qin et al., 2023](https://arxiv.org/abs/2307.16789)): Open-sourced a large-scale tool-use benchmark spanning 16,000+ APIs. This provides a standardized way to evaluate and train models on diverse tool interactions.
+
+- **ToolACE** ([Liu et al., 2024](https://arxiv.org/abs/2401.06201)): Focuses on automated tool-use capability enhancement, demonstrating how to scale tool training data generation while maintaining quality through automated verification.
+
+- **SpecTool** ([Kokane et al., 2024](https://arxiv.org/abs/2411.13547)): A benchmark for characterizing errors in tool-use LLMs. Identifies common failure patterns (parameter hallucination, format errors, semantic misunderstandings) and provides frameworks for systematic error mitigation.
+
+The MCP (Model Context Protocol) ecosystem is also expanding rapidly, with standardized interfaces making it easier to create interoperable tool environments. However, the challenge remains: more tools often means worse performance per tool, suggesting that training strategies need to account for tool complexity and interactions.
 
 # Putting It All Together
 
@@ -448,6 +514,25 @@ Building effective RL environments for LLM training requires thinking beyond sim
 6. **Scale matters**: Parallel environment execution is essential for efficient training
 
 The environment is where your model learns. Invest in getting it right.
+
+---
+
+# References
+
+**Curriculum & Adaptive Learning:**
+- [AdaRFT: Efficient Reinforcement Finetuning via Adaptive Curriculum Learning](https://arxiv.org/abs/2504.05520) - Shi et al., 2025
+- [AdaCuRL: Adaptive Curriculum Reinforcement Learning](https://arxiv.org/abs/2511.09478) - Li et al., 2025
+- [CAPO: Curriculum Advantage Policy Optimization](https://arxiv.org/abs/2512.02580) - Yang et al., 2025
+
+**Code & Tool Use:**
+- [CodeRL: Mastering Code Generation through Pretrained Models and Deep RL](https://arxiv.org/abs/2207.01780) - Le et al., 2022
+- [ToolLLM: Facilitating Large Language Models to Master 16000+ Real-world APIs](https://arxiv.org/abs/2307.16789) - Qin et al., 2023
+- [APIGen: Automated Pipeline for Generating Verifiable Function Calling Datasets](https://arxiv.org/abs/2406.18518) - Liu et al., 2024
+- [SpecTool: A Benchmark for Characterizing Errors in Tool-Use LLMs](https://arxiv.org/abs/2411.13547) - Kokane et al., 2024
+
+**Self-Training & Synthetic Data:**
+- [Self-Training Large Language Models for Tool Use](https://arxiv.org/abs/2401.12999) - Luo et al., 2024
+- [Kimi K1.5 Technical Report](https://arxiv.org/abs/2501.12599) - Moonshot AI, 2025
 
 ---
 
