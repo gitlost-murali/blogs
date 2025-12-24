@@ -10,14 +10,14 @@ permalink: /:categories/:title
 
 # Background
 
-Reinforcement learning follows the FAFO principle—Fool Around and Find Out ([more on this here]({{ site.url }}/{{ site.baseurl }}/grpo-intro/)). But to fool around, LLMs need a playground: an *environment* where they can take actions, observe outcomes, and learn from their mistakes. If you've ever played a video game, you already grasp the core idea. Think of a car racing game: your keyboard inputs (up/down/left/right) feed into the game engine, which executes a step and returns an outcome - did you crash, cross the finish line, or are you still racing? This action → outcome loop is exactly what RL environments provide for LLM training.
+Reinforcement learning follows the FAFO principle-Fool Around and Find Out ([more on this here]({{ site.url }}/{{ site.baseurl }}/grpo-intro/)). But to fool around, LLMs need a playground: an *environment* where they can take actions, observe outcomes, and learn from their mistakes. If you've ever played a video game, you already grasp the core idea. Think of a car racing game: your keyboard inputs (up/down/left/right) feed into the game engine, which executes a step and returns an outcome - did you crash, cross the finish line, or are you still racing? This action → outcome loop is exactly what RL environments provide for LLM training.
 
 <figure style="max-width: 400px; margin: 0 auto;">
     <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/environments/car_arrows.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/environments/car_arrows.png" style="width: 100%; height: auto;"></a>
     <figcaption><b>Figure 1:</b> <i>A car racing game illustrating the RL loop: actions (arrows for up/left/right) lead to observations (track state) and rewards (progress towards finish line)</i></figcaption>
 </figure>
 
-In this post, we'll explore how to design environments that teach language models through trial and error, from simple single-turn math problems to complex multi-turn coding agents.
+This post is a deep dive into the world of RL environments for LLMs-how code gets verified, what makes multi-turn interactions tricky, and the infrastructure challenges that emerge at scale.
 
 # The Environment Abstraction
 
@@ -47,7 +47,7 @@ For LLM environments:
 - **Action**: The model's generated text response
 - **Observation**: The prompt, conversation history, tool outputs
 - **Reward**: Score from verifier (correctness, helpfulness, etc.)
-- **Done**: Whether the task is complete or max turns reached
+- **Done**: Whether to stop or continue interacting with the environment (task complete, max turns reached, etc.)
 - **Info**: Execution traces, intermediate states
 
 ```
@@ -64,41 +64,69 @@ For LLM environments:
 └────────────────────────────┴───────────────────────────────────────────────┘
 ```
 
-# Single-Turn Environments
+# Verification: The Heart of RL Environments
 
-Let's start simple. Single-turn environments are the "hello world" of LLM RL training.
+Every environment needs to answer one question: *"Did the model do it right?"*
 
-## Math Environment
+For math, it's straightforward-extract the answer, compare to ground truth. The verification can be rule-based (string matching, numerical comparison) or LLM-based for complex reasoning tasks.
 
-The simplest environment: give the model a math problem, check if the answer is correct.
+Code verification is more nuanced. Here are the main approaches:
+
+**Stdin/Stdout Matching**
+
+Run the code with specific inputs, compare stdout to expected output.
 
 ```python
-class MathEnv(Environment):
-    def __init__(self, problem: str, expected_answer: str):
-        self.problem = problem
-        self.expected_answer = expected_answer
-    
-    def reset(self) -> str:
-        return f"Solve: {self.problem}"
-    
-    def step(self, llm_response: str) -> Tuple[str, float, bool, dict]:
-        # Extract answer from response
-        extracted_answer = self.extract_answer(llm_response)
-        
-        # Rule-based verification
-        is_correct = self.verify(extracted_answer, self.expected_answer)
-        
-        reward = 1.0 if is_correct else 0.0
-        done = True  # Single turn, always done
-        
-        return "", reward, done, {"correct": is_correct}
+def verify_stdin_stdout(code: str, test_case: TestCase) -> bool:
+    result = sandbox.run(code, stdin=test_case.input)
+    return result.stdout.strip() == test_case.expected_output.strip()
 ```
 
-The verifier can be rule-based (string matching, numerical comparison) or LLM-based (for more complex reasoning verification).
+**Assertion-Based Testing**
 
-## Code Environment
+Wrap the solution in a test harness with assertions. If assertions pass, the code is correct.
 
-Similar structure, but now we execute code and check against test cases:
+```python
+def verify_with_assertions(solution_code: str, test_code: str) -> bool:
+    # test_code contains: assert solution([1,2,3]) == 6
+    full_code = f"{solution_code}\n\n{test_code}"
+    result = sandbox.run(full_code)
+    return result.exit_code == 0  # No AssertionError = pass
+```
+
+**Functional Verification**
+
+Call the generated function directly and check outputs match expected values. This is what you'd typically see in coding benchmarks-test cases specify function name, inputs, and expected output:
+
+```json
+{
+  "func_name": "canSplitArray",
+  "input": "[2, 2, 1]\n4",
+  "output": "true"
+}
+```
+
+```python
+def verify_functional(code: str, test_cases: List[TestCase]) -> float:
+    passed = 0
+    for tc in test_cases:
+        actual = sandbox.call_function(code, tc.func_name, tc.input)
+        if actual == tc.output:
+            passed += 1
+    return passed / len(test_cases)
+```
+
+**Execution-Only Verification**
+
+The most lenient-just check if the code executes without errors. Useful for creative coding tasks or as partial credit.
+
+```python
+def verify_runs(code: str) -> float:
+    result = sandbox.run(code, timeout=5)
+    return 1.0 if result.exit_code == 0 else 0.0
+```
+
+A typical code environment uses one of these paradigms:
 
 ```python
 class CodeEnv(Environment):
@@ -107,19 +135,24 @@ class CodeEnv(Environment):
         self.test_cases = test_cases
     
     def step(self, llm_code: str) -> Tuple[str, float, bool, dict]:
-        # Execute code in sandbox
-        results = self.sandbox.execute(llm_code, self.test_cases)
+        results = []
+        for tc in self.test_cases:
+            # Could use any verification paradigm here
+            passed = self.sandbox.run_with_assertions(llm_code, tc.assertions)
+            results.append(passed)
         
-        # Calculate reward based on passing tests
-        passed = sum(1 for r in results if r.passed)
-        reward = passed / len(self.test_cases)
-        
-        return "", reward, True, {"results": results}
+        reward = sum(results) / len(results)
+        return "", reward, True, {"passed": sum(results), "total": len(results)}
 ```
 
-# Multi-Turn Environments
+# When One Turn Isn't Enough
 
-Real-world tasks rarely complete in a single turn. Here's where the environment hierarchy from Prime Intellect becomes relevant:
+Simple verification works for isolated problems, but real-world tasks rarely complete in a single turn. The model might need to:
+- Iterate on code based on test feedback
+- Use tools to gather information
+- Break down complex problems step by step
+
+This is where multi-turn environments come in. Here's the hierarchy from Prime Intellect:
 
 ```
 ┌─────────────────┐
@@ -299,7 +332,7 @@ Recent research has formalized these approaches:
 
 - **AdaRFT** ([Shi et al., 2025](https://arxiv.org/abs/2504.05520)): Adaptive Reinforcement Finetuning dynamically adjusts training problem difficulty based on the model's recent reward signals. If the model is struggling, it sees easier problems; if it's succeeding, difficulty increases automatically.
 
-- **AdaCuRL** ([Li et al., 2025](https://arxiv.org/abs/2511.09478)): Integrates coarse-to-fine difficulty estimation with adaptive curriculum scheduling. It also incorporates a data revisitation mechanism to mitigate catastrophic forgetting—the model periodically revisits easier problems to retain earlier capabilities.
+- **AdaCuRL** ([Li et al., 2025](https://arxiv.org/abs/2511.09478)): Integrates coarse-to-fine difficulty estimation with adaptive curriculum scheduling. It also incorporates a data revisitation mechanism to mitigate catastrophic forgetting-the model periodically revisits easier problems to retain earlier capabilities.
 
 - **CAPO** ([Yang et al., 2025](https://arxiv.org/abs/2512.02580)): Curriculum Advantage Policy Optimization bootstraps imitation learning with positive-only advantage samples, using curriculum mechanisms to improve generalization across complex reasoning tasks.
 
@@ -375,7 +408,7 @@ Related research in this area:
 
 - **CodeRL** ([Le et al., 2022](https://arxiv.org/abs/2207.01780)): Uses execution feedback from unit tests as reward signals, training a critic model to predict functional correctness and guide code generation.
 
-- **Self-Training for Tool Use** ([Luo et al., 2024](https://arxiv.org/abs/2401.12999)): Shows that LLMs can learn to use tools without human demonstrations by generating their own training data through exploration—the model generates tool-use traces and learns from successful executions.
+- **Self-Training for Tool Use** ([Luo et al., 2024](https://arxiv.org/abs/2401.12999)): Shows that LLMs can learn to use tools without human demonstrations by generating their own training data through exploration-the model generates tool-use traces and learns from successful executions.
 
 ## Environment Groups
 
@@ -506,7 +539,7 @@ When done, wrap your final code in <final_code></final_code> tags."""
 
 Building effective RL environments for LLM training requires thinking beyond simple prompt-response pairs. Key takeaways:
 
-1. **Start simple**: Single-turn environments are easier to debug and validate
+1. **Pick the right verification**: Stdin/stdout, assertions, functional-choose based on your data and goals
 2. **Design for failure**: Sandboxing isn't optional at scale
 3. **Reward carefully**: Sparse rewards can halt training, dense rewards invite hacking
 4. **Curriculum helps**: Gradual difficulty increases keep learning moving
