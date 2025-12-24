@@ -63,13 +63,13 @@ In our car racing analogy versus LLM training, the parallel looks like this:
 └────────────────────────────┴───────────────────────────────────────────────┘
 ```
 
-The critical difference lies in the **Reward**. In a game, the game engine knows the score. In LLM training, we have to build the "engine" that judges intelligence. This brings us to the first major challenge: Verification.
+The critical difference lies in the **Reward**. In a game, the game engine knows the score. In LLM training, respective environment would carry out the reward calculation. This brings us to the first concept: Verification.
 
 # The Verification Problem
 
 Every environment needs to answer two questions: *"Did the model do it right?"* and *"Should we keep going?"*
 
-For math, this is often simple—extract the number and compare it to a ground truth. But for code, "correctness" is a spectrum. We can't just string-match code because there are infinite ways to write the same function.
+For math, this is often simple: extract the number and compare it to a ground truth. But for code, "correctness" is a spectrum. We can't just string-match code because there are infinite ways to write the same function.
 
 We typically use a hierarchy of verification strategies, ranging from lenient to strict:
 
@@ -83,7 +83,8 @@ def verify_runs(code: str) -> float:
 ```
 
 ### 2. Stdin/Stdout Matching
-This treats the code as a black box. You feed input to `stdin` and check if `stdout` matches the expected string. This is language-agnostic but fragile—extra whitespace or debug prints can cause failures.
+This treats the code as a black box. You feed input to `stdin` and check if `stdout` matches the expected string. This is language-agnostic but fragile: extra whitespace or debug prints can cause failures. Seen in benchmarks like **LiveCodeBench** (CodeForces/AtCoder subsets), **APPS**, and **CodeContests**.
+
 
 ```python
 def verify_stdin_stdout(code: str, test_case: TestCase) -> bool:
@@ -92,7 +93,7 @@ def verify_stdin_stdout(code: str, test_case: TestCase) -> bool:
 ```
 
 ### 3. Functional Verification
-Here, we call the generated function directly with specific arguments. This is robust and standard for coding benchmarks.
+Here, we call the generated function directly with specific arguments. This is standard for interview-style benchmarks (like LeetCode problems in LiveCodeBench).
 
 ```python
 def verify_functional(code: str, test_cases: List[TestCase]) -> float:
@@ -106,7 +107,7 @@ def verify_functional(code: str, test_cases: List[TestCase]) -> float:
 ```
 
 ### 4. Assertion-Based Testing
-The gold standard for complex logic. We wrap the solution in a test harness with `assert` statements. If the test script exits with code 0, the solution is correct.
+Here, we wrap the solution in a test harness with `assert` statements (or unit tests). If the test script exits with code 0, the solution is correct. Seen in benchmarks like HumanEval, MBPP, etc.
 
 ```python
 def verify_with_assertions(solution_code: str, test_code: str) -> bool:
@@ -116,10 +117,10 @@ def verify_with_assertions(solution_code: str, test_code: str) -> bool:
     return result.exit_code == 0
 ```
 
-A production-grade **Code Environment** combines these into a single `step` method. It takes the model's code (Action), runs the verification suite (Observation/Reward), and returns the results.
+A production-grade **Code Environment** combines these into a single `step` method. It takes the model's code (Action), runs the verification suite, and returns the results.
 
 ```python
-class CodeEnv(Environment):
+class SingleTurnCodeEnv(Environment):
     def __init__(self, problem: str, test_cases: List[TestCase]):
         self.problem = problem
         self.test_cases = test_cases
@@ -140,7 +141,8 @@ class CodeEnv(Environment):
 
 Verifying a single function is useful, but real-world tasks are rarely one-shot. An agent might need to clarify requirements, debug its own errors, or use external tools.
 
-To handle this, we need to extend our base `Environment` into a hierarchy of increasing complexity.
+This requires the environment to handle multi-turn interactions. This is where the `MultiTurnEnv` comes in. It manages the conversation history, number of turns, and enforces stopping conditions (like max turns). It turns a stateless `step()` into a stateful conversation loop. Here's a high-level view of the hierarchy from [verifiers](https://github.com/PrimeIntellect-ai/verifiers):
+
 
 ```
 ┌─────────────────┐
@@ -154,22 +156,22 @@ To handle this, we need to extend our base `Environment` into a hierarchy of inc
          │
          ↓
 ┌─────────────────┐
-│     ToolEnv     │
+│     ToolEnv     │  (Adds Tools capabilities)
 └────────┬────────┘
          │
          ↓
 ┌─────────────────┐
-│ StatefulToolEnv │
+│ StatefulToolEnv │  (Adds stateful tool calls)
 └────────┬────────┘
          │
          ↓
 ┌─────────────────┐
-│   SandboxEnv    │
+│   SandboxEnv    │  (Adds sandboxing capabilities)
 └────────┬────────┘
          │
          ↓
 ┌─────────────────┐
-│    CodeEnv      │
+│    CodeEnv      │  (Adds code execution capabilities)
 └─────────────────┘
 ```
 
