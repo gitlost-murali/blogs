@@ -45,7 +45,7 @@ In our car racing analogy:
 
 For LLM environments:
 - **Action**: The model's generated text response
-- **Observation**: The prompt, conversation history, tool outputs
+- **Observation**: Tool outputs, error messages, test results, environment feedback
 - **Reward**: Score from verifier (correctness, helpfulness, etc.)
 - **Done**: Whether to stop or continue interacting with the environment (task complete, max turns reached, etc.)
 - **Info**: Execution traces, intermediate states
@@ -57,14 +57,14 @@ For LLM environments:
 │         CAR RACING         │               LLM TRAINING                    │
 ├────────────────────────────┼───────────────────────────────────────────────┤
 │ Action: ↑ ↓ ← →            │ Action: Generated text/code/toolcalls         │
-│ Observation: Track state   │ Observation: Prompt + history + tool outputs  │
+│ Observation: Track state   │ Observation: Tool outputs, errors, feedback   │
 │ Reward: +1 forward         │ Reward: Verifier score                        │
 │ Done: Finish/Crash         │ Done: Task complete / max turns               │
-│ Info: Lap time             │ Info: Execution trace + tool outputs          │
+│ Info: Lap time             │ Info: Execution trace                         │
 └────────────────────────────┴───────────────────────────────────────────────┘
 ```
 
-# Verification: The Heart of RL Environments
+# Verification
 
 Every environment needs to answer one question: *"Did the model do it right?"*
 
