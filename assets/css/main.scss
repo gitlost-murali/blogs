@@ -4,5 +4,361 @@
 
 @charset "utf-8";
 
+/* Custom Typography */
+$serif: 'Fraunces', Georgia, serif;
+$sans-serif: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+$monospace: 'JetBrains Mono', Monaco, Consolas, monospace;
+
+$global-font-family: $serif;
+$header-font-family: $sans-serif;
+$caption-font-family: $sans-serif;
+
+/* Slightly larger base size for better readability */
+$doc-font-size: 18;
+
+/* Improved type scale */
+$type-size-1: 2.5em;
+$type-size-2: 2em;
+$type-size-3: 1.5em;
+$type-size-4: 1.25em;
+$type-size-5: 1em;
+$type-size-6: 0.85em;
+
+/* Better line height for body text */
+$paragraph-indent: false;
+
 @import "minimal-mistakes/skins/{{ site.minimal_mistakes_skin | default: 'default' }}"; // skin
 @import "minimal-mistakes"; // main partials
+
+/* ========================================
+   Custom Styling Overrides
+   ======================================== */
+
+/* Body text improvements */
+body {
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.page__title {
+  font-family: $sans-serif;
+  font-weight: 700;
+  font-size: 2.25em;
+  letter-spacing: -0.03em;
+}
+
+/* Content area - better reading experience */
+.page__content {
+  p, li {
+    line-height: 1.75;
+    color: #3a3a3a;
+  }
+  
+  h2 {
+    margin-top: 2.5em;
+    padding-bottom: 0.3em;
+    border-bottom: 2px solid #e8e4de;
+  }
+  
+  h3 {
+    margin-top: 2em;
+  }
+  
+  /* Better blockquotes */
+  blockquote {
+    font-style: italic;
+    border-left: 3px solid #c17f59;
+    background: #faf8f5;
+    padding: 1em 1.5em;
+    margin: 1.5em 0;
+    border-radius: 0 4px 4px 0;
+    
+    p:last-child {
+      margin-bottom: 0;
+    }
+  }
+  
+  /* Code blocks */
+  pre {
+    border-radius: 6px;
+    border: 1px solid #e8e4de;
+  }
+  
+  code {
+    font-size: 0.9em;
+  }
+}
+
+/* Masthead / Navigation */
+.masthead {
+  border-bottom: 1px solid #e8e4de;
+  background: rgba(254, 252, 248, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.site-title {
+  font-family: $sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.greedy-nav a {
+  font-family: $sans-serif;
+  font-weight: 500;
+}
+
+/* Footer */
+.page__footer {
+  border-top: 1px solid #e8e4de;
+  
+  footer {
+    font-family: $sans-serif;
+  }
+}
+
+/* Archive pages */
+.archive__item-title {
+  font-family: $sans-serif;
+  font-weight: 600;
+  
+  a {
+    text-decoration: none;
+    
+    &:hover {
+      color: #c17f59;
+    }
+  }
+}
+
+.archive__item-excerpt {
+  font-size: 0.95em;
+  color: #5a5a5a;
+}
+
+/* Page meta (date, read time) */
+.page__meta {
+  font-family: $sans-serif;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.8em;
+}
+
+/* Taxonomy tags */
+.page__taxonomy-item {
+  font-family: $sans-serif;
+  font-weight: 500;
+  font-size: 0.85em;
+  background: #f5f2ed;
+  border: none;
+  
+  &:hover {
+    background: #ebe7e0;
+  }
+}
+
+/* Links in content */
+.page__content a:not(.btn) {
+  color: #8b5a3c;
+  text-decoration: underline;
+  text-decoration-color: rgba(139, 90, 60, 0.3);
+  text-underline-offset: 2px;
+  
+  &:hover {
+    text-decoration-color: #8b5a3c;
+  }
+}
+
+/* Layout: No left sidebar, TOC on right */
+@media (min-width: 1024px) {
+  #main {
+    max-width: 1050px;
+  }
+  
+  /* Page content - full width with space for right TOC */
+  .page {
+    float: none;
+    width: 100%;
+    padding-right: 280px;
+  }
+  
+  /* Pages without TOC - use full width */
+  .page__content:not(:has(.sidebar__right)) {
+    .page {
+      padding-right: 0;
+    }
+  }
+  
+  /* Right sidebar (TOC) - positioned in the padding area */
+  .sidebar__right {
+    width: 260px;
+    margin-right: -280px;
+  }
+  
+  .page__related {
+    float: none;
+    width: 100%;
+    padding-right: 0;
+  }
+}
+
+@media (min-width: 1280px) {
+  #main {
+    max-width: 1200px;
+  }
+  
+  .page {
+    padding-right: 320px;
+  }
+  
+  .sidebar__right {
+    width: 300px;
+    margin-right: -320px;
+  }
+}
+
+/* Better mobile spacing */
+@media (max-width: 1024px) {
+  #main {
+    padding-left: 1.5em;
+    padding-right: 1.5em;
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Selection color */
+::selection {
+  background: rgba(193, 127, 89, 0.2);
+}
+
+/* Table of contents */
+.toc {
+  font-family: $sans-serif;
+  font-size: 0.85em;
+  
+  /* Collapsible details/summary */
+  details {
+    summary {
+      cursor: pointer;
+      user-select: none;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      padding: 0.75em 1em;
+      background: #f5f2ed;
+      color: #2c2c2c;
+      font-weight: 600;
+      border-radius: 4px;
+      margin-bottom: 0.5em;
+      transition: background 0.2s ease;
+      
+      &:hover {
+        background: #ebe7e0;
+      }
+      
+      /* Hide default marker */
+      &::-webkit-details-marker {
+        display: none;
+      }
+      
+      &::marker {
+        display: none;
+        content: '';
+      }
+      
+      /* Arrow indicator */
+      &::after {
+        content: '▾';
+        margin-left: auto;
+        font-size: 0.9em;
+        transition: transform 0.2s ease;
+      }
+      
+      i {
+        margin-right: 0.5em;
+      }
+    }
+    
+    &:not([open]) summary::after {
+      transform: rotate(-90deg);
+    }
+  }
+  
+  .toc__content {
+    padding: 0.5em 0;
+  }
+  
+  /* TOC menu hierarchy */
+  .toc__menu {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    
+    /* All list items */
+    li {
+      margin: 0;
+      padding: 0;
+    }
+    
+    /* Links */
+    a {
+      display: block;
+      padding: 0.4em 0.75em;
+      color: #5a5a5a;
+      text-decoration: none;
+      border-left: 2px solid transparent;
+      transition: all 0.15s ease;
+      
+      &:hover {
+        color: #2c2c2c;
+        background: #faf8f5;
+        border-left-color: #c17f59;
+      }
+    }
+    
+    /* Nested lists - hierarchy indentation */
+    ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      
+      li a {
+        padding-left: 1.5em;
+        font-size: 0.95em;
+        color: #7a7a7a;
+      }
+      
+      /* Third level */
+      ul li a {
+        padding-left: 2.25em;
+        font-size: 0.9em;
+      }
+      
+      /* Fourth level */
+      ul ul li a {
+        padding-left: 3em;
+        font-size: 0.85em;
+      }
+    }
+  }
+  
+  /* Old nav__title fallback */
+  .nav__title {
+    font-weight: 600;
+    background: #f5f2ed;
+    color: #2c2c2c;
+    padding: 0.75em 1em;
+    border-radius: 4px;
+    margin-bottom: 0.5em;
+  }
+}

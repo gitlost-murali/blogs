@@ -1,3 +1,7 @@
+_byproducts/
+*.ipynb
+*.py
+_drafts/
 assets/images/cuda-matmul-optimize/GIF_images
 # Vim
 *~

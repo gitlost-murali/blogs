@@ -10,7 +10,16 @@ permalink: /:categories/:title
 
 # Background
 
-Reinforcement learning follows the FAFO principle-Fool Around and Find Out ([more on this here]({{ site.url }}/{{ site.baseurl }}/grpo-intro/)). But to fool around, LLMs need a playground: an *environment* where they can take actions, observe outcomes, and learn from their mistakes. If you've ever played a video game, you already grasp the core idea. Think of a car racing game: your keyboard inputs (up/down/left/right) feed into the game engine, which executes a step and returns an outcome - did you crash, cross the finish line, or are you still racing? This action → outcome loop is exactly what RL environments provide for LLM training.
+Reinforcement learning follows the FAFO principle-Fool Around and Find Out ([more on this here]({{ site.url }}/{{ site.baseurl }}/grpo-intro/)). But to fool around, LLMs need a playground: an *environment* where they can take actions, observe outcomes, and learn from their mistakes. 
+
+If you've ever played a video game, you already grasp the core idea of RL environments. Imagine a car racing game: your keyboard inputs (up/down/left/right) feed into the game engine, which executes a step in the game world and returns an outcome -> 
+
+1. Did you crash, 
+2. Cross the finish line, or 
+3. Are you still racing? 
+
+This action → outcome loop is exactly what RL environments provide for LLM training.
+
 
 <figure style="max-width: 400px; margin: 0 auto;">
     <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/environments/car_arrows.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/environments/car_arrows.png" style="width: 100%; height: auto;"></a>
@@ -548,6 +557,9 @@ The environment is where your model learns. Invest in getting it right.
 - [AdaCuRL: Adaptive Curriculum Reinforcement Learning](https://arxiv.org/abs/2511.09478) - Li et al., 2025
 - [CAPO: Curriculum Advantage Policy Optimization](https://arxiv.org/abs/2512.02580) - Yang et al., 2025
 
+- [DR Tulu: Reinforcement Learning with Evolving Rubrics for Deep Research](https://arxiv.org/abs/2511.19399)
+- [RLVE: Scaling Up Reinforcement Learning for Language Models with Adaptive Verifiable Environments](https://arxiv.org/abs/2511.07317)
+
 **Code & Tool Use:**
 - [CodeRL: Mastering Code Generation through Pretrained Models and Deep RL](https://arxiv.org/abs/2207.01780) - Le et al., 2022
 - [ToolLLM: Facilitating Large Language Models to Master 16000+ Real-world APIs](https://arxiv.org/abs/2307.16789) - Qin et al., 2023
@@ -556,9 +568,12 @@ The environment is where your model learns. Invest in getting it right.
 
 **Self-Training & Synthetic Data:**
 - [Self-Training Large Language Models for Tool Use](https://arxiv.org/abs/2401.12999) - Luo et al., 2024
-- [Kimi K1.5 Technical Report](https://arxiv.org/abs/2501.12599) - Moonshot AI, 2025
-
+- [How Kimi K2 Became One of the Best Tool-Using Models](https://www.dbreunig.com/2025/07/30/how-kimi-was-post-trained-for-tool-use.html)
 ---
 
 If you have any questions, feel free to reach out on [Linkedin](https://www.linkedin.com/in/murali-manohar/), [Twitter](https://twitter.com/gitlostmurali) or [Mail](mailto:kmanoharmurali@gmail.com).
 
+
+# Refernces
+
+- [Intellect-3-report](https://arxiv.org/abs/2512.16144)

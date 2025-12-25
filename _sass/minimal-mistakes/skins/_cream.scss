@@ -1,0 +1,53 @@
+/* ==========================================================================
+   Cream skin - Warm, elegant light theme
+   ========================================================================== */
+
+/* Colors */
+$background-color: #fefcf8 !default;  /* Warm off-white */
+$text-color: #2c2c2c !default;         /* Soft black for readability */
+$muted-text-color: #6b6b6b !default;   /* Muted gray */
+$primary-color: #c17f59 !default;      /* Warm terracotta accent */
+$border-color: #e8e4de !default;       /* Subtle warm border */
+$code-background-color: #f5f2ed !default;  /* Light cream for code */
+$code-background-color-dark: #ebe7e0 !default;
+$form-background-color: #f5f2ed !default;
+$footer-background-color: #f8f6f2 !default;
+
+/* Links */
+$link-color: #8b5a3c !default;         /* Warm brown link */
+$link-color-hover: #6d4730 !default;   /* Darker on hover */
+$link-color-visited: #9a6b4e !default; /* Slightly muted visited */
+
+/* Masthead */
+$masthead-link-color: #2c2c2c !default;
+$masthead-link-color-hover: $primary-color !default;
+$navicon-link-color-hover: mix(#fff, $primary-color, 75%) !default;
+
+/* Syntax highlighting - warm tones */
+$base00: #f5f2ed !default;
+$base01: #ebe7e0 !default;
+$base02: #e0dbd4 !default;
+$base03: #9a9590 !default;
+$base04: #5c5856 !default;
+$base05: #3d3a38 !default;
+$base06: #2c2c2c !default;
+$base07: #1a1a1a !default;
+$base08: #c75646 !default;  /* Red */
+$base09: #d28445 !default;  /* Orange */
+$base0a: #d4a84b !default;  /* Yellow */
+$base0b: #6a9f4d !default;  /* Green */
+$base0c: #5a9f9f !default;  /* Cyan */
+$base0d: #5778c1 !default;  /* Blue */
+$base0e: #9c6b9c !default;  /* Purple */
+$base0f: #b75d5d !default;  /* Brown */
+
+/* Social icons inherit text color */
+.author__urls.social-icons .svg-inline--fa,
+.page__footer-follow .social-icons .svg-inline--fa {
+  color: inherit;
+}
+
+.ais-search-box .ais-search-box--input {
+  background-color: $form-background-color;
+}
+
