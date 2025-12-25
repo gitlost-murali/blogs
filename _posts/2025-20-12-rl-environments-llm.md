@@ -16,7 +16,7 @@ Reinforcement learning follows the FAFO principle-Fool Around and Find Out ([mor
 If you've ever played a video game, you already grasp the core idea of RL environments. Imagine a car racing game: your keyboard inputs (up/down/left/right) feed into the game engine, which executes a step in the game world and returns an outcome -> 
 
 1. Did you crash, 
-2. Cross the finish line, or 
+2. Did you successfully cross the finish line, or 
 3. Are you still racing? 
 
 This action → outcome loop is exactly what RL environments provide for LLM training.
@@ -154,7 +154,7 @@ What makes Bidirectional verification interesting is that instead of optimizing 
 
 <iframe 
   src="{{ site.url }}/{{ site.baseurl }}/assets/visualizations/rl_envs/curepipeline.html" 
-  style="width: 100%; height: 580px; border: none; border-radius: 16px; margin: 24px 0;"
+  style="width: 100%; height: 660px; border: none; border-radius: 16px; margin: 24px 0;"
   loading="lazy"
   title="CURE Pipeline Interactive Visualization">
 </iframe>
@@ -179,112 +179,23 @@ class SingleTurnCodeEnv(Environment):
         return "", reward, True, {"passed": sum(results)}
 ``` -->
 
-# From Functions to Agents
+# From LLMs to Agents
 
-In early experiments, an LLM’s “environment” might be just a single-turn coding task: get a prompt, output code, get a reward. But real-world tasks are rarely one-and-done. An agent might need to ask clarifying questions, fix mistakes, or use tools in multiple steps. This requires multi-turn interaction within an episode.
+In early experiments, an LLM's "environment" might be just a single-turn task: get a prompt, output code, get a reward. But real-world tasks are rarely one shot. An agent might need to *ask clarifying questions*, *fix mistakes*, or *use tools* in multiple steps. This requires multi-turn interaction within an episode/rollout.
 
-This requires the environment to handle multi-turn interactions. This is where the `MultiTurnEnv` comes in. It manages the conversation history, number of turns, and enforces stopping conditions (like max turns). It turns a stateless `step()` into a stateful conversation loop. Here's a high-level view of the hierarchy from [verifiers](https://github.com/PrimeIntellect-ai/verifiers):
+Libraries like [verifiers](https://github.com/PrimeIntellect-ai/verifiers) handle this through environment inheritance, where each layer adds new capabilities:
 
+| Layer | What it adds |
+|-------|--------------|
+| **Environment** | Base protocol: `reset()`, `step()`, reward |
+| **↳ MultiTurnEnv** | Conversation history, turn limits, stopping conditions |
+| **↳ ToolEnv** | Parses tool calls, executes them, returns results |
+| **↳ StatefulToolEnv** | Persistent state across tool calls |
+| **↳ SandboxEnv** | Isolated execution environments |
+| **↳ CodeEnv** | Code execution with safety boundaries |
 
-```
-┌─────────────────┐
-│   Environment   │  (Base Protocol)
-└────────┬────────┘
-         │
-         ↓
-┌─────────────────┐
-│  MultiTurnEnv   │  (Adds History & State)
-└────────┬────────┘
-         │
-         ↓
-┌─────────────────┐
-│     ToolEnv     │  (Adds Tools capabilities)
-└────────┬────────┘
-         │
-         ↓
-┌─────────────────┐
-│ StatefulToolEnv │  (Adds stateful tool calls)
-└────────┬────────┘
-         │
-         ↓
-┌─────────────────┐
-│   SandboxEnv    │  (Adds sandboxing capabilities)
-└────────┬────────┘
-         │
-         ↓
-┌─────────────────┐
-│    CodeEnv      │  (Adds code execution capabilities)
-└─────────────────┘
-```
+The pattern is elegant: `MultiTurnEnv` turns a stateless `step()` into a conversation loop. `ToolEnv` parses special tokens and executes tools. Higher layers add sandboxing and code execution. As a thought exercise, if we were to implement a simple ReAct agent based chatbot, we would have to inherit from `ToolEnv` and fill in the available tool list, tool execution logic and conversation stopping condition.
 
-## 1. The Multi-Turn Foundation
-The `MultiTurnEnv` manages the conversation history and enforces stopping conditions (like max turns). It turns a stateless `step()` into a stateful conversation loop.
-
-```python
-class MultiTurnEnv(Environment):
-    def __init__(self, max_turns: int = 10):
-        self.max_turns = max_turns
-        self.turn_count = 0
-        self.history = []
-    
-    def step(self, action: str) -> Tuple[str, float, bool, dict]:
-        self.turn_count += 1
-        self.history.append({"role": "assistant", "content": action})
-        
-        # Check if the model wants to stop or if we hit the limit
-        if self.is_final_answer(action):
-            return self.evaluate_final_answer(action)
-        
-        if self.turn_count >= self.max_turns:
-            return "", 0.0, True, {"reason": "max_turns"}
-        
-        # If continuing, generate the next observation (e.g., from a tool or user)
-        observation = self.get_next_observation(action)
-        self.history.append({"role": "user", "content": observation})
-        
-        # Intermediate steps usually get 0 reward until the end
-        return observation, 0.0, False, {}
-```
-
-## 2. Adding Tool Capabilities
-Next, we add the ability to execute actions *other* than just talking. The `ToolEnv` parses specific tokens (like tool calls) and executes them, returning the result as a new observation.
-
-```python
-class ToolEnv(MultiTurnEnv):
-    def __init__(self, tools: List[Tool], **kwargs):
-        super().__init__(**kwargs)
-        self.tools = {t.name: t for t in tools}
-    
-    def get_next_observation(self, action: str) -> str:
-        # 1. Parse tool calls from the model's action
-        tool_calls = self.parse_tool_calls(action)
-        
-        # 2. Execute each tool
-        results = []
-        for call in tool_calls:
-            tool = self.tools.get(call.name)
-            if tool:
-                result = tool.execute(call.arguments)
-                results.append(f"{call.name}: {result}")
-        
-        # 3. Return results as the observation
-        return "\n".join(results)
-```
-
-## 3. The ReAct Pattern
-Finally, we can build specific agent architectures on top. A ReAct agent environment simply looks for a "Final Answer" to trigger the reward calculation, while treating everything else as intermediate thought steps.
-
-```python
-class ReactEnv(ToolEnv):
-    def is_final_answer(self, action: str) -> bool:
-        # Check for specific stop tokens or keywords
-        return "Final Answer:" in action or "</final_answer>" in action
-    
-    def evaluate_final_answer(self, action: str) -> Tuple[str, float, bool, dict]:
-        extracted = self.extract_final_answer(action)
-        reward = self.judge(extracted, self.expected_output)
-        return "", reward, True, {"answer": extracted}
-```
 
 # The Reward Engineering Challenge
 
