@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CURE Pipeline</title>
+    <style>
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+        }
+        .cure-container {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            border-radius: 16px;
+            padding: 28px;
+            color: #e8e8e8;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .cure-title {
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: 700;
+            margin-bottom: 6px;
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .cure-controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .cure-btn {
+            background: rgba(0, 217, 255, 0.15);
+            border: 1px solid rgba(0, 217, 255, 0.4);
+            color: #00d9ff;
+            padding: 8px 18px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .cure-btn:hover {
+            background: rgba(0, 217, 255, 0.3);
+            transform: translateY(-1px);
+        }
+        .cure-btn.active {
+            background: #00d9ff;
+            color: #1a1a2e;
+        }
+        .cure-step-indicators {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+        .cure-step-dot {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .cure-step-dot.active {
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            border-color: transparent;
+            color: #1a1a2e;
+            transform: scale(1.15);
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.5);
+        }
+        .cure-step-dot.completed {
+            background: rgba(0, 255, 136, 0.3);
+            border-color: #00ff88;
+            color: #00ff88;
+        }
+        .cure-step-content {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-height: 100px;
+        }
+        .cure-step-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .cure-step-num {
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            color: #1a1a2e;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.95em;
+            flex-shrink: 0;
+        }
+        .cure-step-title {
+            font-size: 1.15em;
+            font-weight: 600;
+            color: #fff;
+        }
+        .cure-step-desc {
+            color: rgba(255, 255, 255, 0.75);
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+        .cure-step-desc sub {
+            font-size: 0.8em;
+            vertical-align: baseline;
+            position: relative;
+            bottom: -0.15em;
+        }
+        .cure-matrix-section {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .cure-matrix-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #00d9ff;
+            text-align: center;
+        }
+        .cure-matrix {
+            display: grid;
+            grid-template-columns: auto repeat(6, 1fr);
+            gap: 3px;
+            font-size: 0.9em;
+            max-width: 520px;
+            margin: 0 auto;
+        }
+        .cure-matrix sub {
+            font-size: 0.85em;
+            vertical-align: baseline;
+            position: relative;
+            bottom: -0.15em;
+        }
+        .cure-matrix-cell {
+            padding: 8px 6px;
+            text-align: center;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        .cure-matrix-header {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+            font-size: 0.85em;
+        }
+        .cure-matrix-row-label {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 600;
+            text-align: left;
+            padding-left: 10px;
+        }
+        .cure-pass-gen { background: rgba(0, 255, 136, 0.25); color: #00ff88; }
+        .cure-fail-gen { background: rgba(255, 77, 77, 0.25); color: #ff6b6b; }
+        .cure-pass-gt { background: rgba(0, 217, 255, 0.35); color: #00d9ff; }
+        .cure-fail-gt { background: rgba(255, 165, 0, 0.3); color: #ffa500; }
+        .cure-legend {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 16px;
+            font-size: 0.8em;
+        }
+        .cure-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .cure-legend-box {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+        }
+        .cure-rewards {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .cure-reward-item {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 8px 14px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85em;
+        }
+        .cure-reward-label {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .cure-reward-label sub {
+            font-size: 0.85em;
+        }
+        .cure-reward-value {
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+        .cure-reward-value.positive { color: #00ff88; }
+        .cure-reward-value.negative { color: #ff6b6b; }
+        .cure-reward-value.neutral { color: #ffa500; }
+        @keyframes cure-fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .cure-animate { animation: cure-fadeIn 0.4s ease-out; }
+    </style>
+</head>
+<body>
+
+<div class="cure-container">
+    <div class="cure-title">The CURE Pipeline</div>
+    
+    <div class="cure-controls">
+        <button class="cure-btn" id="cure-auto-btn" onclick="toggleCureAutoPlay()">▶ Auto-Play</button>
+        <button class="cure-btn" onclick="resetCure()">↺ Reset</button>
+    </div>
+    
+    <div class="cure-step-indicators">
+        <div class="cure-step-dot active" data-step="1" onclick="goToCureStep(1)">1</div>
+        <div class="cure-step-dot" data-step="2" onclick="goToCureStep(2)">2</div>
+        <div class="cure-step-dot" data-step="3" onclick="goToCureStep(3)">3</div>
+        <div class="cure-step-dot" data-step="4" onclick="goToCureStep(4)">4</div>
+        <div class="cure-step-dot" data-step="5" onclick="goToCureStep(5)">5</div>
+    </div>
+    
+    <div class="cure-step-content cure-animate" id="cure-step-panel">
+        <div class="cure-step-header">
+            <div class="cure-step-num" id="cure-step-num">1</div>
+            <div class="cure-step-title" id="cure-step-title">Generate Rollouts</div>
+        </div>
+        <div class="cure-step-desc" id="cure-step-desc">
+            Policy generates <strong>n code solutions</strong> and <strong>m unit tests</strong> for each task. Both the coder and unit tester share the same policy model.
+        </div>
+    </div>
+    
+    <div class="cure-matrix-section">
+        <div class="cure-matrix-title">Execution Matrix B*</div>
+        <div class="cure-matrix">
+            <div class="cure-matrix-cell"></div>
+            <div class="cure-matrix-cell cure-matrix-header">UT<sub>1</sub></div>
+            <div class="cure-matrix-cell cure-matrix-header">UT<sub>2</sub></div>
+            <div class="cure-matrix-cell cure-matrix-header">UT<sub>3</sub></div>
+            <div class="cure-matrix-cell cure-matrix-header">UT<sub>4</sub></div>
+            <div class="cure-matrix-cell cure-matrix-header">GT<sub>1</sub></div>
+            <div class="cure-matrix-cell cure-matrix-header">GT<sub>2</sub></div>
+            
+            <div class="cure-matrix-cell cure-matrix-row-label">Code<sub>1</sub> ✓</div>
+            <div class="cure-matrix-cell cure-pass-gen">✓</div>
+            <div class="cure-matrix-cell cure-pass-gen">✓</div>
+            <div class="cure-matrix-cell cure-fail-gen">✗</div>
+            <div class="cure-matrix-cell cure-pass-gen">✓</div>
+            <div class="cure-matrix-cell cure-pass-gt">✓</div>
+            <div class="cure-matrix-cell cure-pass-gt">✓</div>
+            
+            <div class="cure-matrix-cell cure-matrix-row-label">Code<sub>2</sub> ✓</div>
+            <div class="cure-matrix-cell cure-pass-gen">✓</div>
+            <div class="cure-matrix-cell cure-pass-gen">✓</div>
+            <div class="cure-matrix-cell cure-fail-gen">✗</div>
+            <div class="cure-matrix-cell cure-pass-gen">✓</div>
+            <div class="cure-matrix-cell cure-pass-gt">✓</div>
+            <div class="cure-matrix-cell cure-pass-gt">✓</div>
+            
+            <div class="cure-matrix-cell cure-matrix-row-label">Code<sub>3</sub></div>
+            <div class="cure-matrix-cell cure-pass-gen">✓</div>
+            <div class="cure-matrix-cell cure-fail-gen">✗</div>
+            <div class="cure-matrix-cell cure-pass-gen">✓</div>
+            <div class="cure-matrix-cell cure-pass-gen">✓</div>
+            <div class="cure-matrix-cell cure-pass-gt">✓</div>
+            <div class="cure-matrix-cell cure-fail-gt">✗</div>
+            
+            <div class="cure-matrix-cell cure-matrix-row-label">Code<sub>4</sub></div>
+            <div class="cure-matrix-cell cure-fail-gen">✗</div>
+            <div class="cure-matrix-cell cure-fail-gen">✗</div>
+            <div class="cure-matrix-cell cure-pass-gen">✓</div>
+            <div class="cure-matrix-cell cure-pass-gen">✓</div>
+            <div class="cure-matrix-cell cure-fail-gt">✗</div>
+            <div class="cure-matrix-cell cure-pass-gt">✓</div>
+        </div>
+        
+        <div class="cure-legend">
+            <div class="cure-legend-item">
+                <div class="cure-legend-box cure-pass-gen"></div>
+                <span>Pass (generated UT)</span>
+            </div>
+            <div class="cure-legend-item">
+                <div class="cure-legend-box cure-fail-gen"></div>
+                <span>Fail (generated UT)</span>
+            </div>
+            <div class="cure-legend-item">
+                <div class="cure-legend-box cure-pass-gt"></div>
+                <span>Pass (ground truth)</span>
+            </div>
+            <div class="cure-legend-item">
+                <div class="cure-legend-box cure-fail-gt"></div>
+                <span>Fail (ground truth)</span>
+            </div>
+        </div>
+        
+        <div class="cure-rewards" id="cure-rewards">
+            <div class="cure-reward-item">
+                <span class="cure-reward-label">UT<sub>1</sub>:</span>
+                <span class="cure-reward-value positive">+1</span>
+            </div>
+            <div class="cure-reward-item">
+                <span class="cure-reward-label">UT<sub>2</sub>:</span>
+                <span class="cure-reward-value positive">+2</span>
+            </div>
+            <div class="cure-reward-item">
+                <span class="cure-reward-label">UT<sub>3</sub>:</span>
+                <span class="cure-reward-value negative">-2</span>
+            </div>
+            <div class="cure-reward-item">
+                <span class="cure-reward-label">UT<sub>4</sub>:</span>
+                <span class="cure-reward-value neutral">0</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const cureSteps = [
+        { num: 1, title: "Generate Rollouts", desc: "Policy generates <strong>n code solutions</strong> and <strong>m unit tests</strong> for each task. Both the coder and unit tester share the same policy model." },
+        { num: 2, title: "Execute & Build Matrix", desc: "Run all generated codes against all tests (both generated UTs and ground-truth GTs) to build a <strong>pass/fail execution matrix</strong>." },
+        { num: 3, title: "Compute Code Rewards", desc: "Code reward = <strong>number of ground-truth tests passed</strong>. Code<sub>1</sub> and Code<sub>2</sub> pass both GT tests (reward: 2). Code<sub>3</sub> and Code<sub>4</sub> each pass 1 GT test (reward: 1)." },
+        { num: 4, title: "Compute Unit Test Rewards", desc: "UT reward: <strong>+1 for catching incorrect codes</strong>, <strong>-1 for failing correct codes</strong>. UT<sub>2</sub> catches Code<sub>3</sub> & Code<sub>4</sub> → +2. UT<sub>3</sub> rejects correct Code<sub>1</sub> & Code<sub>2</sub> → -2. UT<sub>4</sub> catches nothing → 0." },
+        { num: 5, title: "Update Policy with GRPO", desc: "Use <strong>normalized rewards as advantages</strong> to update the shared policy. Good codes/tests get reinforced, bad ones get discouraged." }
+    ];
+    
+    let cureCurrentStep = 1;
+    let cureAutoPlay = false;
+    let cureInterval = null;
+    
+    window.goToCureStep = function(step) {
+        cureCurrentStep = step;
+        updateCureUI();
+    };
+    
+    window.toggleCureAutoPlay = function() {
+        cureAutoPlay = !cureAutoPlay;
+        const btn = document.getElementById('cure-auto-btn');
+        if (cureAutoPlay) {
+            btn.classList.add('active');
+            btn.textContent = '⏸ Pause';
+            cureInterval = setInterval(() => {
+                cureCurrentStep = cureCurrentStep >= 5 ? 1 : cureCurrentStep + 1;
+                updateCureUI();
+            }, 2500);
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '▶ Auto-Play';
+            clearInterval(cureInterval);
+        }
+    };
+    
+    window.resetCure = function() {
+        cureAutoPlay = false;
+        clearInterval(cureInterval);
+        document.getElementById('cure-auto-btn').classList.remove('active');
+        document.getElementById('cure-auto-btn').textContent = '▶ Auto-Play';
+        cureCurrentStep = 1;
+        updateCureUI();
+    };
+    
+    function updateCureUI() {
+        const dots = document.querySelectorAll('.cure-step-dot');
+        dots.forEach((dot, i) => {
+            dot.classList.remove('active', 'completed');
+            if (i + 1 === cureCurrentStep) dot.classList.add('active');
+            else if (i + 1 < cureCurrentStep) dot.classList.add('completed');
+        });
+        
+        const step = cureSteps[cureCurrentStep - 1];
+        const panel = document.getElementById('cure-step-panel');
+        panel.classList.remove('cure-animate');
+        void panel.offsetWidth;
+        panel.classList.add('cure-animate');
+        
+        document.getElementById('cure-step-num').textContent = step.num;
+        document.getElementById('cure-step-title').textContent = step.title;
+        document.getElementById('cure-step-desc').innerHTML = step.desc;
+    }
+})();
+</script>
+
+</body>
+</html>
+

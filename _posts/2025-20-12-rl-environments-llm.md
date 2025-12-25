@@ -6,6 +6,7 @@ date: 2025-12-20 10:30:00 +0530
 categories: machine-learning data-science
 toc: true
 permalink: /:categories/:title
+mathjax: true
 ---
 
 # Background
@@ -26,11 +27,12 @@ This action → outcome loop is exactly what RL environments provide for LLM tra
     <figcaption><b>Figure 1:</b> <i>A car racing game illustrating the RL loop: actions (arrows for up/left/right) lead to observations (track state) and rewards (progress towards finish line)</i></figcaption>
 </figure>
 
-This post is a deep dive into the world of RL environments for LLMs-how code gets verified, what makes multi-turn interactions tricky, and the infrastructure challenges that emerge at scale.
+Despite being widely used in training reasoning models like DeepSeek-R1, Qwen and Kimi, the infrastructure and environment design details remain poorly documented. This blog is an attempt to synthesize findings from the existing literature and frontier lab reports/blogs. In this blog, we will cover the following topics: verification strategies, reward engineering, curriculum learning, sandboxing at scale, and the failure modes that derail training.
+
 
 # The Anatomy of an Environment
 
-At its core, an RL environment is just a state machine that adheres to a strict contract. Whether you're training a robot to walk or an LLM to write Python, the interface remains the same:
+At its core, an RL environment is a state machine that responds to an agent’s actions with new observations and rewards. Whether you're training a robot to walk or an LLM to write code, the core interface remains the same (mostly):
 
 ```python
 class Environment:
@@ -44,6 +46,7 @@ class Environment:
 ```
 
 In our car racing analogy:
+
 - **Action**: Your keyboard input (up/down/left/right)
 - **Observation**: The current game state (car position, track layout, other cars)
 - **Reward**: Points for moving forward, penalty for hitting walls
@@ -72,18 +75,26 @@ In our car racing analogy versus LLM training, the parallel looks like this:
 └────────────────────────────┴───────────────────────────────────────────────┘
 ```
 
-The critical difference lies in the **Reward**. In a game, the game engine knows the score. In LLM training, respective environment would carry out the reward calculation. This brings us to the first concept: Verification.
+The critical difference lies in the **Reward**. In a game, the game engine knows the score. In LLM training, respective environment would carry out the reward logic. This brings us to the first concept: Verification.
 
-# The Verification Problem
+# Verification strategies determine what models can learn
 
-Every environment needs to answer two questions: *"Did the model do it right?"* and *"Should we keep going?"*
+Every environment needs to answer two questions: 
+1. ***"Did the model do it right?"*** 
+2. ***"Should we keep going?"***. 
 
-For math, this is often simple: extract the number and compare it to a ground truth. But for code, "correctness" is a spectrum. We can't just string-match code because there are infinite ways to write the same function.
+In other words, we need a *verifier* to compute the reward and a *criterion* to decide if the task is done. 
 
-We typically use a hierarchy of verification strategies, ranging from lenient to strict:
 
-### 1. Execution-Only
-The most lenient check: just ensure the code runs without crashing. This is useful for open-ended creative tasks or assigning partial credit for syntactically correct code.
+The choice of verification approach fundamentally shapes what behaviors RL can reinforce. For math, this is often simple: extract the number and compare it to a ground truth. But for code, "correctness" is a spectrum. We can't just string-match code because there are infinite ways to write the same function. 
+
+<!-- making training more sample-efficient and enabling smarter inference-time regeneration strategies. -->
+
+Code verification strategies have converged to five main approaches, each with distinct tradeoffs that affect training dynamics. 
+
+### 1. Execution-Only Verification
+
+The most lenient check: just ensure the code runs without crashing. This is useful for open-ended creative tasks or assigning partial credit for syntactically correct code. 
 
 ```python
 def verify_runs(code: str) -> float:
@@ -91,42 +102,64 @@ def verify_runs(code: str) -> float:
     return 1.0 if result.exit_code == 0 else 0.0
 ```
 
-### 2. Stdin/Stdout Matching
-This treats the code as a black box. You feed input to `stdin` and check if `stdout` matches the expected string. This is language-agnostic but fragile: extra whitespace or debug prints can cause failures. Seen in benchmarks like **LiveCodeBench** (CodeForces/AtCoder subsets), **APPS**, and **CodeContests**.
+For instance, [CodeRL (Le et al., 2022)](https://arxiv.org/abs/2207.01780) treated code generation as an RL problem with execution-based rewards, using a critic network trained to predict functional correctness from four outcome categories: __compile error__, runtime error, failed tests, and passed tests.
+<!-- The key innovation was that once trained, the critic could provide dense reward estimates during generation, complementing the sparse rewards from actual execution. -->
 
+$$
+r(W_s) = \begin{cases} 
+-1.0 & \text{if } W_s \text{ cannot be compiled (compile error)} \\[0.5em]
+-0.6 & \text{if } W_s \text{ cannot be executed (runtime error)} \\[0.5em]
+-0.3 & \text{if } W_s \text{ failed any unit test} \\[0.5em]
++1.0 & \text{if } W_s \text{ passed all unit tests}
+\end{cases}
+$$
+
+We can see that instead of a sparse binary reward, we can get -1.0 (worst case: not compiled) or -0.6 (not executed), -0.3 (failed any unit test), +1.0 (passed all unit tests) based on the outcome. This is a more informative reward signal that can help the model learn from its mistakes.
+
+### 2. Input/Output Matching
+Run the code and compare output against expected results. This can be done via stdin/stdout (language-agnostic but fragile to whitespace) or by calling the function directly with arguments. Seen in benchmarks like **LiveCodeBench**, **APPS**, and **CodeContests**.
 
 ```python
 def verify_stdin_stdout(code: str, test_case: TestCase) -> bool:
     result = sandbox.run(code, stdin=test_case.input)
     return result.stdout.strip() == test_case.expected_output.strip()
+
+def verify_functional(code: str, test_case: TestCase) -> bool:
+    actual = sandbox.call_function(code, test_case.func_name, test_case.input)
+    return actual == test_case.expected_output
 ```
 
-### 3. Functional Verification
-Here, we call the generated function directly with specific arguments. This is standard for interview-style benchmarks (like LeetCode problems in LiveCodeBench).
+### 3. Assertion-Based Testing
+Here, we wrap the solution in a test harness with `assert` statements (or unit tests). If the test script exits with code 0, the solution is correct. Seen in benchmarks like **HumanEval**, **MBPP**, etc. 
 
-```python
-def verify_functional(code: str, test_cases: List[TestCase]) -> float:
-    passed = 0
-    for tc in test_cases:
-        # call_function invokes the specific function in the sandbox
-        actual = sandbox.call_function(code, tc.func_name, tc.input)
-        if actual == tc.output:
-            passed += 1
-    return passed / len(test_cases)
-```
+>**Note:** [EvalPlus](https://github.com/evalplus/evalplus) extended these datasets by generating **80x more test cases** for HumanEval and **35x more** for MBPP using automated input generation seeded by commercial LLMs.
 
-### 4. Assertion-Based Testing
-Here, we wrap the solution in a test harness with `assert` statements (or unit tests). If the test script exits with code 0, the solution is correct. Seen in benchmarks like HumanEval, MBPP, etc.
+<!-- The pass@k metric—probability that at least one of k samples passes all assertions—has become the standard evaluation paradigm. -->
 
 ```python
 def verify_with_assertions(solution_code: str, test_code: str) -> bool:
-    # test_code contains: assert solution([1,2,3]) == 6
+    # assert candidate(input) == expected_output
+    # test_code contains: assert candidate([1,2,3]) == 6
     full_code = f"{solution_code}\n\n{test_code}"
     result = sandbox.run(full_code)
     return result.exit_code == 0
 ```
 
-A production-grade **Code Environment** combines these into a single `step` method. It takes the model's code (Action), runs the verification suite, and returns the results.
+### 4. Bidirectional verification
+
+What makes Bidirectional verification interesting is that instead of optimizing just for code correctness, it is possible to **optimize for both code correctness and unit test correctness**. [CURE (Yin jie et al., 2025)](https://arxiv.org/abs/2509.14436) proposes co-evolving a coder and unit tester within a single policy (a.k.a LLM). For each task, the model generates *n* code solutions and *m* unit tests, then executes all codes against all tests (ground-truth tests and the generated unit tests) to build a binary pass/fail matrix **B***. Code rewards are simply the number of ground-truth tests passed. The clever part is the unit test reward: **+1** for correct behavior (passing correct code, failing incorrect code), **−1** for incorrect behavior (failing correct code, passing incorrect code) - where code "correctness" is determined by ground-truth tests. Both reward signals are normalized and fed into GRPO to update the shared policy.
+
+**💡 Intuition:** A good unit test gets positive reward when it: (1) passes ALL correct code solutions, AND (2) fails as many incorrect code solutions as possible. A bad unit test gets negative reward when it: fails correct code solutions OR passes too many incorrect code solutions.
+{: .notice--info}
+
+<iframe 
+  src="{{ site.url }}/{{ site.baseurl }}/assets/visualizations/rl_envs/curepipeline.html" 
+  style="width: 100%; height: 580px; border: none; border-radius: 16px; margin: 24px 0;"
+  loading="lazy"
+  title="CURE Pipeline Interactive Visualization">
+</iframe>
+
+<!-- A production-grade **Code Environment** combines these into a single `step` method. It takes the model's code (Action), runs the verification suite, and returns the results.
 
 ```python
 class SingleTurnCodeEnv(Environment):
@@ -144,11 +177,11 @@ class SingleTurnCodeEnv(Environment):
         # Calculate dense reward (percentage of tests passed)
         reward = sum(results) / len(results)
         return "", reward, True, {"passed": sum(results)}
-```
+``` -->
 
 # From Functions to Agents
 
-Verifying a single function is useful, but real-world tasks are rarely one-shot. An agent might need to clarify requirements, debug its own errors, or use external tools.
+In early experiments, an LLM’s “environment” might be just a single-turn coding task: get a prompt, output code, get a reward. But real-world tasks are rarely one-and-done. An agent might need to ask clarifying questions, fix mistakes, or use tools in multiple steps. This requires multi-turn interaction within an episode.
 
 This requires the environment to handle multi-turn interactions. This is where the `MultiTurnEnv` comes in. It manages the conversation history, number of turns, and enforces stopping conditions (like max turns). It turns a stateless `step()` into a stateful conversation loop. Here's a high-level view of the hierarchy from [verifiers](https://github.com/PrimeIntellect-ai/verifiers):
 
@@ -567,9 +600,8 @@ The environment is where your model learns. Invest in getting it right.
 - [SpecTool: A Benchmark for Characterizing Errors in Tool-Use LLMs](https://arxiv.org/abs/2411.13547) - Kokane et al., 2024
 
 **Self-Training & Synthetic Data:**
-- [Self-Training Large Language Models for Tool Use](https://arxiv.org/abs/2401.12999) - Luo et al., 2024
+- [Self-Training Large Language Models for Tool Use](https://arxiv.org/abs/2401.12999)
 - [How Kimi K2 Became One of the Best Tool-Using Models](https://www.dbreunig.com/2025/07/30/how-kimi-was-post-trained-for-tool-use.html)
----
 
 If you have any questions, feel free to reach out on [Linkedin](https://www.linkedin.com/in/murali-manohar/), [Twitter](https://twitter.com/gitlostmurali) or [Mail](mailto:kmanoharmurali@gmail.com).
 
