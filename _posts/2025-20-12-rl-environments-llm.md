@@ -28,12 +28,18 @@ This ***action → outcome loop*** is exactly what RL environments provide for L
     <figcaption><b>Figure 1:</b> <i>A car racing game illustrating the RL loop: actions (arrows for up/left/right) lead to observations (track state) and rewards (progress towards finish line)</i></figcaption>
 </figure>
 
-Despite being widely used in training reasoning models like DeepSeek-R1, Qwen and Kimi, the infrastructure and environment design details remain poorly documented. This blog is an attempt to synthesize findings from the existing literature and frontier lab reports/blogs. In this blog, we will cover the following topics: verification strategies, reward engineering, curriculum learning, sandboxing at scale, and the failure modes that derail training.
+
+This blog is an attempt to synthesize findings from the existing literature and blogs online.
+
+<!-- Despite being widely used in training reasoning models like DeepSeek-R1, Qwen and Kimi, the infrastructure and environment design details remain poorly documented.  -->
+
+ <!-- In this blog, we will cover the following topics: verification strategies, reward engineering, curriculum learning, sandboxing at scale, and the failure modes that derail training. -->
 
 
 # The Anatomy of an Environment
 
-At its core, an RL environment is a state machine that responds to an agent’s actions with new observations and rewards. Whether you're training a robot to walk or an LLM to write code, the core interface remains the same (mostly):
+<!-- At its core, an RL environment is a state machine that responds to an agent’s actions with new observations and rewards.  -->
+Whether you're training a robot to walk or an LLM to write code, the core interface remains the same (mostly):
 
 ```python
 class Environment:
@@ -45,7 +51,7 @@ class Environment:
         """Take an action and return the outcome"""
         pass
 ```
-
+<!-- 
 In our car racing analogy:
 
 - **Action**: Your keyboard input (up/down/left/right)
@@ -59,10 +65,11 @@ For LLM environments:
 - **Observation**: Tool outputs, error messages, test results, environment feedback
 - **Reward**: Score from verifier (correctness, helpfulness, etc.)
 - **Done**: Whether to stop or continue interacting with the environment (task complete, max turns reached, etc.)
-- **Info**: Execution traces, intermediate states
+- **Info**: Execution traces, intermediate states -->
+
+In our car racing analogy versus LLM training, the parallel is as follows:
 
 ```
-In our car racing analogy versus LLM training, the parallel looks like this:
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                              RL ENVIRONMENT                                │
 ├────────────────────────────┬───────────────────────────────────────────────┤
@@ -78,7 +85,7 @@ In our car racing analogy versus LLM training, the parallel looks like this:
 
 The critical difference lies in the **Reward**. In a game, the game engine knows the score. In LLM training, respective environment would carry out the reward logic. This brings us to the first concept: Verification.
 
-# Verification strategies
+# Reward Verification strategies
 
 Every environment needs to answer two questions: 
 1. ***"Did the model do it right?"*** 
@@ -115,7 +122,7 @@ r(W_s) = \begin{cases}
 \end{cases}
 $$
 
-We can see that instead of a sparse binary reward, we can get -1.0 (worst case: not compiled) or -0.6 (not executed), -0.3 (failed any unit test), +1.0 (passed all unit tests) based on the outcome. This is a more informative reward signal that can help the model learn from its mistakes.
+We can see that instead of a sparse binary reward, we can get -1.0 (worst case: not compiled) or -0.6 (compiled but not executed), -0.3 (executed but failed any unit test), +1.0 (passed all unit tests) based on the outcome. This is a more informative reward signal that can help the model learn from its mistakes.
 
 ### 2. Input/Output Matching
 Run the code and compare output against expected results. This can be done via stdin/stdout (language-agnostic but fragile to whitespace) or by calling the function directly with arguments. Seen in benchmarks like **LiveCodeBench**, **APPS**, and **CodeContests**.
@@ -212,6 +219,7 @@ Binary rewards worked surprisingly well for [Deepseek-R1](https://arxiv.org/abs/
 
 ## Partial Rewards: A Double-Edged Sword
 
+<!-- TODO: mention this as PRM (Process Reward Modelling) -->
 Giving **partial rewards for progress** seems like a good idea. In coding, perhaps give 0.1 reward for passing a single test case out of 10 (so 0.7 if it passes 7/10 tests). This dense feedback can help the model improve incrementally so that it's not all-or-nothing.
 
 ```python
@@ -268,23 +276,54 @@ Expected behavior:          Reward-hacked behavior:
 
 ## Curriculum Training
 
-One effective solution: start with easier tasks and gradually increase difficulty. Prime Intellect maintains difficulty levels in their benchmarks, primarily based on solvability by smaller models like Qwen-4B:
 
-```python
-class CurriculumScheduler:
-    def __init__(self, tasks_by_difficulty: Dict[int, List[Task]]):
-        self.tasks = tasks_by_difficulty
-        self.current_level = 1
-    
-    def get_batch(self, success_rate: float) -> List[Task]:
-        # Move to harder tasks when success rate is high
-        if success_rate > 0.8 and self.current_level < max(self.tasks.keys()):
-            self.current_level += 1
-        elif success_rate < 0.2 and self.current_level > 1:
-            self.current_level -= 1
-        
-        return random.sample(self.tasks[self.current_level], k=batch_size)
-```
+RL training is most effective when tasks are neither too easy nor too hard. Curriculum training solves this problem by dividing training into a few manually-defined phases of increasing difficulty ([Wen et al., 2025](https://arxiv.org/abs/2503.10460); [Luo et al., 2025](https://pretty-radio-b75.notion.site/DeepScaleR-Surpassing-O1-Preview-with-a-1-5B-Model-by-Scaling-RL-19681902c1468005bed8ca303013a4e2); [Song et al., 2025](https://arxiv.org/abs/2503.17287)), but these are coarse-grained and
+lack adaptivity. **Adaptive curriculum learning** addresses these issues by matching problem difficulty to the model's evolving capabilities. 
+
+
+[AdaRFT (Shi et al., 2025)](https://arxiv.org/abs/2504.05520) maintains a target difficulty level $T$ that evolves based on recent rewards. When average reward exceeds target ($\beta=0.5$) (also proposed by [DOTS (Yifan et al., 2025)](https://arxiv.org/abs/2506.05316v1)), difficulty increases; otherwise, it decreases. Their approach uses an external LLM (Qwen 2.5 MATH 7B) to estimate difficulty based on the success rate over 128 attempts. They observed a 2x reduction in training steps while improving accuracy. 
+
+<iframe 
+  src="{{ site.url }}/{{ site.baseurl }}/assets/visualizations/rl_envs/adarft.html" 
+  style="width: 100%; height: 800px; border: none; border-radius: 16px; margin: 24px 0;"
+  loading="lazy"
+  title="AdaRFT Pipeline Interactive Visualization">
+</iframe>
+
+[INTELLECT-3 (Prime Intellect Team, 2025)](https://arxiv.org/abs/2512.16144) uses a similar approach to dynamically adjust the difficulty of the training tasks based on the model's performance. In their case, they used `Qwen/Qwen3-4B-Thinking-2507` for difficulty estimation in the initial phase.
+
+<iframe 
+  src="{{ site.url }}/{{ site.baseurl }}/assets/visualizations/rl_envs/intellect3_curriculum.html" 
+  style="width: 100%; height: 1000px; border: none; border-radius: 16px; margin: 24px 0;"
+  loading="lazy"
+  title="INTELLECT-3 Curriculum Training Interactive Visualization">
+</iframe>
+
+<!-- Specifically, we can start with easier tasks and gradually increase difficulty.  -->
+
+<!-- Fine-tuning on problems that are too easy or too hard leads to poor learning outcomes. Instead, the model should be trained on problems whose difficulty is close to the model's current capability. -->
+
+<!-- Prime Intellect maintains difficulty levels in their benchmarks, primarily based on solvability by smaller models like Qwen-4B: -->
+
+
+<!-- Notes: By optimizing a policy model with reward signals that reflect task success, RFT enables more targeted
+learning than supervised finetuning (SFT) alone. However, despite its promise, RFT remains sample-
+inefficient and computationally expensive.
+
+Staged curricula divide training into a few manually-defined phases of increasing
+difficulty (Wen et al., 2025; Luo et al., 2025; Song et al., 2025), but these are coarse-grained and
+lack adaptivity. Other methods use online data filtering, repeatedly rolling out and pruning training
+samples until the model’s average reward meets a target threshold (Bae et al., 2025; Yu et al., 2025).
+While this approach helps prevent the model from stagnating on problems that are either too easy or
+too difficult, it is not truly adaptive and incurs significant rollout overhead. -->
+
+<!-- The intuition is simple: learning is most effective when tasks
+are neither too easy nor too hard. ADARFT formalizes this by maintaining a target difficulty level,
+which increases or decreases based on recent reward feedback. At each step, the model is trained on
+examples closest to this target, promoting a steady progression through solvable yet challenging tasks.
+The full algorithm is outlined in Algorithm 1 -->
+
+
 
 ## Adaptive Environments
 

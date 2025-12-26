@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INTELLECT-3 Curriculum Training</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            background: transparent;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        .curriculum-container {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            border-radius: 16px;
+            padding: 28px;
+            color: #e8e8e8;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            min-height: 100%;
+        }
+        .curriculum-title {
+            text-align: center;
+            font-size: 1.6em;
+            font-weight: 700;
+            margin-bottom: 6px;
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .curriculum-subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.95em;
+            margin-bottom: 24px;
+        }
+        
+        /* Training Progress Section */
+        .progress-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .progress-label {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #fff;
+        }
+        .progress-step {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #00d9ff;
+        }
+        .step-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .step-btn {
+            flex: 1;
+            padding: 12px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .step-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+        .step-btn.active {
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            color: #1a1a2e;
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(0, 217, 255, 0.4);
+            transform: scale(1.05);
+        }
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        /* Movement Alert */
+        .movement-alert {
+            background: rgba(157, 78, 221, 0.15);
+            border: 2px solid rgba(157, 78, 221, 0.5);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        .movement-title {
+            font-weight: 600;
+            color: #c084fc;
+            margin-bottom: 10px;
+            font-size: 0.95em;
+        }
+        .movement-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .movement-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            border: 1px solid rgba(157, 78, 221, 0.4);
+        }
+        .movement-item .from { color: #ff6b6b; }
+        .movement-item .to { color: #00ff88; }
+        .movement-item .arrow { color: rgba(255, 255, 255, 0.5); margin: 0 4px; }
+
+        /* Pools Grid */
+        .pools-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 800px) {
+            .pools-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        .pool {
+            border-radius: 12px;
+            padding: 16px;
+            min-height: 240px;
+            border: 2px solid;
+            transition: all 0.3s ease;
+        }
+        .pool-hard {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+        .pool-normal {
+            background: rgba(234, 179, 8, 0.1);
+            border-color: rgba(234, 179, 8, 0.5);
+        }
+        .pool-easy {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: rgba(34, 197, 94, 0.5);
+        }
+        .pool-filtered {
+            background: rgba(156, 163, 175, 0.1);
+            border-color: rgba(156, 163, 175, 0.4);
+        }
+        .pool-header {
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .pool-label {
+            font-weight: 700;
+            font-size: 1em;
+        }
+        .pool-hard .pool-label { color: #f87171; }
+        .pool-normal .pool-label { color: #facc15; }
+        .pool-easy .pool-label { color: #4ade80; }
+        .pool-filtered .pool-label { color: #9ca3af; }
+        .pool-desc {
+            font-size: 0.75em;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 2px;
+        }
+        .pool-count {
+            font-size: 0.7em;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 4px;
+        }
+        .pool-items {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* Problem Card */
+        .problem-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s ease;
+        }
+        .problem-card.moved {
+            box-shadow: 0 0 0 3px rgba(157, 78, 221, 0.5);
+        }
+        .problem-card.filtered-card {
+            opacity: 0.5;
+        }
+        .problem-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        .problem-name {
+            font-size: 0.85em;
+            font-weight: 500;
+            color: #fff;
+            line-height: 1.3;
+        }
+        .problem-new {
+            font-size: 0.65em;
+            font-weight: 700;
+            color: #c084fc;
+            background: rgba(157, 78, 221, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .problem-rate-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .rate-track {
+            flex: 1;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .rate-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.7s ease;
+        }
+        .pool-hard .rate-fill { background: #f87171; }
+        .pool-normal .rate-fill { background: #facc15; }
+        .pool-easy .rate-fill { background: #4ade80; }
+        .pool-filtered .rate-fill { background: #9ca3af; }
+        .rate-value {
+            font-size: 0.75em;
+            font-family: 'SF Mono', 'Consolas', monospace;
+            color: rgba(255, 255, 255, 0.7);
+            min-width: 36px;
+            text-align: right;
+        }
+        .rate-change {
+            font-size: 0.7em;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 4px;
+        }
+        .rate-change .increase { color: #4ade80; }
+        .pool-empty {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.85em;
+            padding: 32px 0;
+        }
+
+        /* Timeline Section */
+        .timeline-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .timeline-title {
+            font-weight: 600;
+            color: #00d9ff;
+            margin-bottom: 16px;
+            font-size: 1em;
+        }
+        .timeline-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .timeline-label {
+            width: 140px;
+            font-size: 0.85em;
+            color: rgba(255, 255, 255, 0.8);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .timeline-cells {
+            flex: 1;
+            display: flex;
+            gap: 4px;
+        }
+        .timeline-cell {
+            flex: 1;
+            height: 32px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75em;
+            font-family: 'SF Mono', 'Consolas', monospace;
+            border: 1px solid;
+            transition: all 0.3s ease;
+            opacity: 0.5;
+        }
+        .timeline-cell.current {
+            opacity: 1;
+            transform: scale(1.1);
+            box-shadow: 0 0 0 2px #00d9ff;
+            z-index: 1;
+        }
+        .timeline-cell.hard {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #f87171;
+        }
+        .timeline-cell.normal {
+            background: rgba(234, 179, 8, 0.2);
+            border-color: rgba(234, 179, 8, 0.4);
+            color: #facc15;
+        }
+        .timeline-cell.easy {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: rgba(34, 197, 94, 0.4);
+            color: #4ade80;
+        }
+        .timeline-cell.filtered {
+            background: rgba(156, 163, 175, 0.15);
+            border-color: rgba(156, 163, 175, 0.3);
+            color: #9ca3af;
+        }
+        .timeline-steps {
+            display: flex;
+            gap: 4px;
+            margin-left: 152px;
+            margin-top: 8px;
+        }
+        .timeline-step-label {
+            flex: 1;
+            text-align: center;
+            font-size: 0.7em;
+            color: rgba(255, 255, 255, 0.4);
+        }
+        .timeline-step-label.current {
+            color: #00d9ff;
+            font-weight: 600;
+        }
+
+        /* Legend Section */
+        .legend-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .legend-title {
+            font-weight: 600;
+            color: #00d9ff;
+            margin-bottom: 12px;
+            font-size: 1em;
+        }
+        .legend-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px 24px;
+            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.75);
+            line-height: 1.6;
+        }
+        .legend-grid strong {
+            color: #fff;
+        }
+        @media (max-width: 600px) {
+            .legend-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="curriculum-container">
+    <div class="curriculum-title">INTELLECT-3 Curriculum Training</div>
+    <div class="curriculum-subtitle">Watch how problems move between pools as the model improves</div>
+    
+    <!-- Training Progress -->
+    <div class="progress-section">
+        <div class="progress-header">
+            <span class="progress-label">Training Progress</span>
+            <span class="progress-step" id="current-step">Step 0</span>
+        </div>
+        <div class="step-buttons" id="step-buttons"></div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+    </div>
+
+    <!-- Movement Alert -->
+    <div class="movement-alert" id="movement-alert" style="display: none;">
+        <div class="movement-title">🔄 Problems Moved This Step:</div>
+        <div class="movement-items" id="movement-items"></div>
+    </div>
+
+    <!-- Pools Visualization -->
+    <div class="pools-grid" id="pools-grid"></div>
+
+    <!-- Problem Journey Tracker -->
+    <div class="timeline-section">
+        <div class="timeline-title">📊 All Problems - Solve Rate Over Time</div>
+        <div id="timeline-rows"></div>
+        <div class="timeline-steps" id="timeline-steps"></div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend-section">
+        <div class="legend-title">📖 How Curriculum Training Works</div>
+        <div class="legend-grid">
+            <div><strong>1. Initial Assignment:</strong> Problems start in pools based on Qwen3-4B solve rate</div>
+            <div><strong>4. Filtering:</strong> Once rate hits 100%, problem is removed (no learning signal)</div>
+            <div><strong>2. Model Improves:</strong> As training progresses, solve rates increase</div>
+            <div><strong>5. Sampling:</strong> Each batch samples from all pools to maintain curriculum</div>
+            <div><strong>3. Problems Graduate:</strong> Hard → Normal → Easy as model masters them</div>
+            <div><strong>6. Result:</strong> Model always trains on appropriately challenging problems</div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const problemEvolution = [
+        { id: 'P1', name: 'Basic arithmetic (2+2)', rates: [0.85, 0.92, 0.98, 1.0, 1.0, 1.0] },
+        { id: 'P2', name: 'Linear equations', rates: [0.65, 0.75, 0.85, 0.92, 0.98, 1.0] },
+        { id: 'P3', name: 'Quadratic formula', rates: [0.45, 0.55, 0.65, 0.78, 0.88, 0.95] },
+        { id: 'P4', name: 'Calculus integral', rates: [0.25, 0.32, 0.45, 0.58, 0.70, 0.82] },
+        { id: 'P5', name: 'AIME competition', rates: [0.10, 0.15, 0.25, 0.38, 0.52, 0.65] },
+        { id: 'P6', name: 'Research-level math', rates: [0.02, 0.05, 0.10, 0.18, 0.28, 0.40] },
+    ];
+
+    const stepLabels = ['Step 0', 'Step 100', 'Step 200', 'Step 300', 'Step 400', 'Step 500'];
+    const poolOrder = ['hard', 'normal', 'easy', 'filtered'];
+    const poolInfo = {
+        hard: { label: '🔴 HARD', desc: 'Rate < 30%' },
+        normal: { label: '🟡 NORMAL', desc: 'Rate 30-80%' },
+        easy: { label: '🟢 EASY', desc: 'Rate ≥ 80%' },
+        filtered: { label: '🚫 FILTERED', desc: 'Rate = 100%' }
+    };
+
+    let trainingStep = 0;
+
+    function getPool(rate) {
+        if (rate >= 1.0) return 'filtered';
+        if (rate >= 0.8) return 'easy';
+        if (rate >= 0.3) return 'normal';
+        return 'hard';
+    }
+
+    function getCurrentProblems() {
+        return problemEvolution.map(p => ({
+            ...p,
+            currentRate: p.rates[trainingStep],
+            previousRate: trainingStep > 0 ? p.rates[trainingStep - 1] : null,
+            currentPool: getPool(p.rates[trainingStep]),
+            previousPool: trainingStep > 0 ? getPool(p.rates[trainingStep - 1]) : null,
+        }));
+    }
+
+    function didMove(problem) {
+        return problem.previousPool && problem.previousPool !== problem.currentPool;
+    }
+
+    function renderStepButtons() {
+        const container = document.getElementById('step-buttons');
+        container.innerHTML = stepLabels.map((label, idx) => 
+            `<button class="step-btn ${idx === trainingStep ? 'active' : ''}" onclick="window.setStep(${idx})">${label}</button>`
+        ).join('');
+    }
+
+    function renderPools() {
+        const problems = getCurrentProblems();
+        const container = document.getElementById('pools-grid');
+        
+        container.innerHTML = poolOrder.map(poolName => {
+            const info = poolInfo[poolName];
+            const poolProblems = problems.filter(p => p.currentPool === poolName);
+            
+            const itemsHtml = poolProblems.length > 0 
+                ? poolProblems.map(p => {
+                    const moved = didMove(p);
+                    const rateChange = p.previousRate !== null 
+                        ? `was ${(p.previousRate * 100).toFixed(0)}% <span class="increase">(+${((p.currentRate - p.previousRate) * 100).toFixed(0)}%)</span>`
+                        : '';
+                    return `
+                        <div class="problem-card ${moved ? 'moved' : ''} ${poolName === 'filtered' ? 'filtered-card' : ''}">
+                            <div class="problem-header">
+                                <span class="problem-name">${p.name}</span>
+                                ${moved ? '<span class="problem-new">NEW!</span>' : ''}
+                            </div>
+                            <div class="problem-rate-bar">
+                                <div class="rate-track">
+                                    <div class="rate-fill" style="width: ${Math.min(p.currentRate * 100, 100)}%"></div>
+                                </div>
+                                <span class="rate-value">${(p.currentRate * 100).toFixed(0)}%</span>
+                            </div>
+                            ${rateChange ? `<div class="rate-change">${rateChange}</div>` : ''}
+                        </div>
+                    `;
+                }).join('')
+                : '<div class="pool-empty">No problems</div>';
+
+            return `
+                <div class="pool pool-${poolName}">
+                    <div class="pool-header">
+                        <div class="pool-label">${info.label}</div>
+                        <div class="pool-desc">${info.desc}</div>
+                        <div class="pool-count">(${poolProblems.length} problems)</div>
+                    </div>
+                    <div class="pool-items">${itemsHtml}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderMovementAlert() {
+        const problems = getCurrentProblems();
+        const movedProblems = problems.filter(p => didMove(p));
+        const container = document.getElementById('movement-alert');
+        const itemsContainer = document.getElementById('movement-items');
+
+        if (trainingStep > 0 && movedProblems.length > 0) {
+            container.style.display = 'block';
+            itemsContainer.innerHTML = movedProblems.map(p => `
+                <div class="movement-item">
+                    <span>${p.name}</span>:
+                    <span class="from">${p.previousPool}</span>
+                    <span class="arrow">→</span>
+                    <span class="to">${p.currentPool}</span>
+                </div>
+            `).join('');
+        } else {
+            container.style.display = 'none';
+        }
+    }
+
+    function renderTimeline() {
+        const rowsContainer = document.getElementById('timeline-rows');
+        const stepsContainer = document.getElementById('timeline-steps');
+
+        rowsContainer.innerHTML = problemEvolution.map(p => `
+            <div class="timeline-row">
+                <div class="timeline-label">${p.name}</div>
+                <div class="timeline-cells">
+                    ${p.rates.map((rate, idx) => {
+                        const pool = getPool(rate);
+                        const isCurrent = idx === trainingStep;
+                        return `<div class="timeline-cell ${pool} ${isCurrent ? 'current' : ''}">${(rate * 100).toFixed(0)}%</div>`;
+                    }).join('')}
+                </div>
+            </div>
+        `).join('');
+
+        stepsContainer.innerHTML = stepLabels.map((label, idx) => 
+            `<div class="timeline-step-label ${idx === trainingStep ? 'current' : ''}">${label}</div>`
+        ).join('');
+    }
+
+    function updateUI() {
+        document.getElementById('current-step').textContent = stepLabels[trainingStep];
+        document.getElementById('progress-fill').style.width = `${(trainingStep / (stepLabels.length - 1)) * 100}%`;
+        
+        renderStepButtons();
+        renderMovementAlert();
+        renderPools();
+        renderTimeline();
+    }
+
+    window.setStep = function(step) {
+        trainingStep = step;
+        updateUI();
+    };
+
+    // Initial render
+    updateUI();
+})();
+</script>
+
+</body>
+</html>
+

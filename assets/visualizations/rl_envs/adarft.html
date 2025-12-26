@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADARFT: Adaptive Curriculum Learning</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { background: transparent; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; }
+        
+        .container {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            border-radius: 12px;
+            padding: 20px;
+            color: #e2e8f0;
+        }
+        
+        .title {
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: 700;
+            background: linear-gradient(90deg, #22d3ee, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 16px;
+        }
+        
+        /* Concept section */
+        .concept-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .concept-card {
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 0.85em;
+        }
+        .concept-card.t-card {
+            background: linear-gradient(135deg, rgba(168,85,247,0.2), rgba(168,85,247,0.1));
+            border: 1px solid rgba(168,85,247,0.3);
+        }
+        .concept-card.beta-card {
+            background: linear-gradient(135deg, rgba(251,191,36,0.2), rgba(251,191,36,0.1));
+            border: 1px solid rgba(251,191,36,0.3);
+        }
+        .concept-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .badge {
+            font-size: 0.65em;
+            padding: 2px 6px;
+            border-radius: 8px;
+        }
+        .badge.updates { background: rgba(34,197,94,0.2); color: #22c55e; }
+        .badge.constant { background: rgba(239,68,68,0.2); color: #ef4444; }
+        .concept-desc { color: #94a3b8; font-size: 0.9em; line-height: 1.4; }
+        
+        /* Feedback loop */
+        .flow-section {
+            background: rgba(15,23,42,0.4);
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+        }
+        .flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .flow-step {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px;
+            padding: 12px 14px;
+            text-align: center;
+            flex: 1;
+            max-width: 130px;
+        }
+        .flow-step .emoji { font-size: 1.5em; margin-bottom: 4px; }
+        .flow-step .flow-label { font-size: 0.8em; font-weight: 600; margin-bottom: 2px; }
+        .flow-step .flow-sub { font-size: 0.7em; color: #94a3b8; }
+        .flow-arrow { color: #64748b; font-size: 1.3em; flex-shrink: 0; }
+        .conditions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            font-size: 0.75em;
+        }
+        .cond {
+            border-radius: 8px;
+            padding: 10px 12px;
+            text-align: center;
+            line-height: 1.4;
+        }
+        .cond strong { display: block; margin-bottom: 4px; font-size: 1.05em; }
+        .cond.easy { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.25); color: #86efac; }
+        .cond.easy strong { color: #22c55e; }
+        .cond.right { background: rgba(234,179,8,0.12); border: 1px solid rgba(234,179,8,0.25); color: #fde047; }
+        .cond.right strong { color: #eab308; }
+        .cond.hard { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.25); color: #fca5a5; }
+        .cond.hard strong { color: #ef4444; }
+        
+        /* Simulation controls */
+        .controls {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            padding: 14px 20px;
+            background: rgba(15,23,42,0.5);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn.run { background: linear-gradient(135deg, #22c55e, #16a34a); color: #0f172a; }
+        .btn.run.running { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+        .btn.step { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; }
+        .btn.reset { background: linear-gradient(135deg, #64748b, #475569); color: white; }
+        .controls-divider {
+            width: 1px;
+            height: 28px;
+            background: rgba(255,255,255,0.15);
+        }
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.8em;
+            color: #94a3b8;
+        }
+        .speed-control input { 
+            width: 80px; 
+            accent-color: #22d3ee;
+        }
+        
+        /* Stats */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .stat {
+            background: rgba(15,23,42,0.8);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+        .stat.t-stat { border: 1px solid rgba(168,85,247,0.3); }
+        .stat.beta-stat { border: 1px solid rgba(251,191,36,0.3); }
+        .stat.reward-stat { border: 1px solid rgba(59,130,246,0.3); }
+        .stat-label { font-size: 0.65em; color: #94a3b8; margin-bottom: 2px; }
+        .stat-value { font-size: 1.4em; font-weight: 700; }
+        .stat.t-stat .stat-value { color: #a855f7; }
+        .stat.beta-stat .stat-value { color: #fbbf24; }
+        .stat.beta-stat .stat-sub { font-size: 0.55em; color: #64748b; }
+        .stat.reward-stat .stat-value { color: #3b82f6; }
+        
+        /* Chart */
+        .chart-container {
+            background: #0f172a;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 14px;
+        }
+        .chart-container svg { display: block; }
+        
+        /* Formula (below chart) */
+        .formula-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            background: rgba(15,23,42,0.6);
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+        .formula {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+        }
+        .formula .purple { color: #a855f7; }
+        .formula .cyan { color: #22d3ee; }
+        .formula .green { color: #22c55e; }
+        .formula .yellow { color: #fbbf24; }
+        .formula .gray { color: #64748b; }
+        .params {
+            display: flex;
+            gap: 16px;
+            font-size: 0.75em;
+        }
+        .params span { color: #64748b; }
+        .params .val { font-weight: 600; }
+        .params .cyan { color: #22d3ee; }
+        .params .green { color: #22c55e; }
+        .params .yellow { color: #fbbf24; }
+        
+        /* History table */
+        .history {
+            max-height: 90px;
+            overflow-y: auto;
+            font-size: 0.7em;
+            border-radius: 8px;
+            background: rgba(15,23,42,0.5);
+        }
+        .history table { width: 100%; border-collapse: collapse; }
+        .history th, .history td { padding: 5px 8px; text-align: left; }
+        .history th { background: #0f172a; position: sticky; top: 0; color: #94a3b8; }
+        .history tr:first-child td { background: rgba(168,85,247,0.1); }
+        .history .mono { font-family: monospace; }
+        .history .green { color: #22c55e; }
+        .history .red { color: #ef4444; }
+        .history .yellow { color: #eab308; }
+        .history .purple { color: #a855f7; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="title">ADARFT: Adaptive Curriculum Learning</div>
+    
+    <!-- Concept: T vs β -->
+    <div class="concept-row">
+        <div class="concept-card t-card">
+            <div class="concept-header">
+                🎯 <span style="color:#a855f7">T</span> = Target Difficulty
+                <span class="badge updates">ADAPTS</span>
+            </div>
+            <div class="concept-desc">Starts easy (T=0), increases as model improves</div>
+        </div>
+        <div class="concept-card beta-card">
+            <div class="concept-header">
+                ⚡ <span style="color:#fbbf24">β</span> = Target Reward
+                <span class="badge constant">FIXED</span>
+            </div>
+            <div class="concept-desc">Always 0.5 — 50% success maximizes learning</div>
+        </div>
+    </div>
+    
+    <!-- Feedback Loop -->
+    <div class="flow-section">
+        <div class="flow">
+            <div class="flow-step">
+                <div class="emoji">📚</div>
+                <div class="flow-label">Sample Problems</div>
+                <div class="flow-sub">at difficulty ≈ T</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="emoji">🤖</div>
+                <div class="flow-label">Model Solves</div>
+                <div class="flow-sub">gets reward R<sub>avg</sub></div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="emoji">⚖️</div>
+                <div class="flow-label">Compare</div>
+                <div class="flow-sub">R<sub>avg</sub> vs β = 0.5</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="emoji">🎚️</div>
+                <div class="flow-label">Adjust T</div>
+                <div class="flow-sub">↑ or ↓ difficulty</div>
+            </div>
+        </div>
+        <div class="conditions">
+            <div class="cond easy">
+                <strong>R &gt; 0.5 (too easy)</strong>
+                Succeeds too often → Increase T → Harder problems
+            </div>
+            <div class="cond right">
+                <strong>R ≈ 0.5 (just right)</strong>
+                Perfect balance → T stays same → Optimal learning
+            </div>
+            <div class="cond hard">
+                <strong>R &lt; 0.5 (too hard)</strong>
+                Fails too often → Decrease T → Easier problems
+            </div>
+        </div>
+    </div>
+    
+    <!-- Controls -->
+    <div class="controls">
+        <button class="btn run" id="runBtn" onclick="toggleRun()">▶ Run</button>
+        <button class="btn step" id="stepBtn" onclick="runStep()">⏭ Step</button>
+        <button class="btn reset" onclick="reset()">↺ Reset</button>
+        <div class="controls-divider"></div>
+        <div class="speed-control">
+            <span>Speed:</span>
+            <input type="range" id="speedSlider" min="100" max="2000" step="100" value="1100" onchange="updateSpeed()">
+        </div>
+    </div>
+    
+    <!-- Stats -->
+    <div class="stats">
+        <div class="stat">
+            <div class="stat-label">Step</div>
+            <div class="stat-value" id="stepDisplay">0</div>
+        </div>
+        <div class="stat t-stat">
+            <div class="stat-label">Difficulty (T)</div>
+            <div class="stat-value" id="tDisplay">0.0</div>
+        </div>
+        <div class="stat beta-stat">
+            <div class="stat-label">Target (β)</div>
+            <div class="stat-value">0.5</div>
+            <div class="stat-sub">CONSTANT</div>
+        </div>
+        <div class="stat reward-stat">
+            <div class="stat-label">Last Reward</div>
+            <div class="stat-value" id="rewardDisplay">—</div>
+        </div>
+    </div>
+    
+    <!-- Chart -->
+    <div class="chart-container">
+        <svg id="chart" width="100%" viewBox="0 0 500 130"></svg>
+    </div>
+    
+    <!-- Formula (moved below chart) -->
+    <div class="formula-row">
+        <div class="formula">
+            <span class="purple">T'</span> = clip(<span class="purple">T</span> + 
+            <span class="cyan">η</span> · tanh(<span class="green">α</span> · (<span class="yellow">R</span> − <span class="yellow">β</span>)), 
+            <span class="gray">0, 100</span>)
+        </div>
+        <div class="params">
+            <span><span class="val cyan">η = 50</span> step size</span>
+            <span><span class="val green">α = 2</span> sensitivity</span>
+            <span><span class="val yellow">β = 0.5</span> target</span>
+        </div>
+    </div>
+    
+    <!-- History -->
+    <div class="history">
+        <table>
+            <thead>
+                <tr>
+                    <th>Step</th>
+                    <th>Reward</th>
+                    <th>vs β</th>
+                    <th>ΔT</th>
+                    <th>New T</th>
+                </tr>
+            </thead>
+            <tbody id="historyBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+(function() {
+    const BETA = 0.5, ETA = 50, ALPHA = 2, D_MIN = 0, D_MAX = 100;
+    
+    let step = 0, T = 0, isRunning = false, speed = 1000, timer = null;
+    let history = [{ step: 0, T: 0, reward: null, delta: null }];
+    
+    const chart = document.getElementById('chart');
+    const chartWidth = 500, chartHeight = 130, padding = 30;
+    
+    const xScale = (s) => padding + (s / 50) * (chartWidth - 2 * padding);
+    const yScaleD = (d) => chartHeight - padding - (d / 100) * (chartHeight - 2 * padding);
+    const yScaleR = (r) => chartHeight - padding - r * (chartHeight - 2 * padding);
+    
+    function simulateReward(difficulty) {
+        const base = 0.8 - (difficulty / 100) * 0.6;
+        const noise = (Math.random() - 0.5) * 0.2;
+        return Math.max(0, Math.min(1, base + noise));
+    }
+    
+    function updateDifficulty(currentT, avgReward) {
+        const delta = ETA * Math.tanh(ALPHA * (avgReward - BETA));
+        return Math.max(D_MIN, Math.min(D_MAX, currentT + delta));
+    }
+    
+    window.runStep = function() {
+        if (step >= 50) return;
+        
+        const reward = simulateReward(T);
+        const newT = updateDifficulty(T, reward);
+        const delta = newT - T;
+        
+        history.push({ step: step + 1, T: newT, reward, delta });
+        T = newT;
+        step++;
+        
+        updateUI();
+        
+        if (step >= 50) {
+            isRunning = false;
+            document.getElementById('runBtn').textContent = '▶ Run';
+            document.getElementById('runBtn').classList.remove('running');
+            clearTimeout(timer);
+        }
+    };
+    
+    window.toggleRun = function() {
+        if (step >= 50) return;
+        isRunning = !isRunning;
+        const btn = document.getElementById('runBtn');
+        btn.textContent = isRunning ? '⏸ Pause' : '▶ Run';
+        btn.classList.toggle('running', isRunning);
+        
+        if (isRunning) scheduleStep();
+        else clearTimeout(timer);
+    };
+    
+    function scheduleStep() {
+        if (!isRunning || step >= 50) return;
+        timer = setTimeout(() => {
+            runStep();
+            scheduleStep();
+        }, speed);
+    }
+    
+    window.reset = function() {
+        clearTimeout(timer);
+        step = 0; T = 0; isRunning = false;
+        history = [{ step: 0, T: 0, reward: null, delta: null }];
+        document.getElementById('runBtn').textContent = '▶ Run';
+        document.getElementById('runBtn').classList.remove('running');
+        updateUI();
+    };
+    
+    window.updateSpeed = function() {
+        speed = 2100 - parseInt(document.getElementById('speedSlider').value);
+    };
+    
+    function updateUI() {
+        document.getElementById('stepDisplay').textContent = step;
+        document.getElementById('tDisplay').textContent = T.toFixed(1);
+        
+        const lastReward = history.length > 1 ? history[history.length - 1].reward : null;
+        document.getElementById('rewardDisplay').textContent = lastReward !== null ? lastReward.toFixed(2) : '—';
+        
+        document.getElementById('stepBtn').disabled = isRunning || step >= 50;
+        document.getElementById('runBtn').disabled = step >= 50;
+        
+        drawChart();
+        updateHistory();
+    }
+    
+    function drawChart() {
+        let svg = '';
+        
+        // Grid lines
+        for (let d of [0, 50, 100]) {
+            svg += `<line x1="${padding}" y1="${yScaleD(d)}" x2="${chartWidth - padding}" y2="${yScaleD(d)}" 
+                    stroke="#334155" stroke-dasharray="3,3"/>`;
+            svg += `<text x="${padding - 5}" y="${yScaleD(d) + 4}" text-anchor="end" fill="#64748b" font-size="9">${d}</text>`;
+        }
+        
+        // Beta line
+        svg += `<line x1="${padding}" y1="${yScaleR(BETA)}" x2="${chartWidth - padding}" y2="${yScaleR(BETA)}" 
+                stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="6,3"/>`;
+        svg += `<text x="${chartWidth - padding + 4}" y="${yScaleR(BETA) + 4}" fill="#f59e0b" font-size="9">β=0.5</text>`;
+        
+        // Difficulty path
+        if (history.length > 1) {
+            const path = history.map((h, i) => `${i === 0 ? 'M' : 'L'} ${xScale(h.step)} ${yScaleD(h.T)}`).join(' ');
+            svg += `<path d="${path}" fill="none" stroke="#a855f7" stroke-width="2.5"/>`;
+        }
+        
+        // Reward points
+        history.slice(1).forEach(h => {
+            const color = h.reward > BETA ? '#22c55e' : h.reward < BETA ? '#ef4444' : '#eab308';
+            svg += `<circle cx="${xScale(h.step)}" cy="${yScaleR(h.reward)}" r="4" fill="${color}"/>`;
+        });
+        
+        // Current T marker
+        svg += `<circle cx="${xScale(step)}" cy="${yScaleD(T)}" r="6" fill="#a855f7" stroke="white" stroke-width="2"/>`;
+        
+        // Legend
+        svg += `<rect x="${padding}" y="6" width="10" height="10" fill="#a855f7" rx="2"/>
+                <text x="${padding + 14}" y="14" fill="#a855f7" font-size="9">T (Difficulty)</text>
+                <circle cx="${padding + 100}" cy="11" r="4" fill="#22c55e"/>
+                <text x="${padding + 108}" y="14" fill="#64748b" font-size="9">R &gt; β</text>
+                <circle cx="${padding + 150}" cy="11" r="4" fill="#ef4444"/>
+                <text x="${padding + 158}" y="14" fill="#64748b" font-size="9">R &lt; β</text>`;
+        
+        chart.innerHTML = svg;
+    }
+    
+    function updateHistory() {
+        const tbody = document.getElementById('historyBody');
+        tbody.innerHTML = history.slice().reverse().slice(0, 6).map((h, i) => {
+            const statusClass = h.reward === null ? '' : h.reward > BETA ? 'green' : h.reward < BETA ? 'red' : 'yellow';
+            const statusText = h.reward === null ? '—' : h.reward > BETA ? '↑ Easy' : h.reward < BETA ? '↓ Hard' : '→ OK';
+            const deltaText = h.delta !== null ? (h.delta > 0 ? '+' : '') + h.delta.toFixed(1) : '—';
+            return `<tr>
+                <td class="mono">${h.step}</td>
+                <td class="mono">${h.reward !== null ? h.reward.toFixed(3) : '—'}</td>
+                <td class="${statusClass}">${statusText}</td>
+                <td class="mono">${deltaText}</td>
+                <td class="mono purple">${h.T.toFixed(1)}</td>
+            </tr>`;
+        }).join('');
+    }
+    
+    updateUI();
+})();
+</script>
+
+</body>
+</html>
