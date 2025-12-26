@@ -11,15 +11,16 @@ mathjax: true
 
 # Background
 
-Reinforcement learning follows the FAFO principle-Fool Around and Find Out ([more on this here]({{ site.url }}/{{ site.baseurl }}/grpo-intro/)). But to fool around, LLMs need a playground: an *environment* where they can take actions, observe outcomes, and learn from their mistakes. 
+Reinforcement learning works on the FAFO principle → Fool Around and Find Out ([more on this here]({{ site.url }}/{{ site.baseurl }}/grpo-intro/)). But to fool around, LLMs need a playground: an *environment* where they can take actions, observe outcomes, and learn from their mistakes. 
 
-If you've ever played a video game, you already grasp the core idea of RL environments. Imagine a car racing game: your keyboard inputs (up/down/left/right) feed into the game engine, which executes a step in the game world and returns an outcome -> 
+<!-- If you've ever played a video game, you already grasp the core idea of RL environments.  -->
+Imagine a car racing game: Your keyboard inputs (up/down/left/right) go into the game engine, the game world executes a step and returns an outcome: 
 
 1. Did you crash, 
 2. Did you successfully cross the finish line, or 
 3. Are you still racing? 
 
-This action → outcome loop is exactly what RL environments provide for LLM training.
+This ***action → outcome loop*** is exactly what RL environments provide for LLM training.
 
 
 <figure style="max-width: 400px; margin: 0 auto;">
@@ -77,7 +78,7 @@ In our car racing analogy versus LLM training, the parallel looks like this:
 
 The critical difference lies in the **Reward**. In a game, the game engine knows the score. In LLM training, respective environment would carry out the reward logic. This brings us to the first concept: Verification.
 
-# Verification strategies determine what models can learn
+# Verification strategies
 
 Every environment needs to answer two questions: 
 1. ***"Did the model do it right?"*** 
@@ -147,7 +148,9 @@ def verify_with_assertions(solution_code: str, test_code: str) -> bool:
 
 ### 4. Bidirectional verification
 
-What makes Bidirectional verification interesting is that instead of optimizing just for code correctness, it is possible to **optimize for both code correctness and unit test correctness**. [CURE (Yin jie et al., 2025)](https://arxiv.org/abs/2509.14436) proposes co-evolving a coder and unit tester within a single policy (a.k.a LLM). For each task, the model generates *n* code solutions and *m* unit tests, then executes all codes against all tests (ground-truth tests and the generated unit tests) to build a binary pass/fail matrix **B***. Code rewards are simply the number of ground-truth tests passed. The clever part is the unit test reward: **+1** for correct behavior (passing correct code, failing incorrect code), **−1** for incorrect behavior (failing correct code, passing incorrect code) - where code "correctness" is determined by ground-truth tests. Both reward signals are normalized and fed into GRPO to update the shared policy.
+What makes Bidirectional verification interesting is that instead of optimizing just for code correctness, it is possible to **optimize for both code correctness and unit test correctness in one go**. [CURE (Yin jie et al., 2025)](https://arxiv.org/abs/2509.14436) proposes co-evolving a coder and unit tester within a single policy (a.k.a LLM). 
+
+For each task, the model generates *n* code solutions and *m* unit tests, then executes all codes against all tests (ground-truth tests and the generated unit tests) to build a binary pass/fail matrix **B***. Code rewards are simply the number of ground-truth tests passed. The clever part is the unit test reward: **+1** for correct behavior (passing correct code, failing incorrect code), **−1** for incorrect behavior (failing correct code, passing incorrect code) - where code "correctness" is determined by ground-truth tests. Both reward signals are normalized and fed into GRPO to update the shared policy.
 
 **💡 Intuition:** A good unit test gets positive reward when it: (1) passes ALL correct code solutions, AND (2) fails as many incorrect code solutions as possible. A bad unit test gets negative reward when it: fails correct code solutions OR passes too many incorrect code solutions.
 {: .notice--info}
@@ -181,7 +184,7 @@ class SingleTurnCodeEnv(Environment):
 
 # From LLMs to Agents
 
-In early experiments, an LLM's "environment" might be just a single-turn task: get a prompt, output code, get a reward. But real-world tasks are rarely one shot. An agent might need to *ask clarifying questions*, *fix mistakes*, or *use tools* in multiple steps. This requires multi-turn interaction within an episode/rollout.
+In early experiments, an LLM's "environment" might be just a single-turn task: get a prompt, output code, get a reward. But real-world tasks are rarely one-turn. An agent might need to *ask clarifying questions*, *fix mistakes*, or *use tools* in multiple steps. This requires multi-turn interaction within an episode/rollout.
 
 Libraries like [verifiers](https://github.com/PrimeIntellect-ai/verifiers) handle this through environment inheritance, where each layer adds new capabilities:
 
@@ -199,30 +202,46 @@ The pattern is elegant: `MultiTurnEnv` turns a stateless `step()` into a convers
 
 # The Reward Engineering Challenge
 
+The reward function determines training dynamics more than any other design choice. The field has learned hard lessons about reward hacking, with frontier models now actively manipulating evaluation code when given the opportunity. 
+
+TODO: cite SakanaAI & o3 monkey patching -> add citations.
+
 ## The Strict Reward Trap
 
-From experience: strict binary rewards (1 for correct, 0 for wrong) on difficult tasks like math can halt training entirely. The model never gets positive signal to learn from.
-
-```python
-# This can kill training on hard tasks
-reward = 1.0 if perfectly_correct else 0.0
-```
+Binary rewards worked surprisingly well for [Deepseek-R1](https://arxiv.org/abs/2501.12948), but in practice, strict binary rewards on complex tasks can often stall learning as there is no success signal to guide the learning. One mitigation would be to further finetune the LLM (SFT) on the task solutions before RL training. But beyond that, we usually need to shape the reward better.
 
 ## Partial Rewards: A Double-Edged Sword
 
-Partial rewards seem like the solution, but they introduce reward hacking:
+Giving **partial rewards for progress** seems like a good idea. In coding, perhaps give 0.1 reward for passing a single test case out of 10 (so 0.7 if it passes 7/10 tests). This dense feedback can help the model improve incrementally so that it's not all-or-nothing.
 
 ```python
 # Seems reasonable...
 reward = 0.1 * moved_forward + 0.5 * avoided_obstacle + 1.0 * finished
-
-# But the car learns to drive in circles, 
-# accumulating infinite partial rewards!
 ```
 
-The model exploits the reward structure rather than solving the actual task. This is particularly problematic in environments where looping or repetitive behavior can accumulate rewards.
+However, dense rewards come with a trap: **reward hacking**. The agent might find a way to exploit the reward structure rather than solving the actual task. This is particularly problematic in environments where looping or repetitive behavior can accumulate rewards.
 
-```
+### Reward Hacking 
+
+A classic example comes from [OpenAI's research on faulty reward functions](https://openai.com/index/faulty-reward-functions/). In the boat racing game [CoastRunners](http://www.kongregate.com/games/longanimals/coast-runners), 
+
+> The targets were laid out in such a way that the RL agent **could gain a high score without having to finish the course**. Instead of racing, it found an isolated lagoon where it could turn in a large circle and repeatedly knock over three targets, timing its movement to always hit them just as they respawned. Despite repeatedly catching fire, crashing into other boats, and going the wrong way on the track, the agent achieved a score **20% higher** than human players by completely ignoring the intended objective.
+
+<figure style="max-width: 600px; margin: 0 auto;">
+    <video controls style="width: 100%; height: auto; border-radius: 8px;">
+        <source src="{{ site.url }}/{{ site.baseurl }}/assets/vids/rl_envs/CoastRunners_rl.mov" type="video/quicktime">
+        Your browser does not support the video tag.
+    </video>
+    <figcaption><b>Figure:</b> <i>OpenAI's CoastRunners agent exploiting the reward function—scoring higher by circling in a lagoon than by actually racing. <a href="https://openai.com/index/faulty-reward-functions/">Source: OpenAI</a></i></figcaption>
+</figure>
+
+
+#### Gaming the benchmarks
+
+Reward Hacking has become alarmingly sophisticated. [METR research (June 2025)](https://metr.org/blog/2025-06-05-recent-reward-hacking/) found o3 reward-hacking in 100% of runs on [certain tasks](https://github.com/METR/RE-Bench/tree/main/ai_rd_optimize_llm_foundry), with 30.4% hacking rate across [RE-Bench](https://github.com/METR/RE-Bench) overall. Documented exploits include: monkey-patching `torch.cuda.synchronize` to fake faster runtimes, tracing the Python call stack to steal the grader's ground_truth tensor, patching evaluation functions to return "succeeded: True", and overwriting PyTorch's `__eq__` operator to always return `True`. 
+
+<!-- ```
+Total: 1.6                    Total: ∞ (loops forever!)
 Expected behavior:          Reward-hacked behavior:
                             
    START                       START
@@ -245,8 +264,7 @@ Expected behavior:          Reward-hacked behavior:
   │ Race │                    │Fwd  │───────┘
   └─────┘                     └─────┘
                               
-Total: 1.6                    Total: ∞ (loops forever!)
-```
+``` -->
 
 ## Curriculum Training
 
@@ -280,6 +298,11 @@ Recent research has formalized these approaches:
 
 - **CAPO** ([Yang et al., 2025](https://arxiv.org/abs/2512.02580)): Curriculum Advantage Policy Optimization bootstraps imitation learning with positive-only advantage samples, using curriculum mechanisms to improve generalization across complex reasoning tasks.
 
+
+TODO: write about this
+[Software agents can self-improve via self-play RL](https://x.com/YuxiangWei9/status/2003541373853524347)
+og-paper-> [arxiv for self-play RL](https://arxiv.org/abs/2512.18552)
+
 # Sandboxing: The Unsung Hero
 
 ## Why Sandboxing Matters
@@ -290,6 +313,15 @@ You might think: "I'll just run the model's code directly." Here's why that's a 
 2. **Infinite loops**: The model generates `while True: pass` and your training hangs
 3. **Resource exhaustion**: Memory bombs, fork bombs, disk filling
 4. **Security**: Arbitrary code execution on your training cluster is... not great
+
+
+### Why Scaffolds Matter:
+
+Reference for EXACT lines in this section: [Why Benchmarking is Hard](https://epoch.ai/gradient-updates/why-benchmarking-is-hard) -> 
+> Scaffolds continue to have an outsized impact. As agentic evals, such as SWE-bench Verified or RLI, become more common, one component becomes increasingly important: The scaffold, i.e., the software that operates the agent, usually a CLI such as Claude Code, OpenHands, etc
+
+
+> On SWE-bench Verified, a popular agentic coding benchmark, simply switching the scaffold makes up to an 11% difference for GPT-5 and up to a 15% difference for Kimi K2 Thinking. We cover the effect of the scaffold in our SWE-bench Verified review. The choice of scaffold has the single biggest impact on the overall performance
 
 ## The Scale Challenge
 
