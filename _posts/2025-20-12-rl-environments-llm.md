@@ -14,27 +14,18 @@ mathjax: true
 Reinforcement learning works on the FAFO principle → Fool Around and Find Out ([more on this here]({{ site.url }}/{{ site.baseurl }}/grpo-intro/)). But to fool around, LLMs need a playground: an *environment* where they can take actions, observe outcomes, and learn from their mistakes. 
 
 <!-- If you've ever played a video game, you already grasp the core idea of RL environments.  -->
-Imagine a car racing game: Your keyboard inputs (up/down/left/right) go into the game engine, the game world executes a step and returns an outcome: 
-
-1. Did you crash, 
-2. Did you successfully cross the finish line, or 
-3. Are you still racing? 
-
-This ***action → outcome loop*** is exactly what RL environments provide for LLM training.
-
 
 <figure style="max-width: 400px; margin: 0 auto;">
     <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/environments/car_arrows.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/environments/car_arrows.png" style="width: 100%; height: auto;"></a>
     <figcaption><b>Figure 1:</b> <i>A car racing game illustrating the RL loop: actions (arrows for up/left/right) lead to observations (track state) and rewards (progress towards finish line)</i></figcaption>
 </figure>
 
+In the above game, the player's actions (↑/↓/←/→) decide the outcome of the game:
+1. Did you crash?
+2. Did you successfully cross the finish line? or
+3. Are you still racing?
 
-This blog is an attempt to synthesize findings from the existing literature and blogs online.
-
-<!-- Despite being widely used in training reasoning models like DeepSeek-R1, Qwen and Kimi, the infrastructure and environment design details remain poorly documented.  -->
-
- <!-- In this blog, we will cover the following topics: verification strategies, reward engineering, curriculum learning, sandboxing at scale, and the failure modes that derail training. -->
-
+This ***action → outcome loop*** is exactly what RL environments provide for LLM training. This blog is an attempt to synthesize findings from the existing literature and blogs online.
 
 # The Anatomy of an Environment
 
