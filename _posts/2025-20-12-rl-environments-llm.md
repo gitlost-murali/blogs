@@ -189,24 +189,6 @@ class SingleTurnCodeEnv(Environment):
         return "", reward, True, {"passed": sum(results)}
 ``` -->
 
-# From LLMs to Agents
-
-In early experiments, an LLM's "environment" might be just a single-turn task: get a prompt, output code, get a reward. But real-world tasks are rarely one-turn. An agent might need to *ask clarifying questions*, *fix mistakes*, or *use tools* in multiple steps. This requires multi-turn interaction within an episode/rollout.
-
-Libraries like [verifiers](https://github.com/PrimeIntellect-ai/verifiers) handle this through environment inheritance, where each layer adds new capabilities:
-
-| Layer | What it adds |
-|-------|--------------|
-| **Environment** | Base protocol: `reset()`, `step()`, reward |
-| **↳ MultiTurnEnv** | Conversation history, turn limits, stopping conditions |
-| **↳ ToolEnv** | Parses tool calls, executes them, returns results |
-| **↳ StatefulToolEnv** | Persistent state across tool calls |
-| **↳ SandboxEnv** | Isolated execution environments |
-| **↳ CodeEnv** | Code execution with safety boundaries |
-
-The pattern is elegant: `MultiTurnEnv` turns a stateless `step()` into a conversation loop. `ToolEnv` parses special tokens and executes tools. Higher layers add sandboxing and code execution. As a thought exercise, if we were to implement a simple ReAct agent based chatbot, we would have to inherit from `ToolEnv` and fill in the available tool list, tool execution logic and conversation stopping condition.
-
-
 # The Reward Engineering Challenge
 
 The reward function determines training dynamics more than any other design choice. The field has learned hard lessons about reward hacking, with frontier models now actively manipulating evaluation code when given the opportunity. 
@@ -273,6 +255,8 @@ Expected behavior:          Reward-hacked behavior:
   └─────┘                     └─────┘
                               
 ``` -->
+
+So how do we avoid stalled learning from sparse rewards *without* inviting reward hacking? One effective strategy is to control the *difficulty* of tasks the model sees during training.
 
 ## Curriculum Training
 
@@ -341,6 +325,23 @@ Recent research has formalized these approaches:
 TODO: write about this
 [Software agents can self-improve via self-play RL](https://x.com/YuxiangWei9/status/2003541373853524347)
 og-paper-> [arxiv for self-play RL](https://arxiv.org/abs/2512.18552)
+
+# From LLMs to Agents
+
+So far we've discussed single-turn environments where the model generates one response and receives a reward. But real-world tasks are rarely one-turn. An agent might need to *ask clarifying questions*, *fix mistakes*, or *use tools* in multiple steps. This requires multi-turn interaction within an episode/rollout.
+
+Libraries like [verifiers](https://github.com/PrimeIntellect-ai/verifiers) handle this through environment inheritance, where each layer adds new capabilities:
+
+| Layer | What it adds |
+|-------|--------------|
+| **Environment** | Base protocol: `reset()`, `step()`, reward |
+| **↳ MultiTurnEnv** | Conversation history, turn limits, stopping conditions |
+| **↳ ToolEnv** | Parses tool calls, executes them, returns results |
+| **↳ StatefulToolEnv** | Persistent state across tool calls |
+| **↳ SandboxEnv** | Isolated execution environments |
+| **↳ CodeEnv** | Code execution with safety boundaries |
+
+The pattern is elegant: `MultiTurnEnv` turns a stateless `step()` into a conversation loop. `ToolEnv` parses special tokens and executes tools. Higher layers add sandboxing and code execution. As a thought exercise, if we were to implement a simple ReAct agent based chatbot, we would have to inherit from `ToolEnv` and fill in the available tool list, tool execution logic and conversation stopping condition.
 
 # Sandboxing: The Unsung Hero
 
