@@ -25,7 +25,8 @@ In the above game, the player's actions (↑/↓/←/→) decide the outcome of 
 2. Did you successfully cross the finish line? or
 3. Are you still racing?
 
-This ***action → outcome loop*** is exactly what RL environments provide for LLM training. This blog is an attempt to synthesize findings from the existing literature and blogs online.
+This ***action → outcome loop*** is exactly what RL environments provide for LLM training. 
+<!-- This blog is an attempt to synthesize findings from the existing literature and blogs online. -->
 
 # The Anatomy of an Environment
 
@@ -116,7 +117,7 @@ $$
 We can see that instead of a sparse binary reward, we can get -1.0 (worst case: not compiled) or -0.6 (compiled but not executed), -0.3 (executed but failed any unit test), +1.0 (passed all unit tests) based on the outcome. This is a more informative reward signal that can help the model learn from its mistakes.
 
 ### 2. Input/Output Matching
-Run the code and compare output against expected results. This can be done via stdin/stdout (language-agnostic but fragile to whitespace) or by calling the function directly with arguments. Seen in benchmarks like **LiveCodeBench**, **APPS**, and **CodeContests**.
+Here, we run the code and compare output against expected results. This can be done via stdin/stdout (language-agnostic) or by calling the function directly with arguments. Seen in benchmarks like **LiveCodeBench**, **APPS**, and **CodeContests**.
 
 ```python
 def verify_stdin_stdout(code: str, test_case: TestCase) -> bool:
