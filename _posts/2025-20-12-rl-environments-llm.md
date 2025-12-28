@@ -349,14 +349,21 @@ To convert benchmark scores into real-world value ($$$), we want LLMs to perform
 
 Even after achieving a good general purpose tool calling model, real world tool use is still hard for LLMs because:
 
+<ol>
+<li><strong>Coverage of your tools:</strong> Public datasets cover generic APIs like weather, booking, search. But if you're building an agent for your company's internal systems, there's no dataset for your proprietary CRM or custom database schema. You need to generate environments reflecting your specific tool interfaces.</li>
 
-1. **Coverage of your tools:** Public datasets cover generic APIs like weather, booking, search. But if you're building an agent for your company's internal systems, there's no dataset for your proprietary CRM or custom database schema. You need to generate environments reflecting your specific tool interfaces.
+<li><strong>Multi-turn and error handling:</strong> Most datasets focus on single-turn function calling: user asks, model calls function, done. Real agents need to handle failures gracefully, ask clarifying questions, and chain tools across turns. This multi-turn data is harder to find and harder to synthesize.</li>
 
-2. **Multi-turn and error handling:** Most datasets focus on single-turn function calling: user asks, model calls function, done. Real agents need to handle failures gracefully, ask clarifying questions, and chain tools across turns. This multi-turn data is harder to find and harder to synthesize.
+<li><strong>Scaffolding matters:</strong> The <em>scaffold</em>, the orchestration layer around your agent (e.g., Claude Code, OpenHands), controls how tools are presented, ordered, and filtered to the agent's context. These details compound into big performance swings: on SWE-bench Verified, <a href="https://epoch.ai/gradient-updates/why-benchmarking-is-hard">simply switching the scaffold causes up to 11% difference for GPT-5 and 15% for Kimi K2. In fact, the choice of scaffold has the single biggest impact on overall agent performance.</a> This is why you need to train and evaluate on environments that mirror your actual deployment, not just generic benchmarks.
 
-3. **Scaffolding matters:** The *scaffold*, the orchestration layer around your agent (e.g., Claude Code, OpenHands), controls how tools are presented, ordered, and filtered to the agent's context. These details compound into big performance swings: on SWE-bench Verified, [simply switching the scaffold causes up to 11% difference for GPT-5 and 15% for Kimi K2. In fact, the choice of scaffold has the single biggest impact on overall agent performance.](https://epoch.ai/gradient-updates/why-benchmarking-is-hard). This is why you need to train and evaluate on environments that mirror your actual deployment, not just generic benchmarks.
+<figure style="max-width: 600px; margin: 1em auto;">
+    <a href="{{ site.url }}/{{ site.baseurl }}/assets/images/environments/swebench_comparison-epochai.png"><img src="{{ site.url }}/{{ site.baseurl }}/assets/images/environments/swebench_comparison-epochai.png" style="width: 100%; height: auto;"></a>
+    <figcaption><b>Figure:</b> <i>The choice of agent scaffold has a large impact on SWE-bench Verified score. <a href="https://epoch.ai/gradient-updates/why-benchmarking-is-hard">Source: Epoch AI</a></i></figcaption>
+</figure>
+</li>
 
-4. **Cost and infrastructure:** Even once you've defined your custom environment, hitting live APIs for thousands of training queries is slow, costly, and sometimes impractical—APIs may require authentication, have rate limits, or charge per call.
+<li><strong>Cost and infrastructure:</strong> Even once you've defined your custom environment, hitting live APIs for thousands of training queries is slow, costly, and sometimes impractical—APIs may require authentication, have rate limits, or charge per call.</li>
+</ol>
 
 To handle these challenges, we need synthetic environments reflecting our specific tools, workflows, and orchestration. But do we actually need to hit real APIs to train on them?
 
