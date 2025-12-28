@@ -257,7 +257,7 @@ lack adaptivity. **Adaptive curriculum learning** addresses these issues by matc
 
 [RLVE (Zeng et al., 2025)](https://arxiv.org/abs/2511.07317) introduced a large-scale suite of 400 math and reasoning environments that procedurally generate tasks based on the model's capabilities as training progresses.
 
-[AdaRFT (Shi et al., 2025)](https://arxiv.org/abs/2504.05520) maintains a target difficulty level $T$ that evolves based on recent rewards. When average reward exceeds target ($\beta=0.5$) (also proposed by [DOTS (Yifan et al., 2025)](https://arxiv.org/abs/2506.05316v1)), difficulty increases; otherwise, it decreases. Their approach uses an external LLM (Qwen 2.5 MATH 7B) to estimate difficulty based on the success rate over 128 attempts. They observed a 2x reduction in training steps while improving accuracy. 
+[AdaRFT (Shi et al., 2025)](https://arxiv.org/abs/2504.05520) maintain a target difficulty level $T$ that evolves based on recent rewards. When average reward exceeds target ($\beta=0.5$) (also proposed by [DOTS (Yifan et al., 2025)](https://arxiv.org/abs/2506.05316v1)), difficulty increases; otherwise, it decreases. Their approach uses an external LLM (Qwen 2.5 MATH 7B) to estimate difficulty based on the success rate over 128 attempts. They observed a 2x reduction in training steps while improving accuracy. 
 
 <iframe 
   src="{{ site.url }}/{{ site.baseurl }}/assets/visualizations/rl_envs/adarft.html" 
@@ -325,7 +325,9 @@ og-paper-> [arxiv for self-play RL](https://arxiv.org/abs/2512.18552) -->
 
 # From LLMs to Agents
 
-So far we've discussed single-turn environments where the model generates one response and receives a reward. But real-world tasks are rarely one-turn. An agent might need to *ask clarifying questions*, *fix mistakes*, or *use tools* in multiple steps. This requires multi-turn interaction within an episode/rollout.
+With the right verification, reward shaping, and curriculum design, we can train an LLM that's great at single-turn math and code. But real-world tasks are often messier. An agent might need to *ask clarifying questions*, *fix mistakes*, or *use tools* across multiple steps. This requires multi-turn interaction within an episode/rollout.
+
+The techniques we've discussed still apply. What changes is the **environment architecture**: managing conversation history, parsing tool calls, executing code safely, and deciding when to stop.
 
 Libraries like [verifiers](https://github.com/PrimeIntellect-ai/verifiers) handle this through environment inheritance, where each layer adds new capabilities:
 
@@ -338,90 +340,13 @@ Libraries like [verifiers](https://github.com/PrimeIntellect-ai/verifiers) handl
 | **↳ SandboxEnv** | Isolated execution environments |
 | **↳ CodeEnv** | Code execution with safety boundaries |
 
-The pattern is elegant: `MultiTurnEnv` turns a stateless `step()` into a conversation loop. `ToolEnv` parses special tokens and executes tools. Higher layers add sandboxing and code execution. As a thought exercise, if we were to implement a simple ReAct agent based chatbot, we would have to inherit from `ToolEnv` and fill in the available tool list, tool execution logic and conversation stopping condition.
+Each layer builds on the previous: `MultiTurnEnv` turns a stateless `step()` into a conversation loop, `ToolEnv` parses special tokens and executes tools, and higher layers add sandboxing and code execution. 
 
-# Sandboxing: The Unsung Hero
+As a thought exercise, to implement a simple ReAct agent, you'd inherit from `ToolEnv` and fill in the tool list, execution logic, and stopping condition.
 
-## Why Sandboxing Matters
+# Tool Calling: From LLMs to Agents
 
-You might think: "I'll just run the model's code directly." Here's why that's a terrible idea for RL training:
-
-1. **Segfaults and crashes**: One bad piece of generated code shouldn't kill a 20-day training run
-2. **Infinite loops**: The model generates `while True: pass` and your training hangs
-3. **Resource exhaustion**: Memory bombs, fork bombs, disk filling
-4. **Security**: Arbitrary code execution on your training cluster is... not great
-
-
-### Why Scaffolds Matter:
-
-Reference for EXACT lines in this section: [Why Benchmarking is Hard](https://epoch.ai/gradient-updates/why-benchmarking-is-hard) -> 
-> Scaffolds continue to have an outsized impact. As agentic evals, such as SWE-bench Verified or RLI, become more common, one component becomes increasingly important: The scaffold, i.e., the software that operates the agent, usually a CLI such as Claude Code, OpenHands, etc
-
-
-> On SWE-bench Verified, a popular agentic coding benchmark, simply switching the scaffold makes up to an 11% difference for GPT-5 and up to a 15% difference for Kimi K2 Thinking. We cover the effect of the scaffold in our SWE-bench Verified review. The choice of scaffold has the single biggest impact on the overall performance
-
-## The Scale Challenge
-
-For efficient RL training, you need to run thousands of environment instances in parallel. Prime Intellect reports running 4,000 concurrent sandboxes during their RL training.
-
-```python
-# Naive approach: sequential execution (slow!)
-for prompt in prompts:
-    response = model.generate(prompt)
-    reward = env.step(response)  # Each step might take seconds
-
-# Parallel execution with sandboxing
-async def run_parallel_envs(prompts, num_workers=4000):
-    async with SandboxPool(num_workers) as pool:
-        tasks = [pool.execute(env.step, p) for p in prompts]
-        results = await asyncio.gather(*tasks)
-    return results
-```
-
-## Beyond Python: Multi-Language Environments
-
-The challenge multiplies when you consider:
-- **Different programming languages**: Python, JavaScript, Rust, Go...
-- **Database environments**: Testing SQL queries safely
-- **CLI environments**: Shell commands, file system operations
-- **SWE environments**: Full development setups with git, package managers, build tools
-- **Computer use**: GUI interactions, browser automation
-
-MCP (Model Context Protocol) servers can help for simple Python execution, but don't scale to these diverse requirements. This is why teams like Prime Intellect invest heavily in robust sandboxing infrastructure.
-
-# Interesting Training Patterns
-
-## Self-Generated Verification
-
-An intriguing pattern (discussed with colleague Leonard):
-
-**Pattern 1: LLM generates code with test cases**
-```python
-# Model generates both the solution and tests
-generated_code = model.generate("Write a function to sort a list")
-generated_tests = model.generate("Write test cases for this sort function")
-
-# Cross-validate
-reward = run_tests(generated_code, generated_tests)
-```
-
-**Pattern 2: LLM generates test cases with code as verification**
-```python
-# Flip it: generate tests first, then code
-generated_tests = model.generate("Write edge case tests for sorting")
-generated_code = model.generate("Write code that passes these tests")
-
-# The most discriminative tests are those that fail most attempts
-# This helps identify robust test cases
-```
-
-This bidirectional approach can help "robustify" both code generation and test generation capabilities.
-
-Related research in this area:
-
-- **CodeRL** ([Le et al., 2022](https://arxiv.org/abs/2207.01780)): Uses execution feedback from unit tests as reward signals, training a critic model to predict functional correctness and guide code generation.
-
-- **Self-Training for Tool Use** ([Luo et al., 2024](https://arxiv.org/abs/2401.12999)): Shows that LLMs can learn to use tools without human demonstrations by generating their own training data through exploration-the model generates tool-use traces and learns from successful executions.
+Tool calling turns
 
 ## Environment Groups
 
@@ -484,6 +409,92 @@ Notable work in this area:
 - **SpecTool** ([Kokane et al., 2024](https://arxiv.org/abs/2411.13547)): A benchmark for characterizing errors in tool-use LLMs. Identifies common failure patterns (parameter hallucination, format errors, semantic misunderstandings) and provides frameworks for systematic error mitigation.
 
 The MCP (Model Context Protocol) ecosystem is also expanding rapidly, with standardized interfaces making it easier to create interoperable tool environments. However, the challenge remains: more tools often means worse performance per tool, suggesting that training strategies need to account for tool complexity and interactions.
+
+
+# Sandboxing: The Unsung Hero
+
+## Why Sandboxing Matters
+
+You might think: "I'll just run the model's code directly." Here's why that's a terrible idea for RL training:
+
+1. **Segfaults and crashes**: One bad piece of generated code shouldn't kill a 20-day training run
+2. **Infinite loops**: The model generates `while True: pass` and your training hangs
+3. **Resource exhaustion**: Memory bombs, fork bombs, disk filling
+4. **Security**: Arbitrary code execution on your training cluster is... not great
+
+
+### Why Scaffolds Matter:
+
+Reference for EXACT lines in this section: [Why Benchmarking is Hard](https://epoch.ai/gradient-updates/why-benchmarking-is-hard) -> 
+> Scaffolds continue to have an outsized impact. As agentic evals, such as SWE-bench Verified or RLI, become more common, one component becomes increasingly important: The scaffold, i.e., the software that operates the agent, usually a CLI such as Claude Code, OpenHands, etc
+
+
+> On SWE-bench Verified, a popular agentic coding benchmark, simply switching the scaffold makes up to an 11% difference for GPT-5 and up to a 15% difference for Kimi K2 Thinking. We cover the effect of the scaffold in our SWE-bench Verified review. The choice of scaffold has the single biggest impact on the overall performance
+
+## The Scale Challenge
+
+For efficient RL training, you need to run thousands of environment instances in parallel. Prime Intellect reports running 4,000 concurrent sandboxes during their RL training.
+
+```python
+# Naive approach: sequential execution (slow!)
+for prompt in prompts:
+    response = model.generate(prompt)
+    reward = env.step(response)  # Each step might take seconds
+
+# Parallel execution with sandboxing
+async def run_parallel_envs(prompts, num_workers=4000):
+    async with SandboxPool(num_workers) as pool:
+        tasks = [pool.execute(env.step, p) for p in prompts]
+        results = await asyncio.gather(*tasks)
+    return results
+```
+
+## Beyond Python: Multi-Language Environments
+
+The challenge multiplies when you consider:
+- **Different programming languages**: Python, JavaScript, Rust, Go...
+- **Database environments**: Testing SQL queries safely
+- **CLI environments**: Shell commands, file system operations
+- **SWE environments**: Full development setups with git, package managers, build tools
+- **Computer use**: GUI interactions, browser automation
+
+MCP (Model Context Protocol) servers can help for simple Python execution, but don't scale to these diverse requirements. This is why teams like Prime Intellect invest heavily in robust sandboxing infrastructure.
+
+<!-- 
+# Interesting Training Patterns
+
+## Self-Generated Verification
+
+An intriguing pattern (discussed with colleague Leonard):
+
+**Pattern 1: LLM generates code with test cases**
+```python
+# Model generates both the solution and tests
+generated_code = model.generate("Write a function to sort a list")
+generated_tests = model.generate("Write test cases for this sort function")
+
+# Cross-validate
+reward = run_tests(generated_code, generated_tests)
+```
+
+**Pattern 2: LLM generates test cases with code as verification**
+```python
+# Flip it: generate tests first, then code
+generated_tests = model.generate("Write edge case tests for sorting")
+generated_code = model.generate("Write code that passes these tests")
+
+# The most discriminative tests are those that fail most attempts
+# This helps identify robust test cases
+```
+
+This bidirectional approach can help "robustify" both code generation and test generation capabilities.
+
+Related research in this area:
+
+- **CodeRL** ([Le et al., 2022](https://arxiv.org/abs/2207.01780)): Uses execution feedback from unit tests as reward signals, training a critic model to predict functional correctness and guide code generation.
+
+- **Self-Training for Tool Use** ([Luo et al., 2024](https://arxiv.org/abs/2401.12999)): Shows that LLMs can learn to use tools without human demonstrations by generating their own training data through exploration-the model generates tool-use traces and learns from successful executions. -->
+
 
 # Putting It All Together
 
