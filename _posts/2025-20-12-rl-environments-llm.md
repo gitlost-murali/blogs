@@ -323,30 +323,75 @@ An extension to adaptive curriculum learning is to make the environment itself a
 [Software agents can self-improve via self-play RL](https://x.com/YuxiangWei9/status/2003541373853524347)
 og-paper-> [arxiv for self-play RL](https://arxiv.org/abs/2512.18552) -->
 
-# From LLMs to Agents
-
-With the right verification, reward shaping, and curriculum design, we can train an LLM that's great at single-turn math and code. But real-world tasks are often messier. An agent might need to *ask clarifying questions*, *fix mistakes*, or *use tools* across multiple steps. This requires multi-turn interaction within an episode/rollout.
-
-The techniques we've discussed still apply. What changes is the **environment architecture**: managing conversation history, parsing tool calls, executing code safely, and deciding when to stop.
-
-Libraries like [verifiers](https://github.com/PrimeIntellect-ai/verifiers) handle this through environment inheritance, where each layer adds new capabilities:
-
-| Layer | What it adds |
-|-------|--------------|
-| **Environment** | Base protocol: `reset()`, `step()`, reward |
-| **↳ MultiTurnEnv** | Conversation history, turn limits, stopping conditions |
-| **↳ ToolEnv** | Parses tool calls, executes them, returns results |
-| **↳ StatefulToolEnv** | Persistent state across tool calls |
-| **↳ SandboxEnv** | Isolated execution environments |
-| **↳ CodeEnv** | Code execution with safety boundaries |
-
-Each layer builds on the previous: `MultiTurnEnv` turns a stateless `step()` into a conversation loop, `ToolEnv` parses special tokens and executes tools, and higher layers add sandboxing and code execution. 
-
-As a thought exercise, to implement a simple ReAct agent, you'd inherit from `ToolEnv` and fill in the tool list, execution logic, and stopping condition.
-
 # Tool Calling: From LLMs to Agents
 
-Tool calling turns
+To convert benchmark scores into real-world value ($$$), we want LLMs to perform tasks beyond their parametric knowledge like searching the web, reading files, querying databases, calling APIs, writing reports, etc. A number of SFT datasets already exist to train good tool calling models:
+
+| Dataset | Size | APIs | Source | Quality Issues |
+|---------|------|------|--------|----------------|
+| ToolBench | 126K pairs | 16,464 | RapidAPI | 50% query hallucination rate |
+| xLAM-60k | 60K | 3,673 | APIGen pipeline | 95%+ verified correct |
+| Glaive v1/v2 | 52K / 113K | Synthetic | Proprietary generation | Model may hallucinate functions |
+| API-Blend | ~160K | Multi-source | Curated transforms | Limited nested/parallel calls |
+| Gorilla/APIBench | 11K | 1,645 | HF/TorchHub/TensorHub | No execution verification |
+| ToolAlpaca | 3,938 | 400+ | Multi-agent simulation | Limited tool diversity |
+
+<!-- reveals that in ToolBench, 57.3% of queries contain unsolvable requests or incomplete information, and more critically, 74% of API call trajectories exhibit hallucination behaviors. -->
+
+
+<!-- To enable the tool calling behavior, we must generate diverse synthetic data, manage tool complexity, and understand the specific failure modes that emerge. For instance, we must generate data that covers the edge cases of tool calling, such as empty results, timeouts, and parameter hallucination. -->
+
+<!-- To train such an LLM to be a good multi-turn and tool calling agent, we must first make the LLM better at tool calling and later throw it into multi-turn environments with tool calling capabilities. However, handcrafting these environments is time-consuming and error-prone. -->
+
+<!-- (after thorough data cleaning [Quality Matters - Iskander et al. (2024)](https://aclanthology.org/2024.emnlp-main.285/)  -->
+
+## Real World Tool Use is Hard
+
+Even after achieving a good general purpose tool calling model, real world tool use is still hard for LLMs because:
+
+
+1. **Coverage of your tools:** Public datasets cover generic APIs like weather, booking, search. But if you're building an agent for your company's internal systems, there's no dataset for your proprietary CRM or custom database schema. You need to generate environments reflecting your specific tool interfaces.
+
+2. **Multi-turn and error handling:** Most datasets focus on single-turn function calling: user asks, model calls function, done. Real agents need to handle failures gracefully, ask clarifying questions, and chain tools across turns. This multi-turn data is harder to find and harder to synthesize.
+
+To handle this, we can build synthetic environments that are tailored to the specific tools and workflows of the target application. However, this is time-consuming and resource intensive. In complex environments with resource intensive tools, each tool call is expensive to run.
+
+## LLMs as Tool Simulators
+
+One follow-up practical question in tool-use training would be: **Do we need to hit actual APIs to get real responses for our data?** In nearly all cases, the answer is no and it's usually undesirable to do so. Hitting live APIs for thousands of queries is **slow, costly, and sometimes impractical** (what if the API requires auth or has rate limits?). Instead, researchers have used two strategies:
+
+**1. Offline execution with mock implementations:** For certain tools, you can write a simple function that mimics the API. For example, for a `get_exchange_rate(base, target)` tool, you might implement a stub that returns a made-up exchange rate. This was done in the BFCL evaluation when the authors manually wrote Python functions for things like weather info or mortgage calculations so that they could execute the model’s function calls and check correctness [[Source: BFCL](https://gorilla.cs.berkeley.edu/blogs/8_berkeley_function_calling_leaderboard.html#:~:text=Each%20category%20has%20both%20AST,calls%20in%20the%20real%20world)]. In training data, however, it’s more common to simply embed an example response directly rather than executing a stub on the fly.
+
+**2. LLMs as Tool Simulators:** An intriguing byproduct of these efforts is that the LLM itself can serve as a mock API server. Instead of hitting real external services during training (which is slow, costly, and potentially insecure), one can prompt an LLM to pretend to be the tool. For instance, given a function spec like `get_weather(city)` and some internal knowledge or sample data, the LLM can generate a plausible response `({"temp": 15, "condition": "Cloudy"})` which is then fed back to the agent model. The big advantage is flexibility: you can generate infinite variations of tool responses (including erroneous ones) to make the model robust, and you don’t need your actual API keys during training. The downside is that a simulator might not capture every nuance of a real tool’s behavior, so a mix of simulated and real testing is ideal.
+
+Is this simulation realistic? It can be. Recent research has started to quantitatively evaluate how well an LLM can imitate a real API. [MirrorAPI (Guo et al., 2025)](https://aclanthology.org/2025.findings-acl.273/) is a system that fine-tunes an LLM specifically to mimic API outputs given the API documentation and a user query. They measured the similarity between the simulated responses and the true API responses across hundreds of real API calls. They found that the fine-tuned simulator achieved very high BLEU scores and cosine similarity to the real outputs. In other words, a well-trained "API simulator" can produce outputs almost indistinguishable from the real API, including error messages and edge-case behaviors. This finding has big implications. [MirrorAPI](https://aclanthology.org/2025.findings-acl.273/) was used to create a complete simulated tool-use benchmark, [StableToolBench](https://aclanthology.org/2025.findings-acl.273/), where the agent interacts with simulated APIs – avoiding all the unpredictability of calling external services during evaluation.
+
+<!-- It means we can confidently train our agent on simulated tool interactions, and even use such a simulator as a drop-in for an API during testing or RL training.  -->
+
+
+
+## The Tool Complexity Problem
+
+Even with good data, a training dynamics issue emerges: benchmark scores regress when too many different tools are introduced. When there's only one tool available, performance is higher than when the model must choose among many.
+
+This suggests organizing training into capability groups:
+
+```python
+class EnvironmentGroup:
+    def __init__(self, name: str, tools: List[Tool]):
+        self.name = name
+        self.tools = tools
+    
+    @staticmethod
+    def file_ops() -> 'EnvironmentGroup':
+        return EnvironmentGroup("file_ops", [ReadFile, WriteFile, ListDir])
+    
+    @staticmethod  
+    def web_apis() -> 'EnvironmentGroup':
+        return EnvironmentGroup("web", [HttpGet, HttpPost, ParseJSON])
+```
+A curriculum approach might work here: master single tools first, then tool families (all file operations, all web APIs), then full environments with all tools available. The MCP (Model Context Protocol) ecosystem is expanding with standardized interfaces, but the fundamental challenge remains—more tools means more interference during training.
+
 
 ## Environment Groups
 
@@ -409,6 +454,28 @@ Notable work in this area:
 - **SpecTool** ([Kokane et al., 2024](https://arxiv.org/abs/2411.13547)): A benchmark for characterizing errors in tool-use LLMs. Identifies common failure patterns (parameter hallucination, format errors, semantic misunderstandings) and provides frameworks for systematic error mitigation.
 
 The MCP (Model Context Protocol) ecosystem is also expanding rapidly, with standardized interfaces making it easier to create interoperable tool environments. However, the challenge remains: more tools often means worse performance per tool, suggesting that training strategies need to account for tool complexity and interactions.
+
+
+# From LLMs to Agents
+
+With the right verification, reward shaping, and curriculum design, we can train an LLM that's great at single-turn math and code. But real-world tasks are often messier. An agent might need to *ask clarifying questions*, *fix mistakes*, or *use tools* across multiple steps. This requires multi-turn interaction within an episode/rollout.
+
+The techniques we've discussed still apply. What changes is the **environment architecture**: managing conversation history, parsing tool calls, executing code safely, and deciding when to stop.
+
+Libraries like [verifiers](https://github.com/PrimeIntellect-ai/verifiers) handle this through environment inheritance, where each layer adds new capabilities:
+
+| Layer | What it adds |
+|-------|--------------|
+| **Environment** | Base protocol: `reset()`, `step()`, reward |
+| **↳ MultiTurnEnv** | Conversation history, turn limits, stopping conditions |
+| **↳ ToolEnv** | Parses tool calls, executes them, returns results |
+| **↳ StatefulToolEnv** | Persistent state across tool calls |
+| **↳ SandboxEnv** | Isolated execution environments |
+| **↳ CodeEnv** | Code execution with safety boundaries |
+
+Each layer builds on the previous: `MultiTurnEnv` turns a stateless `step()` into a conversation loop, `ToolEnv` parses special tokens and executes tools, and higher layers add sandboxing and code execution. 
+
+As a thought exercise, to implement a simple ReAct agent, you'd inherit from `ToolEnv` and fill in the tool list, execution logic, and stopping condition.
 
 
 # Sandboxing: The Unsung Hero
