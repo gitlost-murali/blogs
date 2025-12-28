@@ -354,39 +354,30 @@ Even after achieving a good general purpose tool calling model, real world tool 
 
 2. **Multi-turn and error handling:** Most datasets focus on single-turn function calling: user asks, model calls function, done. Real agents need to handle failures gracefully, ask clarifying questions, and chain tools across turns. This multi-turn data is harder to find and harder to synthesize.
 
-To handle this, we can build synthetic environments that are tailored to the specific tools and workflows of the target application. However, this is time-consuming and resource intensive. In complex environments with resource intensive tools, each tool call is expensive to run.
+3. **Scaffolding matters:** The *scaffold*, the orchestration layer around your agent (e.g., Claude Code, OpenHands), controls how tools are presented, ordered, and filtered to the agent's context. These details compound into big performance swings: on SWE-bench Verified, [simply switching the scaffold causes up to 11% difference for GPT-5 and 15% for Kimi K2](https://epoch.ai/gradient-updates/why-benchmarking-is-hard). This is why you need to train and evaluate on environments that mirror your actual deployment, not just generic benchmarks.
 
-## LLMs as Tool Simulators
+4. **Cost and infrastructure:** Even once you've defined your custom environment, hitting live APIs for thousands of training queries is slow, costly, and sometimes impractical—APIs may require authentication, have rate limits, or charge per call.
 
-One follow-up practical question in tool-use training would be: **Do we need to hit actual APIs to get real responses for our data?** In nearly all cases, the answer is no and it's usually undesirable to do so. Hitting live APIs for thousands of queries is **slow, costly, and sometimes impractical** (what if the API requires auth or has rate limits?). Instead, researchers have used two strategies:
+To handle these challenges, we need synthetic environments reflecting our specific tools, workflows, and orchestration. But do we actually need to hit real APIs to train on them?
 
-**1. Offline execution with mock implementations:** For certain tools, you can write a simple function that mimics the API. For example, for a `get_exchange_rate(base, target)` tool, you might implement a stub that returns a made-up exchange rate. This was done in the BFCL evaluation when the authors manually wrote Python functions for things like weather info or mortgage calculations so that they could execute the model’s function calls and check correctness [[Source: BFCL](https://gorilla.cs.berkeley.edu/blogs/8_berkeley_function_calling_leaderboard.html#:~:text=Each%20category%20has%20both%20AST,calls%20in%20the%20real%20world)]. In training data, however, it’s more common to simply embed an example response directly rather than executing a stub on the fly.
+## Simulating Tool Responses
 
-**2. LLMs as Tool Simulators:** An intriguing byproduct of these efforts is that the LLM itself can serve as a mock API server. Instead of hitting real external services during training (which is slow, costly, and potentially insecure), one can prompt an LLM to pretend to be the tool. For instance, given a function spec like `get_weather(city)` and some internal knowledge or sample data, the LLM can generate a plausible response `({"temp": 15, "condition": "Cloudy"})` which is then fed back to the agent model. The big advantage is flexibility: you can generate infinite variations of tool responses (including erroneous ones) to make the model robust, and you don’t need your actual API keys during training. The downside is that a simulator might not capture every nuance of a real tool’s behavior, so a mix of simulated and real testing is ideal.
+In nearly all cases, the answer is no—and it's usually undesirable to do so. Instead, researchers have used two strategies:
+
+**1. Mock implementations:** For certain tools, you can write a simple function that mimics the API. For example, for a `get_exchange_rate(base, target)` tool, you might implement a stub that returns a made-up exchange rate. This was done in the BFCL evaluation when the authors manually wrote Python functions for things like weather info or mortgage calculations so that they could execute the model's function calls and check correctness [[Source: BFCL](https://gorilla.cs.berkeley.edu/blogs/8_berkeley_function_calling_leaderboard.html#:~:text=Each%20category%20has%20both%20AST,calls%20in%20the%20real%20world)]. In training data, however, it's more common to simply embed an example response directly rather than executing a stub on the fly.
+
+**2. LLM-based simulation:** An intriguing byproduct of these efforts is that the LLM itself can serve as a mock API server. Instead of hitting real external services during training (which is slow, costly, and potentially insecure), one can prompt an LLM to pretend to be the tool. For instance, given a function spec like `get_weather(city)` and some internal knowledge or sample data, the LLM can generate a plausible response `({"temp": 15, "condition": "Cloudy"})` which is then fed back to the agent model. The big advantage is flexibility: you can generate infinite variations of tool responses (including erroneous ones) to make the model robust, and you don’t need your actual API keys during training. The downside is that a simulator might not capture every nuance of a real tool’s behavior, so a mix of simulated and real testing is ideal.
 
 Is this simulation realistic? It can be. Recent research has started to quantitatively evaluate how well an LLM can imitate a real API. [MirrorAPI (Guo et al., 2025)](https://aclanthology.org/2025.findings-acl.273/) is a system that fine-tunes an LLM specifically to mimic API outputs given the API documentation and a user query. They measured the similarity between the simulated responses and the true API responses across hundreds of real API calls. They found that the fine-tuned simulator achieved very high BLEU scores and cosine similarity to the real outputs. In other words, a well-trained "API simulator" can produce outputs almost indistinguishable from the real API, including error messages and edge-case behaviors. This finding has big implications. [MirrorAPI](https://aclanthology.org/2025.findings-acl.273/) was used to create a complete simulated tool-use benchmark, [StableToolBench](https://aclanthology.org/2025.findings-acl.273/), where the agent interacts with simulated APIs – avoiding all the unpredictability of calling external services during evaluation.
 
 <!-- It means we can confidently train our agent on simulated tool interactions, and even use such a simulator as a drop-in for an API during testing or RL training.  -->
 
 
-## The Tool Complexity Problem or Context Confusion
+## Context Confusion: The Tool Complexity Problem
 
-Birth of [MCP (Model Context Protocol)](https://modelcontextprotocol.io/docs/getting-started/intro) and agentic frameworks ([PydanticAI](https://ai.pydantic.dev)) made it easier to connect many tools to an LLM. This tool cocktail or vomit can lead to [Context Confusion](https://www.dbreunig.com/2025/06/22/how-contexts-fail-and-how-to-fix-them.html#context-confusion), which usually manifests into **benchmark scores degradation**. Specifically, when there's only one tool available, agent's downstream performance is higher than when the model must choose among many.
+The rise of [MCP (Model Context Protocol)](https://modelcontextprotocol.io/docs/getting-started/intro) and agentic frameworks ([PydanticAI](https://ai.pydantic.dev)) made it easier to connect many tools to an LLM. But this tool cocktail can lead to [Context Confusion](https://www.dbreunig.com/2025/06/22/how-contexts-fail-and-how-to-fix-them.html#context-confusion), which usually manifests as **benchmark score degradation**. Specifically, when there's only one tool available, agent's downstream performance is higher than when the model must choose among many.
 
-A curriculum approach might work here: master single tools first, then tool families (all file operations, all web APIs), then full environments with all tools available. The MCP (Model Context Protocol) ecosystem is expanding with standardized interfaces, but the fundamental challenge remains—more tools means more interference during training.
-
-This brings up the question of why scaffolds matter.
-
-### Why Scaffolds Matter:
-
-Reference for EXACT lines in this section: [Why Benchmarking is Hard](https://epoch.ai/gradient-updates/why-benchmarking-is-hard) -> 
-
-> Scaffolds continue to have an outsized impact. As agentic evals, such as SWE-bench Verified or RLI, become more common, one component becomes increasingly important: The scaffold, i.e., the software that operates the agent, usually a CLI such as Claude Code, OpenHands, etc
-
-
-> On SWE-bench Verified, a popular agentic coding benchmark, simply switching the scaffold makes up to an 11% difference for GPT-5 and up to a 15% difference for Kimi K2 Thinking. We cover the effect of the scaffold in our SWE-bench Verified review. The choice of scaffold has the single biggest impact on the overall performance
-
-> OpenAI only ran 477 of the 500 problems in SWE-bench Verified in their o3 and o4-mini evaluations due to infrastructure challenges. -->
+A curriculum approach might work here: master single tools first, then tool families (all file operations, all web APIs), then full environments with all tools available. The MCP ecosystem is expanding with standardized interfaces, but the fundamental challenge remains—more tools means more interference during training. This is another reason why your scaffold matters (see point 3 above): how tools are ordered, filtered, and presented in context directly affects whether the agent gets confused by too many options.
 
 # From LLMs to Agents
 
