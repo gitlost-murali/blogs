@@ -369,92 +369,24 @@ Is this simulation realistic? It can be. Recent research has started to quantita
 <!-- It means we can confidently train our agent on simulated tool interactions, and even use such a simulator as a drop-in for an API during testing or RL training.  -->
 
 
+## The Tool Complexity Problem or Context Confusion
 
-## The Tool Complexity Problem
+Birth of [MCP (Model Context Protocol)](https://modelcontextprotocol.io/docs/getting-started/intro) and agentic frameworks ([PydanticAI](https://ai.pydantic.dev)) made it easier to connect many tools to an LLM. This tool cocktail or vomit can lead to [Context Confusion](https://www.dbreunig.com/2025/06/22/how-contexts-fail-and-how-to-fix-them.html#context-confusion), which usually manifests into **benchmark scores degradation**. Specifically, when there's only one tool available, agent's downstream performance is higher than when the model must choose among many.
 
-Even with good data, a training dynamics issue emerges: benchmark scores regress when too many different tools are introduced. When there's only one tool available, performance is higher than when the model must choose among many.
-
-This suggests organizing training into capability groups:
-
-```python
-class EnvironmentGroup:
-    def __init__(self, name: str, tools: List[Tool]):
-        self.name = name
-        self.tools = tools
-    
-    @staticmethod
-    def file_ops() -> 'EnvironmentGroup':
-        return EnvironmentGroup("file_ops", [ReadFile, WriteFile, ListDir])
-    
-    @staticmethod  
-    def web_apis() -> 'EnvironmentGroup':
-        return EnvironmentGroup("web", [HttpGet, HttpPost, ParseJSON])
-```
 A curriculum approach might work here: master single tools first, then tool families (all file operations, all web APIs), then full environments with all tools available. The MCP (Model Context Protocol) ecosystem is expanding with standardized interfaces, but the fundamental challenge remains—more tools means more interference during training.
 
+This brings up the question of why scaffolds matter.
 
-## Environment Groups
+### Why Scaffolds Matter:
 
-Not all tools are created equal. Colleague Max Meuer reported an interesting finding: **benchmark scores regress when too many different tools are introduced** to a Chat Environment. When there's only one tool, performance is higher.
+Reference for EXACT lines in this section: [Why Benchmarking is Hard](https://epoch.ai/gradient-updates/why-benchmarking-is-hard) -> 
 
-This suggests organizing environments into capability groups:
-- **Single-tool environments**: Master one tool at a time
-- **Tool family environments**: Related tools (all file operations, all web APIs)
-- **Full environments**: All tools available (but harder to train)
+> Scaffolds continue to have an outsized impact. As agentic evals, such as SWE-bench Verified or RLI, become more common, one component becomes increasingly important: The scaffold, i.e., the software that operates the agent, usually a CLI such as Claude Code, OpenHands, etc
 
-```python
-class EnvironmentGroup:
-    def __init__(self, name: str, tools: List[Tool]):
-        self.name = name
-        self.tools = tools
-    
-    @staticmethod
-    def file_ops() -> 'EnvironmentGroup':
-        return EnvironmentGroup("file_ops", [ReadFile, WriteFile, ListDir])
-    
-    @staticmethod  
-    def web_apis() -> 'EnvironmentGroup':
-        return EnvironmentGroup("web", [HttpGet, HttpPost, ParseJSON])
-```
 
-# Synthetic Tools and Data
+> On SWE-bench Verified, a popular agentic coding benchmark, simply switching the scaffold makes up to an 11% difference for GPT-5 and up to a 15% difference for Kimi K2 Thinking. We cover the effect of the scaffold in our SWE-bench Verified review. The choice of scaffold has the single biggest impact on the overall performance
 
-The [Kimi K1.5 technical report](https://arxiv.org/abs/2501.12599) highlights an important insight: the diversity and quality of synthetic tool-use data matters enormously for tool proficiency. Moonshot AI invested heavily in generating massive amounts of synthetic tool interactions for training.
-
-Key considerations:
-- **Tool diversity**: Expose the model to many different tool interfaces (Kimi trained on thousands of unique tool signatures)
-- **Error cases**: Include examples where tool calls fail or return unexpected results
-- **Composition**: Multi-step tool use patterns where the output of one tool feeds into another
-- **Edge cases**: Unusual parameter combinations, empty results, timeouts
-- **Realistic distributions**: Tool usage patterns should mirror real-world applications
-
-## LLMs as Tool Mocks
-
-An interesting research direction: using LLMs to simulate tool behavior during training. This allows:
-- Training without actual API access
-- Generating diverse tool responses
-- Simulating edge cases and errors
-
-Research in this space:
-
-- **ToolLLM** ([Qin et al., 2023](https://arxiv.org/abs/2307.16789)): Created a benchmark with 16,000+ real-world APIs across 49 categories. They used ChatGPT to generate diverse tool-use scenarios and demonstrated that training on synthetic API interactions transfers to real tool use.
-
-- **APIGen** ([Liu et al., 2024](https://arxiv.org/abs/2406.18518)): An automated pipeline for generating verifiable, diverse function-calling datasets. Uses multi-stage verification (format checking, execution validation, semantic verification) to ensure quality of synthetic tool-use data.
-
-## Tool Collection and MCP Servers
-
-The ecosystem is growing with collections of tools and MCP (Model Context Protocol) servers that provide standardized interfaces for various capabilities.
-
-Notable work in this area:
-
-- **ToolBench** ([Qin et al., 2023](https://arxiv.org/abs/2307.16789)): Open-sourced a large-scale tool-use benchmark spanning 16,000+ APIs. This provides a standardized way to evaluate and train models on diverse tool interactions.
-
-- **ToolACE** ([Liu et al., 2024](https://arxiv.org/abs/2401.06201)): Focuses on automated tool-use capability enhancement, demonstrating how to scale tool training data generation while maintaining quality through automated verification.
-
-- **SpecTool** ([Kokane et al., 2024](https://arxiv.org/abs/2411.13547)): A benchmark for characterizing errors in tool-use LLMs. Identifies common failure patterns (parameter hallucination, format errors, semantic misunderstandings) and provides frameworks for systematic error mitigation.
-
-The MCP (Model Context Protocol) ecosystem is also expanding rapidly, with standardized interfaces making it easier to create interoperable tool environments. However, the challenge remains: more tools often means worse performance per tool, suggesting that training strategies need to account for tool complexity and interactions.
-
+> OpenAI only ran 477 of the 500 problems in SWE-bench Verified in their o3 and o4-mini evaluations due to infrastructure challenges. -->
 
 # From LLMs to Agents
 
@@ -490,13 +422,6 @@ You might think: "I'll just run the model's code directly." Here's why that's a 
 4. **Security**: Arbitrary code execution on your training cluster is... not great
 
 
-### Why Scaffolds Matter:
-
-Reference for EXACT lines in this section: [Why Benchmarking is Hard](https://epoch.ai/gradient-updates/why-benchmarking-is-hard) -> 
-> Scaffolds continue to have an outsized impact. As agentic evals, such as SWE-bench Verified or RLI, become more common, one component becomes increasingly important: The scaffold, i.e., the software that operates the agent, usually a CLI such as Claude Code, OpenHands, etc
-
-
-> On SWE-bench Verified, a popular agentic coding benchmark, simply switching the scaffold makes up to an 11% difference for GPT-5 and up to a 15% difference for Kimi K2 Thinking. We cover the effect of the scaffold in our SWE-bench Verified review. The choice of scaffold has the single biggest impact on the overall performance
 
 ## The Scale Challenge
 
@@ -527,104 +452,10 @@ The challenge multiplies when you consider:
 
 MCP (Model Context Protocol) servers can help for simple Python execution, but don't scale to these diverse requirements. This is why teams like Prime Intellect invest heavily in robust sandboxing infrastructure.
 
-<!-- 
-# Interesting Training Patterns
-
-## Self-Generated Verification
-
-An intriguing pattern (discussed with colleague Leonard):
-
-**Pattern 1: LLM generates code with test cases**
-```python
-# Model generates both the solution and tests
-generated_code = model.generate("Write a function to sort a list")
-generated_tests = model.generate("Write test cases for this sort function")
-
-# Cross-validate
-reward = run_tests(generated_code, generated_tests)
-```
-
-**Pattern 2: LLM generates test cases with code as verification**
-```python
-# Flip it: generate tests first, then code
-generated_tests = model.generate("Write edge case tests for sorting")
-generated_code = model.generate("Write code that passes these tests")
-
-# The most discriminative tests are those that fail most attempts
-# This helps identify robust test cases
-```
-
-This bidirectional approach can help "robustify" both code generation and test generation capabilities.
-
 Related research in this area:
-
-- **CodeRL** ([Le et al., 2022](https://arxiv.org/abs/2207.01780)): Uses execution feedback from unit tests as reward signals, training a critic model to predict functional correctness and guide code generation.
 
 - **Self-Training for Tool Use** ([Luo et al., 2024](https://arxiv.org/abs/2401.12999)): Shows that LLMs can learn to use tools without human demonstrations by generating their own training data through exploration-the model generates tool-use traces and learns from successful executions. -->
 
-
-# Putting It All Together
-
-Here's a complete example of a multi-turn code environment:
-
-```python
-class MultiTurnCodeEnv(SandboxEnv):
-    def __init__(
-        self,
-        problem: str,
-        test_cases: List[TestCase],
-        max_turns: int = 5,
-        sandbox_config: SandboxConfig = None
-    ):
-        super().__init__(sandbox_config)
-        self.problem = problem
-        self.test_cases = test_cases
-        self.max_turns = max_turns
-        self.attempts = []
-    
-    def reset(self) -> str:
-        self.attempts = []
-        return f"""Problem: {self.problem}
-        
-Write a solution. You can iterate based on test feedback.
-When done, wrap your final code in <final_code></final_code> tags."""
-    
-    def step(self, action: str) -> Tuple[str, float, bool, dict]:
-        self.attempts.append(action)
-        
-        # Check for final submission
-        if "<final_code>" in action:
-            code = self.extract_final_code(action)
-            results = self.sandbox.execute(code, self.test_cases)
-            passed = sum(1 for r in results if r.passed)
-            reward = passed / len(self.test_cases)
-            return "", reward, True, {"results": results, "attempts": len(self.attempts)}
-        
-        # Run intermediate code and provide feedback
-        code = self.extract_code(action)
-        results = self.sandbox.execute(code, self.test_cases)
-        
-        feedback = self.format_feedback(results)
-        
-        if len(self.attempts) >= self.max_turns:
-            passed = sum(1 for r in results if r.passed)
-            reward = passed / len(self.test_cases)
-            return "", reward, True, {"reason": "max_turns"}
-        
-        return feedback, 0.0, False, {}
-    
-    def format_feedback(self, results: List[TestResult]) -> str:
-        lines = ["Test Results:"]
-        for i, r in enumerate(results):
-            status = "✓ PASS" if r.passed else "✗ FAIL"
-            lines.append(f"  Test {i+1}: {status}")
-            if not r.passed:
-                lines.append(f"    Expected: {r.expected}")
-                lines.append(f"    Got: {r.actual}")
-                if r.error:
-                    lines.append(f"    Error: {r.error}")
-        return "\n".join(lines)
-```
 
 # Conclusion
 
