@@ -386,29 +386,48 @@ The rise of [MCP (Model Context Protocol)](https://modelcontextprotocol.io/docs/
 
 A curriculum approach might work here: master single tools first, then tool families (all file operations, all web APIs), then full environments with all tools available. The MCP ecosystem is expanding with standardized interfaces, but the fundamental challenge remains—more tools means more interference during training. This is another reason why your scaffold matters (see point 3 above): how tools are ordered, filtered, and presented in context directly affects whether the agent gets confused by too many options.
 
-# From LLMs to Agents
+# Multi-Turn RL Training
 
-With the right verification, reward shaping, and curriculum design, we can train an LLM that's great at single-turn math and code. But real-world tasks are often messier. An agent might need to *ask clarifying questions*, *fix mistakes*, or *use tools* across multiple steps. This requires multi-turn interaction within an episode/rollout.
+With the right verification, reward shaping, and curriculum design, we can train an LLM that's great at single-turn math and code. But real-world agents are messier—they need to *ask clarifying questions*, *fix mistakes*, *recover from errors*, and *chain tools* across multiple steps.
 
-The techniques we've discussed still apply. What changes is the **environment architecture**: managing conversation history, parsing tool calls, executing code safely, and deciding when to stop.
+## What Changes in Multi-Turn?
 
-Libraries like [verifiers](https://github.com/PrimeIntellect-ai/verifiers) handle this through environment inheritance, where each layer adds new capabilities:
+Single-turn RL is conceptually simple: one prompt → one response → one reward. Multi-turn introduces new challenges:
+
+| Challenge | Single-Turn | Multi-Turn |
+|-----------|-------------|------------|
+| **Credit assignment** | Direct: response → reward | Delayed: which turn caused failure? |
+| **State management** | Stateless | Conversation history, tool state |
+| **Stopping criteria** | Always done after 1 turn | When to stop? Max turns? Success signal? |
+| **Reward timing** | End of response | End of episode? Per-turn? |
+
+The fundamental question becomes: **how do you assign reward to individual turns when success depends on the whole trajectory?**
+
+## Trajectory-Level vs Turn-Level Rewards
+
+Most multi-turn RL work uses **trajectory-level rewards**—you get a single reward at the end of the episode based on task success. This is simpler but suffers from credit assignment problems (which turn was good/bad?).
+
+An alternative is **turn-level rewards**, where each turn gets partial credit. But this reintroduces reward hacking risks we discussed earlier—the agent might learn to maximize intermediate rewards without solving the task.
+
+[OpenHands (Wang et al., 2024)](https://arxiv.org/abs/2407.16741) and [SWE-agent (Yang et al., 2024)](https://arxiv.org/abs/2405.15793) both use trajectory-level binary rewards (did you solve the GitHub issue?) with the simplicity of: reward = 1 if tests pass, else 0.
+
+## Environment Architecture
+
+Libraries like [verifiers](https://github.com/PrimeIntellect-ai/verifiers) handle multi-turn complexity through environment inheritance, where each layer adds new capabilities:
 
 | Layer | What it adds |
 |-------|--------------|
 | **Environment** | Base protocol: `reset()`, `step()`, reward |
 | **↳ MultiTurnEnv** | Conversation history, turn limits, stopping conditions |
 | **↳ ToolEnv** | Parses tool calls, executes them, returns results |
-| **↳ StatefulToolEnv** | Persistent state across tool calls |
+| **↳ StatefulToolEnv** | Persistent state across tool calls (files, DBs) |
 | **↳ SandboxEnv** | Isolated execution environments |
 | **↳ CodeEnv** | Code execution with safety boundaries |
 
-Each layer builds on the previous: `MultiTurnEnv` turns a stateless `step()` into a conversation loop, `ToolEnv` parses special tokens and executes tools, and higher layers add sandboxing and code execution. 
-
-As a thought exercise, to implement a simple ReAct agent, you'd inherit from `ToolEnv` and fill in the tool list, execution logic, and stopping condition.
+Each layer builds on the previous. The key insight: **multi-turn environments need to manage state that persists across the episode**—file changes, database writes, git commits. This is what makes sandboxing critical.
 
 
-# Sandboxing: The Unsung Hero
+# Sandboxing
 
 ## Why Sandboxing Matters
 
@@ -485,6 +504,10 @@ The environment is where your model learns. Invest in getting it right.
 - [ToolLLM: Facilitating Large Language Models to Master 16000+ Real-world APIs](https://arxiv.org/abs/2307.16789) - Qin et al., 2023
 - [APIGen: Automated Pipeline for Generating Verifiable Function Calling Datasets](https://arxiv.org/abs/2406.18518) - Liu et al., 2024
 - [SpecTool: A Benchmark for Characterizing Errors in Tool-Use LLMs](https://arxiv.org/abs/2411.13547) - Kokane et al., 2024
+
+**Multi-Turn Agents:**
+- [OpenHands: An Open Platform for AI Software Developers as Generalist Agents](https://arxiv.org/abs/2407.16741) - Wang et al., 2024
+- [SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering](https://arxiv.org/abs/2405.15793) - Yang et al., 2024
 
 **Self-Training & Synthetic Data:**
 - [Self-Training Large Language Models for Tool Use](https://arxiv.org/abs/2401.12999)
