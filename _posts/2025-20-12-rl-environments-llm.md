@@ -266,14 +266,16 @@ lack adaptivity. **Adaptive curriculum learning** addresses these issues by matc
   title="AdaRFT Pipeline Interactive Visualization">
 </iframe>
 
-[INTELLECT-3 (Prime Intellect Team, 2025)](https://arxiv.org/abs/2512.16144) uses a similar approach to dynamically adjust the difficulty of the training tasks based on the model's performance. In their case, they used `Qwen/Qwen3-4B-Thinking-2507` for difficulty estimation in the initial phase.
+<!-- [INTELLECT-3 (Prime Intellect Team, 2025)](https://arxiv.org/abs/2512.16144) &  -->
 
-<iframe 
+[Adaptive CuRL (Li et al., 2025)](https://arxiv.org/abs/2511.09478) addresses gradient starvation by partitioning training data into difficulty buckets and progressively merging harder buckets based on the accuracy reward of the policy's current state. Crucially, earlier buckets remain in the training set after merges, providing a data revisitation mechanism **to mitigate catastrophic forgetting**. [INTELLECT-3 (Prime Intellect Team, 2025)](https://arxiv.org/abs/2512.16144) takes a lighter-weight approach: problems are sorted into difficulty pools (easy, normal, hard) based on observed solve rates, and sampling ratios from each pool are adjusted dynamically. An online filter discards trivial rollouts that provide no learning signal. Unlike AdaCuRL, INTELLECT-3 does not explicitly address catastrophic forgetting through bucket merging.
+
+<!-- <iframe 
   src="{{ site.url }}/{{ site.baseurl }}/assets/visualizations/rl_envs/intellect3_curriculum.html" 
   style="width: 100%; height: 1000px; border: none; border-radius: 16px; margin: 24px 0;"
   loading="lazy"
   title="INTELLECT-3 Curriculum Training Interactive Visualization">
-</iframe>
+</iframe> -->
 
 <!-- Specifically, we can start with easier tasks and gradually increase difficulty.  -->
 
