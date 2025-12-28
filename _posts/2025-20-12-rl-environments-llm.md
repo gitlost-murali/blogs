@@ -183,9 +183,7 @@ class SingleTurnCodeEnv(Environment):
 
 # The Reward Engineering Challenge
 
-The reward function determines training dynamics more than any other design choice. The field has learned hard lessons about reward hacking, with frontier models now actively manipulating evaluation code when given the opportunity. 
-
-TODO: cite SakanaAI & o3 monkey patching -> add citations.
+The reward function determines training dynamics more than any other design choice. The field has learned hard lessons about reward hacking, with frontier models now actively manipulating evaluation code when given the opportunity. For instance, [SakanaAI had to walk back claims](https://techcrunch.com/2025/02/21/sakana-walks-back-claims-that-its-ai-can-dramatically-speed-up-model-training/) about their AI speeding up model training after discovering it was gaming the metrics. Similarly, [METR's O3 evaluation](https://evaluations.metr.org/openai-o3-report/#reward-hacking-examples) documented numerous reward hacking examples from OpenAI's o3 model.
 
 ## The Strict Reward Trap
 
@@ -257,6 +255,8 @@ RL training is most effective when tasks are neither too easy nor too hard. Curr
 lack adaptivity. **Adaptive curriculum learning** addresses these issues by matching problem difficulty to the model's evolving capabilities. 
 
 
+[RLVE (Zeng et al., 2025)](https://arxiv.org/abs/2511.07317) introduced a large-scale suite of 400 math and reasoning environments that procedurally generate tasks based on the model's capabilities as training progresses.
+
 [AdaRFT (Shi et al., 2025)](https://arxiv.org/abs/2504.05520) maintains a target difficulty level $T$ that evolves based on recent rewards. When average reward exceeds target ($\beta=0.5$) (also proposed by [DOTS (Yifan et al., 2025)](https://arxiv.org/abs/2506.05316v1)), difficulty increases; otherwise, it decreases. Their approach uses an external LLM (Qwen 2.5 MATH 7B) to estimate difficulty based on the success rate over 128 attempts. They observed a 2x reduction in training steps while improving accuracy. 
 
 <iframe 
@@ -268,8 +268,9 @@ lack adaptivity. **Adaptive curriculum learning** addresses these issues by matc
 
 <!-- [INTELLECT-3 (Prime Intellect Team, 2025)](https://arxiv.org/abs/2512.16144) &  -->
 
-[Adaptive CuRL (Li et al., 2025)](https://arxiv.org/abs/2511.09478) addresses gradient starvation by partitioning training data into difficulty buckets and progressively merging harder buckets based on the accuracy reward of the policy's current state. Crucially, earlier buckets remain in the training set after merges, providing a data revisitation mechanism **to mitigate catastrophic forgetting**. [INTELLECT-3 (Prime Intellect Team, 2025)](https://arxiv.org/abs/2512.16144) takes a lighter-weight approach: problems are sorted into difficulty pools (easy, normal, hard) based on observed solve rates, and sampling ratios from each pool are adjusted dynamically. An online filter discards trivial rollouts that provide no learning signal. Unlike AdaCuRL, INTELLECT-3 does not explicitly address catastrophic forgetting through bucket merging.
+[Adaptive CuRL (Li et al., 2025)](https://arxiv.org/abs/2511.09478) addresses gradient starvation by partitioning training data into difficulty buckets and progressively merging harder buckets based on the accuracy reward of the policy's current state. Crucially, earlier buckets remain in the training set after merges, providing a data revisitation mechanism **to mitigate catastrophic forgetting**. [INTELLECT-3 (Prime Intellect Team, 2025)](https://arxiv.org/abs/2512.16144) takes a lighter-weight approach: problems are sorted into difficulty pools (easy, normal, hard) based on observed solve rates, and sampling ratios from each pool are adjusted dynamically. An online filter discards trivial rollouts that provide no learning signal. Unlike AdaCuRL, INTELLECT-3 does not explicitly address catastrophic forgetting through bucket merging. 
 
+<!-- CITE: TODO: write about -->
 <!-- <iframe 
   src="{{ site.url }}/{{ site.baseurl }}/assets/visualizations/rl_envs/intellect3_curriculum.html" 
   style="width: 100%; height: 1000px; border: none; border-radius: 16px; margin: 24px 0;"
@@ -305,20 +306,22 @@ The full algorithm is outlined in Algorithm 1 -->
 
 ## Adaptive Environments
 
-Similar to curriculum training, but the environment itself evolves. Instead of manual difficulty levels, use an LLM to update rubrics and task parameters based on training progress.
+An extension to adaptive curriculum learning is to make the environment itself adaptive. Instead of fixed rubrics/reward functions, we can update them based on the model's performance.
 
-Recent research has formalized these approaches:
+[DR Tulu (Shao et al., 2025)](https://arxiv.org/abs/2511.19399) introduced evolving rubrics for open-ended tasks. Static RLVR only works for short-form QA with verifiable answers. RLER (Reinforcement Learning with Evolving Rubrics) creates dynamic rubrics that co-evolve with the policy model, incorporating newly searched information from the environment rather than just LM parametric knowledge. Static rubrics are vulnerable to reward hacking; evolving rubrics adapt to training dynamics.
 
-- **AdaRFT** ([Shi et al., 2025](https://arxiv.org/abs/2504.05520)): Adaptive Reinforcement Finetuning dynamically adjusts training problem difficulty based on the model's recent reward signals. If the model is struggling, it sees easier problems; if it's succeeding, difficulty increases automatically.
+<!-- - **AdaRFT** ([Shi et al., 2025](https://arxiv.org/abs/2504.05520)): Adaptive Reinforcement Finetuning dynamically adjusts training problem difficulty based on the model's recent reward signals. If the model is struggling, it sees easier problems; if it's succeeding, difficulty increases automatically.
 
-- **AdaCuRL** ([Li et al., 2025](https://arxiv.org/abs/2511.09478)): Integrates coarse-to-fine difficulty estimation with adaptive curriculum scheduling. It also incorporates a data revisitation mechanism to mitigate catastrophic forgetting-the model periodically revisits easier problems to retain earlier capabilities.
-
-- **CAPO** ([Yang et al., 2025](https://arxiv.org/abs/2512.02580)): Curriculum Advantage Policy Optimization bootstraps imitation learning with positive-only advantage samples, using curriculum mechanisms to improve generalization across complex reasoning tasks.
+- **AdaCuRL** ([Li et al., 2025](https://arxiv.org/abs/2511.09478)): Integrates coarse-to-fine difficulty estimation with adaptive curriculum scheduling. It also incorporates a data revisitation mechanism to mitigate catastrophic forgetting-the model periodically revisits easier problems to retain earlier capabilities. -->
 
 
-TODO: write about this
+<!-- TODO: cover CAPO later
+- **CAPO** ([Yang et al., 2025](https://arxiv.org/abs/2512.02580)): Curriculum Advantage Policy Optimization bootstraps imitation learning with positive-only advantage samples, using curriculum mechanisms to improve generalization across complex reasoning tasks. -->
+
+
+<!-- TODO: write about this
 [Software agents can self-improve via self-play RL](https://x.com/YuxiangWei9/status/2003541373853524347)
-og-paper-> [arxiv for self-play RL](https://arxiv.org/abs/2512.18552)
+og-paper-> [arxiv for self-play RL](https://arxiv.org/abs/2512.18552) -->
 
 # From LLMs to Agents
 
