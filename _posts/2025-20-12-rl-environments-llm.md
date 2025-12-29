@@ -418,11 +418,11 @@ Libraries like [verifiers](https://github.com/PrimeIntellect-ai/verifiers) handl
 | Layer | What it adds |
 |-------|--------------|
 | **Environment** | Base protocol: `reset()`, `step()`, reward |
-| **↳ MultiTurnEnv** | Conversation history, turn limits, stopping conditions |
-| **↳ ToolEnv** | Parses tool calls, executes them, returns results |
-| **↳ StatefulToolEnv** | Persistent state across tool calls (files, DBs) |
-| **↳ SandboxEnv** | Isolated execution environments |
-| **↳ CodeEnv** | Code execution with safety boundaries |
+| &nbsp;&nbsp;**↳ MultiTurnEnv** | Conversation history, turn limits, stopping conditions |
+| &nbsp;&nbsp;&nbsp;&nbsp;**↳ ToolEnv** | Parses tool calls, executes them, returns results |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**↳ StatefulToolEnv** | Persistent state across tool calls (files, DBs) |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**↳ SandboxEnv** | Isolated execution environments |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**↳ CodeEnv** | Code execution with safety boundaries |
 
 Each layer builds on the previous. The key insight: **multi-turn environments need to manage state that persists across the episode**—file changes, database writes, git commits. This is what makes sandboxing critical.
 
@@ -471,8 +471,9 @@ MCP (Model Context Protocol) servers can help for simple Python execution, but d
 
 Related research in this area:
 
-- **Self-Training for Tool Use** ([Luo et al., 2024](https://arxiv.org/abs/2401.12999)): Shows that LLMs can learn to use tools without human demonstrations by generating their own training data through exploration-the model generates tool-use traces and learns from successful executions. -->
+- **Self-Training for Tool Use** ([Luo et al., 2024](https://arxiv.org/abs/2401.12999)): Shows that LLMs can learn to use tools without human demonstrations by generating their own training data through exploration-the model generates tool-use traces and learns from successful executions.
 
+- **Self-Play SWE-RL** ([Wei et al., 2025](https://arxiv.org/pdf/2512.18552)): Toward Training Superintelligent Software Agents through Self-Play SWE-RL.
 
 # Conclusion
 
@@ -487,7 +488,6 @@ Building effective RL environments for LLM training requires thinking beyond sim
 
 The environment is where your model learns. Invest in getting it right.
 
----
 
 # References
 
