@@ -459,35 +459,35 @@ Running model-generated code on the training cluster is a terrible idea because:
 
 The risks compound at scale. When we're running thousands of concurrent rollouts, the probability of hitting an edge case approaches certainty.
 
-## The Scale Challenge
+## Scaling Sandboxed Execution
 
 For efficient RL training, we need to run thousands of environment instances in parallel. For instance, [Prime Intellect reports running 4,000 concurrent sandboxes during their RL training](https://arxiv.org/abs/2512.16144).
 
-## Beyond Python: Multi-Language Environments
+This creates a trade-off between isolation strength and startup latency:
 
-A common response when discussing RL environment infrastructure is: *"Why not just use existing Python MCP servers?"* This misses the fundamental challenge—real-world tool use spans far more than Python execution.
+- **Containers (Docker, Podman)**: Fast startup (~100ms), good isolation, but share the host kernel. A kernel exploit could escape the sandbox.
+- **MicroVMs (Firecracker, gVisor)**: Near-VM isolation with container-like speed. Firecracker powers AWS Lambda and can boot in ~125ms. [E2B](https://e2b.dev/) builds on Firecracker to offer sandboxed code execution as a service.
+- **Full VMs**: Strongest isolation, but slower startup and higher resource overhead—impractical at 4,000 concurrent instances.
 
-Consider what a model actually needs to learn:
+Most production RL systems land on containers with seccomp filters and namespace restrictions, or microVMs when stronger guarantees are needed. The key is matching isolation level to risk: simple arithmetic doesn't need a VM, but arbitrary shell commands might.
 
-- **Different programming languages**: Python, JavaScript, Rust, Go, C++—each with its own runtime, package manager, and execution model. A Python sandbox won't help when training on Rust compilation or JavaScript async patterns.
-- **Database environments**: Testing SQL queries against real database engines (Postgres, MySQL, SQLite) with proper isolation. You can't mock your way to learning actual query optimization.
-- **CLI environments**: Shell commands, file system operations, piping, environment variables. These require actual filesystem access with proper sandboxing.
-- **SWE environments**: Full development setups with git, package managers, build tools, linters, test runners. [SWE-agent](https://arxiv.org/abs/2405.15793) and [OpenHands](https://arxiv.org/abs/2407.16741) demonstrate the complexity here.
-- **Computer use**: GUI interactions, browser automation (Playwright, Selenium), screenshot-based feedback loops.
+## Beyond Python: The Multi-Language Reality
 
-Each of these requires different isolation strategies, different resource limits, and different verification approaches. A single Python MCP server handles one narrow slice of this landscape.
+The sandboxing challenge compounds when we move beyond Python. Real-world tool use spans a much wider landscape, and each domain brings its own isolation requirements:
 
-This is why teams like Prime Intellect invest heavily in robust, multi-environment sandboxing infrastructure rather than bolting on existing solutions.
+- **Different programming languages**: Python, JavaScript, Rust, Go, C++—each with its own runtime, package manager, and execution semantics. Training on Rust compilation errors or JavaScript async patterns requires those actual environments, not simulations.
+- **Database environments**: SQL queries against real engines (Postgres, MySQL, SQLite). Learning query optimization requires actual query planners—mocks won't teach your model about index selection.
+- **CLI environments**: Shell commands, file system operations, piping, environment variables. These need particularly careful sandboxing given shell's power to modify the system.
+- **SWE environments**: Full development setups with git, package managers, build tools, linters, test runners. [SWE-agent](https://arxiv.org/abs/2405.15793) and [OpenHands](https://arxiv.org/abs/2407.16741) demonstrate the infrastructure complexity here.
+- **Computer use**: GUI interactions, browser automation, screenshot-based feedback loops—requiring display servers and rendering infrastructure.
 
-Related research in this area:
+Each domain requires different isolation strategies, resource limits, and verification approaches. There's no single solution that covers the full landscape, which is why building robust RL environments remains an active area of infrastructure investment.
 
-- **Self-Training for Tool Use** ([Luo et al., 2024](https://arxiv.org/abs/2401.12999)): Shows that LLMs can learn to use tools without human demonstrations by generating their own training data through exploration-the model generates tool-use traces and learns from successful executions.
-
-- **Self-Play SWE-RL** ([Wei et al., 2025](https://arxiv.org/pdf/2512.18552)): Toward Training Superintelligent Software Agents through Self-Play SWE-RL.
+---
 
 # Conclusion
 
-Building effective RL environments for LLM training requires thinking beyond simple prompt-response pairs. Key takeaways:
+Building effective RL environments for LLM training requires thinking beyond simple prompt-response pairs. The environment is where your model actually learns—from verifiable feedback, through safe execution, at scale. Here are the key takeaways:
 
 1. **Pick the right verification**: Stdin/stdout, assertions, functional-choose based on your data and goals
 2. **Design for failure**: Sandboxing isn't optional at scale
@@ -496,7 +496,13 @@ Building effective RL environments for LLM training requires thinking beyond sim
 5. **Group wisely**: Too many tools at once can hurt performance
 6. **Scale matters**: Parallel environment execution is essential for efficient training
 
-The environment is where your model learns. Invest in getting it right.
+<!-- The environment is where your model learns. Invest in getting it right. -->
+
+<!-- Related research in this area:
+
+- **Self-Training for Tool Use** ([Luo et al., 2024](https://arxiv.org/abs/2401.12999)): Shows that LLMs can learn to use tools without human demonstrations by generating their own training data through exploration-the model generates tool-use traces and learns from successful executions.
+
+- **Self-Play SWE-RL** ([Wei et al., 2025](https://arxiv.org/pdf/2512.18552)): Toward Training Superintelligent Software Agents through Self-Play SWE-RL. -->
 
 
 # References
