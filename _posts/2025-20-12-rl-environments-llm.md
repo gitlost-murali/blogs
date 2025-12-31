@@ -518,31 +518,36 @@ The model will optimize whatever signal you give it. If the environment allows r
 
 # References
 
-**Curriculum & Adaptive Learning:**
+- [DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning](https://arxiv.org/abs/2501.12948) - DeepSeek-AI, 2025
+- [INTELLECT-3: Distributed Reinforcement Learning with Synthetic Data for AGI](https://arxiv.org/abs/2512.16144) - Prime Intellect Team, 2025
 - [AdaRFT: Efficient Reinforcement Finetuning via Adaptive Curriculum Learning](https://arxiv.org/abs/2504.05520) - Shi et al., 2025
 - [AdaCuRL: Adaptive Curriculum Reinforcement Learning](https://arxiv.org/abs/2511.09478) - Li et al., 2025
 - [CAPO: Curriculum Advantage Policy Optimization](https://arxiv.org/abs/2512.02580) - Yang et al., 2025
-
-- [DR Tulu: Reinforcement Learning with Evolving Rubrics for Deep Research](https://arxiv.org/abs/2511.19399)
-- [RLVE: Scaling Up Reinforcement Learning for Language Models with Adaptive Verifiable Environments](https://arxiv.org/abs/2511.07317)
-
-**Code & Tool Use:**
+- [DOTS: Learning to Reason Dynamically in LLMs via Optimal Reasoning Trajectories Search](https://arxiv.org/abs/2506.05316v1) - Yifan et al., 2025
+- [Light-R1: Curriculum SFT, DPO and RL for Long COT](https://arxiv.org/abs/2503.10460) - Wen et al., 2025
+- [DeepScaleR: Surpassing O1-Preview with a 1.5B Model by Scaling RL](https://pretty-radio-b75.notion.site/DeepScaleR-Surpassing-O1-Preview-with-a-1-5B-Model-by-Scaling-RL-19681902c1468005bed8ca303013a4e2) - Luo et al., 2025
+- [SimpleRL-Zoo: Investigating and Taming Zero Reinforcement Learning for Open Base Models](https://arxiv.org/abs/2503.17287) - Song et al., 2025
+- [RLVE: Scaling Up Reinforcement Learning for Language Models with Adaptive Verifiable Environments](https://arxiv.org/abs/2511.07317) - Zeng et al., 2025
+- [DR Tulu: Reinforcement Learning with Evolving Rubrics for Deep Research](https://arxiv.org/abs/2511.19399) - Shao et al., 2025
+- [CURE: Code Understanding and Repair through Co-Evolving Models](https://arxiv.org/abs/2509.14436) - Yin jie et al., 2025
+- [EvalPlus: Rigorous Evaluation of LLM-Synthesized Code](https://github.com/evalplus/evalplus) - Liu et al., 2023
 - [CodeRL: Mastering Code Generation through Pretrained Models and Deep RL](https://arxiv.org/abs/2207.01780) - Le et al., 2022
 - [ToolLLM: Facilitating Large Language Models to Master 16000+ Real-world APIs](https://arxiv.org/abs/2307.16789) - Qin et al., 2023
 - [APIGen: Automated Pipeline for Generating Verifiable Function Calling Datasets](https://arxiv.org/abs/2406.18518) - Liu et al., 2024
 - [SpecTool: A Benchmark for Characterizing Errors in Tool-Use LLMs](https://arxiv.org/abs/2411.13547) - Kokane et al., 2024
-
-**Multi-Turn Agents:**
+- [Berkeley Function Calling Leaderboard (BFCL)](https://gorilla.cs.berkeley.edu/blogs/8_berkeley_function_calling_leaderboard.html) - Gorilla Team, 2024
+- [MirrorAPI: Imitating APIs via Fine-Tuned LLMs](https://aclanthology.org/2025.findings-acl.273/) - Guo et al., 2025
+- [StableToolBench: A Stable Large-Scale Benchmark for Tool Learning](https://aclanthology.org/2025.findings-acl.273/) - Guo et al., 2025
 - [OpenHands: An Open Platform for AI Software Developers as Generalist Agents](https://arxiv.org/abs/2407.16741) - Wang et al., 2024
 - [SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering](https://arxiv.org/abs/2405.15793) - Yang et al., 2024
+- [Faulty Reward Functions in the Wild](https://openai.com/index/faulty-reward-functions/) - OpenAI, 2016
+- [Recent Reward Hacking Research](https://metr.org/blog/2025-06-05-recent-reward-hacking/) - METR, 2025
+- [OpenAI o3 Evaluation Report](https://evaluations.metr.org/openai-o3-report/) - METR, 2025
+- [Self-Training Large Language Models for Tool Use](https://arxiv.org/abs/2401.12999) - Luo et al., 2024
+- [How Kimi K2 Became One of the Best Tool-Using Models](https://www.dbreunig.com/2025/07/30/how-kimi-was-post-trained-for-tool-use.html) - Breunig, 2025
+- [Why Benchmarking is Hard: Scaffold Effects on SWE-bench](https://epoch.ai/gradient-updates/why-benchmarking-is-hard) - Epoch AI, 2025
+- [SWE-bench Docker Optimization](https://epoch.ai/blog/swebench-docker) - Epoch AI, 2025
+- [How Contexts Fail and How to Fix Them](https://www.dbreunig.com/2025/06/22/how-contexts-fail-and-how-to-fix-them.html) - Breunig, 2025
+- [verifiers: A Library for Multi-Turn RL Training](https://github.com/PrimeIntellect-ai/verifiers) - Prime Intellect, 2025
 
-**Self-Training & Synthetic Data:**
-- [Self-Training Large Language Models for Tool Use](https://arxiv.org/abs/2401.12999)
-- [How Kimi K2 Became One of the Best Tool-Using Models](https://www.dbreunig.com/2025/07/30/how-kimi-was-post-trained-for-tool-use.html)
-
-If you have any questions, feel free to reach out on [Linkedin](https://www.linkedin.com/in/murali-manohar/), [Twitter](https://twitter.com/gitlostmurali) or [Mail](mailto:kmanoharmurali@gmail.com).
-
-
-# Refernces
-
-- [Intellect-3-report](https://arxiv.org/abs/2512.16144)
+Feel free to reach out on [Twitter](https://twitter.com/gitlostmurali), [Linkedin](https://www.linkedin.com/in/murali-manohar/), [GitHub](https://github.com/gitlostmurali), or [Mail](mailto:kmanoharmurali@gmail.com).
