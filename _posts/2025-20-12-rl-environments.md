@@ -1,7 +1,7 @@
 ---
 title: Building RL Environments for LLM Training - From Car Racing to Code Agents
 excerpt: A deep dive into designing environments for reinforcement learning with LLMs - understanding actions, observations, rewards, and scaling challenges
-tags: [Machine Learning, Language Models, Reinforcement Learning, Environments, Agents, GRPO, Training]
+tags: [Machine Learning, Language Models, Reinforcement Learning, RL, Sandbox, Environments, Agents, GRPO, Training, AI]
 date: 2025-12-20 10:30:00 +0530
 categories: machine-learning data-science
 toc: true
