@@ -1,6 +1,6 @@
 ---
 title: "Engineering RL Environments for LLM Training: An Overview"
-excerpt: What happens between the RL policy update and the next rollout : verification, reward shaping, tool execution, and the infrastructure that holds it together
+excerpt: Everything that happens in an RL environment between the policy update and the next rollout: verification, reward shaping, tool calling, curriculum design, and the infrastructure that holds it together
 tags: [Machine Learning, Language Models, Reinforcement Learning, RL, Sandbox, Environments, Agents, GRPO, Training, AI]
 date: 2025-12-20 10:30:00 +0530
 categories: machine-learning data-science
