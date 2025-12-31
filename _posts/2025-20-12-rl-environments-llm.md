@@ -443,9 +443,9 @@ These abstractions hide real operational complexity. Consider what's required to
 - The original SWE-bench Docker setup consumed **684 GiB** before [optimization efforts](https://epoch.ai/blog/swebench-docker) brought it down to ~67 GiB
 - Building these images from scratch can take hours
 
-This is why SWE-bench agents use pre-built Docker images per repository. You can't afford to `pip install` Django's entire dependency tree every time your agent wants to attempt a fix. The environments must be ready to go, with the exact commit checked out and dependencies pre-installed.
+This is why SWE-bench agents use pre-built Docker images per repository. We can't afford to `pip install` Django's entire dependency tree every time our agent wants to attempt a fix. The environments must be ready to go, with the exact commit checked out and dependencies pre-installed.
 
-This complexity is exactly why robust sandboxing matters: you need isolation that can be spun up reliably, thousands of times, without breaking your training run.
+This complexity is exactly why robust sandboxing matters: we need isolation that can be spun up reliably, thousands of times, without breaking the training run.
 
 # Sandboxing
 
@@ -457,7 +457,6 @@ You might think: "I'll just run the model's code directly." Here's why that's a 
 2. **Infinite loops**: The model generates `while True: pass` and your training hangs
 3. **Resource exhaustion**: Memory bombs, fork bombs, disk filling
 4. **Security**: Arbitrary code execution on your training cluster is... not great
-
 
 
 ## The Scale Challenge
