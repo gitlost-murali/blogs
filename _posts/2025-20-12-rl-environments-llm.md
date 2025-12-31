@@ -428,7 +428,7 @@ Each layer builds on the previous. The key insight: **multi-turn environments ne
 
 These abstractions hide real operational complexity—especially at scale. Consider what's required to run agents on [SWE-bench](https://www.swebench.com/):
 
-**For each task instance, you need to:**
+**For each task instance, we need to:**
 1. Clone the target repository (could be Django, scikit-learn, matplotlib—each with different dependencies)
 2. Checkout the specific **base commit** that existed before the bug was introduced
 3. Install the project's dependencies in an isolated environment
@@ -447,44 +447,37 @@ This complexity makes robust sandboxing essential: we need isolation that can be
 
 # Sandboxing
 
+Running model-generated code during RL training is an operational challenge that might break a multi-week training run. Without proper isolation, a single malicious or buggy code snippet can compromise the entire training run.
+
 ## Why Sandboxing Matters
 
-You might think: "I'll just run the model's code directly." Here's why that's a terrible idea for RL training:
+Running model-generated code on the training cluster is a terrible idea because:
 
-1. **Segfaults and crashes**: One bad piece of generated code shouldn't kill a 20-day training run
-2. **Infinite loops**: The model generates `while True: pass` and your training hangs
-3. **Resource exhaustion**: Memory bombs, fork bombs, disk filling
-4. **Security**: Arbitrary code execution on your training cluster is... not great
+1. **Segfaults and crashes**: One segfault or infinite loop shouldn't kill a 20-day training run.
+2. **Resource exhaustion**: Memory bombs, fork bombs and disk filling attacks are trivial to generate and can easily overwhelm the training cluster.
+3. **Security breaches**: The model might curl the internal APIs, read environment variables with API keys, or worse.
 
+The risks compound at scale. When we're running thousands of concurrent rollouts, the probability of hitting an edge case approaches certainty.
 
 ## The Scale Challenge
 
-For efficient RL training, you need to run thousands of environment instances in parallel. Prime Intellect reports running 4,000 concurrent sandboxes during their RL training.
-
-```python
-# Naive approach: sequential execution (slow!)
-for prompt in prompts:
-    response = model.generate(prompt)
-    reward = env.step(response)  # Each step might take seconds
-
-# Parallel execution with sandboxing
-async def run_parallel_envs(prompts, num_workers=4000):
-    async with SandboxPool(num_workers) as pool:
-        tasks = [pool.execute(env.step, p) for p in prompts]
-        results = await asyncio.gather(*tasks)
-    return results
-```
+For efficient RL training, we need to run thousands of environment instances in parallel. For instance, [Prime Intellect reports running 4,000 concurrent sandboxes during their RL training](https://arxiv.org/abs/2512.16144).
 
 ## Beyond Python: Multi-Language Environments
 
-The challenge multiplies when you consider:
-- **Different programming languages**: Python, JavaScript, Rust, Go...
-- **Database environments**: Testing SQL queries safely
-- **CLI environments**: Shell commands, file system operations
-- **SWE environments**: Full development setups with git, package managers, build tools
-- **Computer use**: GUI interactions, browser automation
+A common response when discussing RL environment infrastructure is: *"Why not just use existing Python MCP servers?"* This misses the fundamental challenge—real-world tool use spans far more than Python execution.
 
-MCP (Model Context Protocol) servers can help for simple Python execution, but don't scale to these diverse requirements. This is why teams like Prime Intellect invest heavily in robust sandboxing infrastructure.
+Consider what a model actually needs to learn:
+
+- **Different programming languages**: Python, JavaScript, Rust, Go, C++—each with its own runtime, package manager, and execution model. A Python sandbox won't help when training on Rust compilation or JavaScript async patterns.
+- **Database environments**: Testing SQL queries against real database engines (Postgres, MySQL, SQLite) with proper isolation. You can't mock your way to learning actual query optimization.
+- **CLI environments**: Shell commands, file system operations, piping, environment variables. These require actual filesystem access with proper sandboxing.
+- **SWE environments**: Full development setups with git, package managers, build tools, linters, test runners. [SWE-agent](https://arxiv.org/abs/2405.15793) and [OpenHands](https://arxiv.org/abs/2407.16741) demonstrate the complexity here.
+- **Computer use**: GUI interactions, browser automation (Playwright, Selenium), screenshot-based feedback loops.
+
+Each of these requires different isolation strategies, different resource limits, and different verification approaches. A single Python MCP server handles one narrow slice of this landscape.
+
+This is why teams like Prime Intellect invest heavily in robust, multi-environment sandboxing infrastructure rather than bolting on existing solutions.
 
 Related research in this area:
 
