@@ -465,11 +465,29 @@ For efficient RL training, we need to run thousands of environment instances in 
 
 This creates a trade-off between isolation strength and startup latency:
 
-- **Containers (Docker, Podman)**: Fast startup (~100ms), good isolation, but share the host kernel. A kernel exploit could escape the sandbox.
-- **MicroVMs (Firecracker, gVisor)**: Near-VM isolation with container-like speed. Firecracker powers AWS Lambda and can boot in ~125ms. [E2B](https://e2b.dev/) builds on Firecracker to offer sandboxed code execution as a service.
-- **Full VMs**: Strongest isolation, but slower startup and higher resource overhead—impractical at 4,000 concurrent instances.
+- **Containers (Docker, Podman)**: Fast startup (often ~10–100ms when warm), decent isolation, but they share the host kernel. A kernel exploit could escape the sandbox.
+- **MicroVMs (Firecracker)**: VM-grade isolation with near-container ergonomics; used by AWS Lambda, with boot times often cited on the order of ~100ms in optimized setups. [E2B](https://e2b.dev/) builds on Firecracker to offer sandboxed code execution as a service.
 
-Most production RL systems land on containers with seccomp filters and namespace restrictions, or microVMs when stronger guarantees are needed. The key is matching isolation level to risk: simple arithmetic doesn't need a VM, but arbitrary shell commands might.
+{: .notice--info}
+You may also see **gVisor** mentioned in this space. It's not a microVM but a **container sandbox** that intercepts syscalls to reduce the host kernel attack surface.
+
+- **Full VMs**: Strongest isolation, but slower startup and higher resource overhead—often too costly at ~4,000 concurrent instances.
+
+
+Most production RL systems end up with **hardened containers**, and reach for **microVMs** when they need stronger guarantees. In practice, you usually want the *lightest isolation that still keeps you safe*—simple arithmetic doesn't need a VM, but arbitrary shell commands often do.
+
+## Practical Recommendations
+
+For prototyping and small-scale experiments:
+
+- Use **E2B** or **Modal** — the managed overhead is worth it
+- Focus on your environment logic, not infrastructure
+
+For production RL training:
+
+- If you need maximum control: build on **Kubernetes + gVisor** with custom orchestration
+- If you need speed to production: **E2B (self-hosted)** or **Modal** with reserved capacity
+- Budget ~20–30% of engineering time for sandbox infrastructure if you're building custom
 
 ## Beyond Python: The Multi-Language Reality
 
@@ -482,8 +500,6 @@ The sandboxing challenge compounds when we move beyond Python. Real-world tool u
 - **Computer use**: GUI interactions, browser automation, screenshot-based feedback loops—requiring display servers and rendering infrastructure.
 
 Each domain requires different isolation strategies, resource limits, and verification approaches. There's no single solution that covers the full landscape, which is why building robust RL environments remains an active area of infrastructure investment.
-
----
 
 # Conclusion
 
