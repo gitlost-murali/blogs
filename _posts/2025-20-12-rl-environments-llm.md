@@ -503,14 +503,9 @@ Each domain requires different isolation strategies, resource limits, and verifi
 
 # Conclusion
 
-Building effective RL environments for LLM training requires thinking beyond simple prompt-response pairs. The environment is where your model actually learns—from verifiable feedback, through safe execution, at scale. Here are the key takeaways:
+We are shifting from curating static datasets to engineering dynamic environments. This turns data preparation into a systems problem: you need sandboxes that don't leak, verifiers that don't hallucinate, and curricula that adapt to the model's progress.
 
-1. **Pick the right verification**: Stdin/stdout, assertions, functional-choose based on your data and goals
-2. **Design for failure**: Sandboxing isn't optional at scale
-3. **Reward carefully**: Sparse rewards can halt training, dense rewards invite hacking
-4. **Curriculum helps**: Gradual difficulty increases keep learning moving
-5. **Group wisely**: Too many tools at once can hurt performance
-6. **Scale matters**: Parallel environment execution is essential for efficient training
+The model will optimize whatever signal you give it. If the environment allows reward hacking, the model will hack it. If the sandbox is slow, training stalls. The difficulty lies in constructing a feedback loop that is both tight enough to provide signal and robust enough to scale. The algorithm matters less than the integrity of the environment it runs in.
 
 <!-- The environment is where your model learns. Invest in getting it right. -->
 
