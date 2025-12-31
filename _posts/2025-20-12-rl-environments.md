@@ -5,7 +5,7 @@ tags: [Machine Learning, Language Models, Reinforcement Learning, RL, Sandbox, E
 date: 2025-12-20 10:30:00 +0530
 categories: machine-learning data-science
 toc: true
-permalink: /:categories/:title
+permalink: /:title
 mathjax: true
 ---
 
