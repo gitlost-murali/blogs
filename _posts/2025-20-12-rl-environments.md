@@ -75,7 +75,7 @@ In our car racing analogy versus LLM training, the parallel is as follows:
 └────────────────────────────┴───────────────────────────────────────────────┘
 ```
 
-The critical difference lies in the **Reward**. In a game, the game engine knows the score. In LLM training, respective environment would carry out the reward logic. This brings us to the first concept: Verification.
+The critical difference lies in the **Reward**. In a game, the score is built into the engine—cross the finish line, get a point. In LLM training, we need to define what correctness means and build logic to verify it. This brings us to the first concept: Verification.
 
 # Reward Verification strategies
 
