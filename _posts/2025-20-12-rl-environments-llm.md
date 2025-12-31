@@ -86,7 +86,7 @@ Every environment needs to answer two questions:
 In other words, we need a *verifier* to compute the reward and a *criterion* to decide if the task is done. 
 
 
-The choice of verification approach fundamentally shapes what behaviors RL can reinforce. For math, this is often simple: extract the number and compare it to a ground truth. But for code, "correctness" is a spectrum. We can't just string-match code because there are infinite ways to write the same function. 
+The verification method effectively *defines* what "good behavior" means for RL: the policy will learn to optimize whatever the verifier can reliably score. For math, this is often straightforward: extract the final number and compare it against a ground-truth answer. But for code, "correctness" is a spectrum rather than a single target. It involves satisfying a set of constraints—the code must run, produce the right outputs, and often meet style, safety, or efficiency standards. Naively string-matching source code doesn't work because there are infinitely many equivalent implementations of the same function.
 
 <!-- making training more sample-efficient and enabling smarter inference-time regeneration strategies. -->
 
@@ -425,6 +425,25 @@ Libraries like [verifiers](https://github.com/PrimeIntellect-ai/verifiers) handl
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**↳ CodeEnv** | Code execution with safety boundaries |
 
 Each layer builds on the previous. The key insight: **multi-turn environments need to manage state that persists across the episode**—file changes, database writes, git commits. This is what makes sandboxing critical.
+
+## The Weight of Real Environments
+
+These abstractions hide enormous operational complexity. Consider what happens when you run [SWE-agent](https://swe-agent.com/) on a real benchmark:
+
+**For each task instance, you need to:**
+1. Clone the target repository (could be Django, scikit-learn, matplotlib—each with different dependencies)
+2. Checkout the specific **base commit** that existed before the bug was introduced
+3. Install the project's dependencies in an isolated environment
+4. Apply any environment-specific patches or configurations
+5. Set up the test harness to verify the fix
+
+**The infrastructure cost is staggering:**
+- Docker images for SWE-bench can reach **160GB+ total** across all project environments
+- Each environment requires **16GB+ RAM** for comfortable operation
+- The original SWE-bench Docker setup consumed **684 GiB** before [optimization efforts](https://epoch.ai/blog/swebench-docker) brought it down to ~67 GiB
+- Building these images from scratch can take hours
+
+This is why SWE-agent and similar tools use pre-built Docker images per repository. You can't afford to `pip install` Django's entire dependency tree every time your agent wants to attempt a fix. The environments must be ready to go, with the exact commit checked out and dependencies pre-installed.
 
 
 # Sandboxing
