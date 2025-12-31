@@ -268,7 +268,7 @@ lack adaptivity. **Adaptive curriculum learning** addresses these issues by matc
 
 <!-- [INTELLECT-3 (Prime Intellect Team, 2025)](https://arxiv.org/abs/2512.16144) &  -->
 
-[Adaptive CuRL (Li et al., 2025)](https://arxiv.org/abs/2511.09478) addresses gradient starvation by partitioning training data into difficulty buckets and progressively merging harder buckets based on the accuracy reward of the policy's current state. Crucially, earlier buckets remain in the training set after merges, providing a data revisitation mechanism **to mitigate catastrophic forgetting**. [INTELLECT-3 (Prime Intellect Team, 2025)](https://arxiv.org/abs/2512.16144) takes a lighter-weight approach: problems are sorted into difficulty pools (easy, normal, hard) based on observed solve rates, and sampling ratios from each pool are adjusted dynamically. An online filter discards trivial rollouts that provide no learning signal. Unlike AdaCuRL, INTELLECT-3 does not explicitly address catastrophic forgetting through bucket merging. 
+[AdaCuRL (Li et al., 2025)](https://arxiv.org/abs/2511.09478) addresses gradient starvation by partitioning training data into difficulty buckets and progressively merging harder buckets based on the accuracy reward of the policy's current state. Crucially, earlier buckets remain in the training set after merges, providing a data revisitation mechanism **to mitigate catastrophic forgetting**. [INTELLECT-3 (Prime Intellect Team, 2025)](https://arxiv.org/abs/2512.16144) takes a lighter-weight approach: problems are sorted into difficulty pools (easy, normal, hard) based on observed solve rates, and sampling ratios from each pool are adjusted dynamically. An online filter discards trivial rollouts that provide no learning signal. Unlike AdaCuRL, INTELLECT-3 does not explicitly address catastrophic forgetting through bucket merging. 
 
 <!-- CITE: TODO: write about -->
 <!-- <iframe 
@@ -522,7 +522,7 @@ The model will optimize whatever signal you give it. If the environment allows r
 - [INTELLECT-3: Distributed Reinforcement Learning with Synthetic Data for AGI](https://arxiv.org/abs/2512.16144) - Prime Intellect Team, 2025
 - [AdaRFT: Efficient Reinforcement Finetuning via Adaptive Curriculum Learning](https://arxiv.org/abs/2504.05520) - Shi et al., 2025
 - [AdaCuRL: Adaptive Curriculum Reinforcement Learning](https://arxiv.org/abs/2511.09478) - Li et al., 2025
-- [CAPO: Curriculum Advantage Policy Optimization](https://arxiv.org/abs/2512.02580) - Yang et al., 2025
+<!-- - [CAPO: Curriculum Advantage Policy Optimization](https://arxiv.org/abs/2512.02580) - Yang et al., 2025 -->
 - [DOTS: Learning to Reason Dynamically in LLMs via Optimal Reasoning Trajectories Search](https://arxiv.org/abs/2506.05316v1) - Yifan et al., 2025
 - [Light-R1: Curriculum SFT, DPO and RL for Long COT](https://arxiv.org/abs/2503.10460) - Wen et al., 2025
 - [DeepScaleR: Surpassing O1-Preview with a 1.5B Model by Scaling RL](https://pretty-radio-b75.notion.site/DeepScaleR-Surpassing-O1-Preview-with-a-1-5B-Model-by-Scaling-RL-19681902c1468005bed8ca303013a4e2) - Luo et al., 2025
@@ -543,6 +543,8 @@ The model will optimize whatever signal you give it. If the environment allows r
 - [Faulty Reward Functions in the Wild](https://openai.com/index/faulty-reward-functions/) - OpenAI, 2016
 - [Recent Reward Hacking Research](https://metr.org/blog/2025-06-05-recent-reward-hacking/) - METR, 2025
 - [OpenAI o3 Evaluation Report](https://evaluations.metr.org/openai-o3-report/) - METR, 2025
+- [RE-Bench: Evaluating Frontier AI R&D Capabilities](https://github.com/METR/RE-Bench) - METR, 2025
+- [Sakana AI Walks Back Claims About AI Speeding Up Model Training](https://techcrunch.com/2025/02/21/sakana-walks-back-claims-that-its-ai-can-dramatically-speed-up-model-training/) - TechCrunch, 2025
 - [Self-Training Large Language Models for Tool Use](https://arxiv.org/abs/2401.12999) - Luo et al., 2024
 - [How Kimi K2 Became One of the Best Tool-Using Models](https://www.dbreunig.com/2025/07/30/how-kimi-was-post-trained-for-tool-use.html) - Breunig, 2025
 - [Why Benchmarking is Hard: Scaffold Effects on SWE-bench](https://epoch.ai/gradient-updates/why-benchmarking-is-hard) - Epoch AI, 2025
