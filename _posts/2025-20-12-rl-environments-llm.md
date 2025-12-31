@@ -428,7 +428,7 @@ Each layer builds on the previous. The key insight: **multi-turn environments ne
 
 ## The Weight of Real Environments
 
-These abstractions hide enormous operational complexity. Consider what happens when you run [SWE-agent](https://swe-agent.com/) on a real benchmark:
+These abstractions hide real operational complexity. Consider what's required to run agents on [SWE-bench](https://www.swebench.com/):
 
 **For each task instance, you need to:**
 1. Clone the target repository (could be Django, scikit-learn, matplotlib—each with different dependencies)
@@ -437,14 +437,15 @@ These abstractions hide enormous operational complexity. Consider what happens w
 4. Apply any environment-specific patches or configurations
 5. Set up the test harness to verify the fix
 
-**The infrastructure cost is staggering:**
+**The infrastructure cost adds up:**
 - Docker images for SWE-bench can reach **160GB+ total** across all project environments
 - Each environment requires **16GB+ RAM** for comfortable operation
 - The original SWE-bench Docker setup consumed **684 GiB** before [optimization efforts](https://epoch.ai/blog/swebench-docker) brought it down to ~67 GiB
 - Building these images from scratch can take hours
 
-This is why SWE-agent and similar tools use pre-built Docker images per repository. You can't afford to `pip install` Django's entire dependency tree every time your agent wants to attempt a fix. The environments must be ready to go, with the exact commit checked out and dependencies pre-installed.
+This is why SWE-bench agents use pre-built Docker images per repository. You can't afford to `pip install` Django's entire dependency tree every time your agent wants to attempt a fix. The environments must be ready to go, with the exact commit checked out and dependencies pre-installed.
 
+This complexity is exactly why robust sandboxing matters: you need isolation that can be spun up reliably, thousands of times, without breaking your training run.
 
 # Sandboxing
 
