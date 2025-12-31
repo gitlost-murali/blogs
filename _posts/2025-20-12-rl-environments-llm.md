@@ -445,7 +445,7 @@ These abstractions hide real operational complexity. Consider what's required to
 
 This is why SWE-bench agents use pre-built Docker images per repository. We can't afford to `pip install` Django's entire dependency tree every time our agent wants to attempt a fix. The environments must be ready to go, with the exact commit checked out and dependencies pre-installed.
 
-This complexity is exactly why robust sandboxing matters: we need isolation that can be spun up reliably, thousands of times, without breaking the training run.
+This complexity makes robust sandboxing essential: we need isolation that can be spun up reliably, thousands of times, without breaking the training run.
 
 # Sandboxing
 
