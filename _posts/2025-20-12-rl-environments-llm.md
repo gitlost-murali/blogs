@@ -426,9 +426,7 @@ Libraries like [verifiers](https://github.com/PrimeIntellect-ai/verifiers) handl
 
 Each layer builds on the previous. The key insight: **multi-turn environments need to manage state that persists across the episode**—file changes, database writes, git commits. This is what makes sandboxing critical.
 
-## The Weight of Real Environments
-
-These abstractions hide real operational complexity. Consider what's required to run agents on [SWE-bench](https://www.swebench.com/):
+These abstractions hide real operational complexity—especially at scale. Consider what's required to run agents on [SWE-bench](https://www.swebench.com/):
 
 **For each task instance, you need to:**
 1. Clone the target repository (could be Django, scikit-learn, matplotlib—each with different dependencies)
