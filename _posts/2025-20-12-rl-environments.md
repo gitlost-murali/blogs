@@ -1,5 +1,5 @@
 ---
-title: An overview of RL Environments
+title: An Overview of RL Environments
 excerpt: Everything that happens in an RL environment between the policy update and the next rollout - verification, reward shaping, tool calling, curriculum design, and the infrastructure that holds it together
 tags: [Machine Learning, Language Models, Reinforcement Learning, RL, Sandbox, Environments, Agents, GRPO, Training, AI]
 date: 2025-12-20 10:30:00 +0530
