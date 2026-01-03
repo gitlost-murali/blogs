@@ -11,7 +11,7 @@ mathjax: true
 
 # Background
 
-Reinforcement learning works on the FAFO principle → Fool Around and Find Out ([more on this here]({{ site.url }}/{{ site.baseurl }}/blogs/grpo-intro/)). But to fool around, LLMs need a playground: an *environment* where they can take actions, observe outcomes, and learn from their mistakes. 
+Reinforcement learning works on the FAFO principle → Fool Around and Find Out (<a href="{{ site.url }}/{{ site.baseurl }}/grpo-intro">more on this here</a>). But to fool around, LLMs need a playground: an *environment* where they can take actions, observe outcomes, and learn from their mistakes. 
 
 <!-- If you've ever played a video game, you already grasp the core idea of RL environments.  -->
 
