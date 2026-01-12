@@ -145,7 +145,7 @@ def verify_with_assertions(solution_code: str, test_code: str) -> bool:
     return result.exit_code == 0
 ```
 
-### 4. Bidirectional verification
+<!-- ### 4. Bidirectional verification
 
 What makes Bidirectional verification interesting is that instead of optimizing just for code correctness, it is possible to **optimize for both code correctness and unit test correctness in one go**. [CURE (Yin jie et al., 2025)](https://arxiv.org/abs/2506.03136) proposes co-evolving a coder and unit tester within a single policy (a.k.a LLM). 
 
@@ -159,7 +159,8 @@ For each task, the model generates *n* code solutions and *m* unit tests, then e
   style="width: 100%; height: 660px; border: none; border-radius: 16px; margin: 24px 0;"
   loading="lazy"
   title="CURE Pipeline Interactive Visualization">
-</iframe>
+</iframe> -->
+
 
 <!-- A production-grade **Code Environment** combines these into a single `step` method. It takes the model's code (Action), runs the verification suite, and returns the results.
 
