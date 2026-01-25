@@ -298,7 +298,8 @@ start = time.time()
 threads = [threading.Thread(target=simulated_io_task, args=(i,)) for i in range(num_tasks)]
 for t in threads: t.start()
 for t in threads: t.join()
-print(f"Threaded I/O: {time.time() - start:.2f}s")```
+print(f"Threaded I/O: {time.time() - start:.2f}s")
+```
 
 **Results:**
 ```
