@@ -860,6 +860,11 @@ async def continuous_rollouts():
 
 **Every `await` is a yield point.** While Rollout 1 waits for the generator, Rollouts 2-32 can make progress. This is I/O-bound concurrency — the CPU isn't doing heavy work; it's orchestrating remote calls.
 
+### See It In Action
+
+Click "Step" to watch the event loop switch between coroutines at each `await`:
+
+<iframe src="/assets/visualizations/grpo-async-flow.html" width="100%" height="700" style="border: none; border-radius: 12px; margin: 20px 0;"></iframe>
 
 ### The Training Coroutine
 

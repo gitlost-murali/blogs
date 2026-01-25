@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRPO Async Training Flow</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 30px 20px;
+        }
+        
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+        }
+        
+        /* Main layout */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 25px;
+        }
+        
+        /* Left panel - the story */
+        .story-panel {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .current-execution {
+            margin-bottom: 25px;
+        }
+        
+        .exec-label {
+            font-size: 0.75rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        
+        .exec-box {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid #00d4ff;
+            min-height: 120px;
+        }
+        
+        .exec-coroutine {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .exec-coroutine .badge {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        
+        .badge-rollout {
+            background: linear-gradient(135deg, #7b2cbf, #9d4edd);
+        }
+        
+        .badge-training {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: #000;
+        }
+        
+        .exec-action {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: #00d4ff;
+            margin-bottom: 12px;
+        }
+        
+        .exec-explanation {
+            font-size: 0.85rem;
+            color: #aaa;
+            line-height: 1.5;
+        }
+        
+        /* Timeline / sequence */
+        .sequence-container {
+            margin-top: 20px;
+        }
+        
+        .sequence-label {
+            font-size: 0.75rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+        
+        .sequence-track {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            min-height: 80px;
+        }
+        
+        .seq-item {
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-family: 'JetBrains Mono', monospace;
+            opacity: 0.4;
+            transition: all 0.3s ease;
+        }
+        
+        .seq-item.active {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+        
+        .seq-item.past {
+            opacity: 0.6;
+        }
+        
+        .seq-item.rollout {
+            background: linear-gradient(135deg, #7b2cbf, #9d4edd);
+        }
+        
+        .seq-item.training {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: #000;
+        }
+        
+        /* Right panel - coroutine states */
+        .states-panel {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .states-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #00d4ff;
+        }
+        
+        .coroutine-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        .coroutine-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+        }
+        
+        .coroutine-item.running {
+            background: rgba(0, 212, 255, 0.15);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+        
+        .coroutine-item.waiting {
+            opacity: 0.5;
+        }
+        
+        .coro-id {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: #888;
+            width: 20px;
+        }
+        
+        .coro-name {
+            flex: 1;
+        }
+        
+        .coro-status {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .status-running {
+            background: #00d4ff;
+            color: #000;
+        }
+        
+        .status-waiting {
+            background: rgba(255, 255, 255, 0.1);
+            color: #888;
+        }
+        
+        /* Controls */
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: #000;
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* Key insight */
+        .insight-box {
+            margin-top: 25px;
+            background: linear-gradient(135deg, rgba(123, 44, 191, 0.15), rgba(0, 212, 255, 0.15));
+            border-radius: 12px;
+            padding: 18px;
+            border-left: 4px solid #7b2cbf;
+        }
+        
+        .insight-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #00d4ff;
+            font-size: 0.9rem;
+        }
+        
+        .insight-text {
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: #ccc;
+        }
+        
+        .insight-text code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+        }
+        
+        /* Stats bar */
+        .stats-bar {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: #00d4ff;
+        }
+        
+        .stat-label {
+            font-size: 0.65rem;
+            color: #888;
+            text-transform: uppercase;
+        }
+        
+        /* Step indicator */
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+        
+        .step-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: #888;
+        }
+        
+        .step-dots {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .step-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .step-dot.active {
+            background: #00d4ff;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+        
+        .step-dot.past {
+            background: rgba(0, 212, 255, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Event Loop in Action</h1>
+        <p class="subtitle">Watch how the event loop switches between coroutines at each <code>await</code></p>
+        
+        <div class="main-grid">
+            <div class="story-panel">
+                <div class="current-execution">
+                    <div class="exec-label">Currently Executing</div>
+                    <div class="exec-box" id="execBox">
+                        <div class="exec-coroutine" id="execCoroutine">
+                            <span id="execName">—</span>
+                            <span class="badge badge-rollout" id="execBadge">ROLLOUT</span>
+                        </div>
+                        <div class="exec-action" id="execAction">Click "Step" or "Auto" to begin</div>
+                        <div class="exec-explanation" id="execExplanation">
+                            The event loop will execute one coroutine at a time. When a coroutine hits <code>await</code>, it yields control and another coroutine runs.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sequence-container">
+                    <div class="sequence-label">Execution Sequence</div>
+                    <div class="sequence-track" id="sequenceTrack">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+                
+                <div class="step-indicator">
+                    <span class="step-num" id="stepNum">Step 0 / 20</span>
+                    <div class="step-dots" id="stepDots">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+                
+                <div class="insight-box">
+                    <div class="insight-title">💡 The Key Insight</div>
+                    <div class="insight-text" id="insightText">
+                        Only <strong>one coroutine runs at a time</strong> — there's no parallelism. But while Rollout 1 waits for a network response, the event loop switches to Rollout 2, then 3, etc. This is <strong>concurrency without parallelism</strong>.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="states-panel">
+                <div class="states-title">📋 Coroutine States</div>
+                <div class="coroutine-list" id="coroutineList">
+                    <!-- Filled by JS -->
+                </div>
+                
+                <div class="stats-bar">
+                    <div class="stat">
+                        <div class="stat-value" id="statRunning">0</div>
+                        <div class="stat-label">Running</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="statWaiting">0</div>
+                        <div class="stat-label">Waiting</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="statSwitches">0</div>
+                        <div class="stat-label">Switches</div>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn btn-primary" id="stepBtn" onclick="step()">Step →</button>
+                    <button class="btn btn-secondary" id="autoBtn" onclick="toggleAuto()">Auto ▶</button>
+                    <button class="btn btn-secondary" onclick="reset()">↺</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Simplified model: 6 rollouts + 1 training to keep it comprehensible
+        const NUM_ROLLOUTS = 6;
+        
+        // Define the stages each rollout goes through
+        const ROLLOUT_STAGES = [
+            { action: 'await dataloader.sample()', explanation: 'Requesting a training sample from the data service. This is a network call — yields control.' },
+            { action: 'await generator.generate()', explanation: 'Sending prompt to LLM for inference. This takes seconds — perfect time for other coroutines to run.' },
+            { action: 'await reward_actor.evaluate()', explanation: 'Computing reward score. Another RPC to a remote service.' },
+            { action: 'await ref_model.forward()', explanation: 'Getting reference model logprobs for KL penalty calculation.' },
+            { action: 'await replay_buffer.add()', explanation: 'Adding the completed episode to the shared buffer. Training can now use it.' },
+        ];
+        
+        const TRAINING_STAGES = [
+            { action: 'await replay_buffer.sample()', explanation: 'Trying to get a batch from the buffer. If empty, yields and waits.' },
+            { action: 'await trainer.train_step()', explanation: 'Running backprop on the policy model. This is the actual learning step.' },
+            { action: 'await trainer.push_weights()', explanation: 'Pushing updated weights to storage so generator can fetch them.' },
+        ];
+        
+        // State
+        let coroutines = [];
+        let currentStep = 0;
+        let totalSteps = 20;
+        let switchCount = 0;
+        let autoInterval = null;
+        let executionSequence = [];
+        
+        // Initialize
+        function init() {
+            // Create rollout coroutines
+            for (let i = 0; i < NUM_ROLLOUTS; i++) {
+                coroutines.push({
+                    id: i,
+                    type: 'rollout',
+                    name: `Rollout ${i + 1}`,
+                    stageIndex: 0,
+                    state: 'waiting', // 'running' or 'waiting'
+                });
+            }
+            
+            // Create training coroutine
+            coroutines.push({
+                id: NUM_ROLLOUTS,
+                type: 'training',
+                name: 'Training',
+                stageIndex: 0,
+                state: 'waiting',
+            });
+            
+            // Generate step dots
+            const dotsContainer = document.getElementById('stepDots');
+            for (let i = 0; i < totalSteps; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'step-dot';
+                dot.id = `dot-${i}`;
+                dotsContainer.appendChild(dot);
+            }
+            
+            renderCoroutineList();
+            updateDisplay();
+        }
+        
+        function renderCoroutineList() {
+            const list = document.getElementById('coroutineList');
+            list.innerHTML = '';
+            
+            coroutines.forEach((coro, idx) => {
+                const item = document.createElement('div');
+                item.className = `coroutine-item ${coro.state}`;
+                item.id = `coro-${idx}`;
+                
+                const stages = coro.type === 'rollout' ? ROLLOUT_STAGES : TRAINING_STAGES;
+                const currentStage = stages[coro.stageIndex % stages.length];
+                
+                item.innerHTML = `
+                    <span class="coro-id">${coro.type === 'rollout' ? 'R' + (coro.id + 1) : 'T'}</span>
+                    <span class="coro-name">${coro.name}</span>
+                    <span class="coro-status ${coro.state === 'running' ? 'status-running' : 'status-waiting'}">
+                        ${coro.state === 'running' ? 'RUNNING' : 'waiting'}
+                    </span>
+                `;
+                list.appendChild(item);
+            });
+        }
+        
+        function step() {
+            if (currentStep >= totalSteps) return;
+            
+            // Find current running coroutine and make it wait
+            const running = coroutines.find(c => c.state === 'running');
+            if (running) {
+                running.state = 'waiting';
+                // Advance its stage
+                const stages = running.type === 'rollout' ? ROLLOUT_STAGES : TRAINING_STAGES;
+                running.stageIndex = (running.stageIndex + 1) % stages.length;
+            }
+            
+            // Pick next coroutine (round-robin style, but training gets picked sometimes)
+            let nextIdx;
+            if (currentStep % 4 === 3) {
+                // Every 4th step, run training
+                nextIdx = coroutines.length - 1;
+            } else {
+                // Otherwise, pick a rollout
+                nextIdx = currentStep % NUM_ROLLOUTS;
+            }
+            
+            const next = coroutines[nextIdx];
+            next.state = 'running';
+            switchCount++;
+            
+            // Add to sequence
+            executionSequence.push({
+                type: next.type,
+                name: next.type === 'rollout' ? `R${next.id + 1}` : 'T',
+            });
+            
+            currentStep++;
+            updateDisplay();
+            renderCoroutineList();
+            updateSequence();
+        }
+        
+        function updateDisplay() {
+            const running = coroutines.find(c => c.state === 'running');
+            
+            const execName = document.getElementById('execName');
+            const execBadge = document.getElementById('execBadge');
+            const execAction = document.getElementById('execAction');
+            const execExplanation = document.getElementById('execExplanation');
+            const execBox = document.getElementById('execBox');
+            
+            if (running) {
+                const stages = running.type === 'rollout' ? ROLLOUT_STAGES : TRAINING_STAGES;
+                const stage = stages[running.stageIndex % stages.length];
+                
+                execName.textContent = running.name;
+                execBadge.textContent = running.type.toUpperCase();
+                execBadge.className = `badge badge-${running.type}`;
+                execAction.textContent = stage.action;
+                execExplanation.innerHTML = stage.explanation;
+                execBox.style.borderLeftColor = running.type === 'rollout' ? '#9d4edd' : '#00d4ff';
+            } else {
+                execName.textContent = '—';
+                execAction.textContent = 'Click "Step" to begin';
+                execExplanation.textContent = 'The event loop will execute one coroutine at a time.';
+            }
+            
+            // Update stats
+            document.getElementById('statRunning').textContent = coroutines.filter(c => c.state === 'running').length;
+            document.getElementById('statWaiting').textContent = coroutines.filter(c => c.state === 'waiting').length;
+            document.getElementById('statSwitches').textContent = switchCount;
+            
+            // Update step indicator
+            document.getElementById('stepNum').textContent = `Step ${currentStep} / ${totalSteps}`;
+            for (let i = 0; i < totalSteps; i++) {
+                const dot = document.getElementById(`dot-${i}`);
+                dot.className = 'step-dot';
+                if (i < currentStep) dot.classList.add('past');
+                if (i === currentStep - 1) dot.classList.add('active');
+            }
+            
+            // Update insight based on progress
+            const insightText = document.getElementById('insightText');
+            if (currentStep === 0) {
+                insightText.innerHTML = 'Only <strong>one coroutine runs at a time</strong> — there\'s no parallelism. But while Rollout 1 waits for a network response, the event loop switches to Rollout 2, then 3, etc. This is <strong>concurrency without parallelism</strong>.';
+            } else if (currentStep < 5) {
+                insightText.innerHTML = `Notice: each <code>await</code> is a <strong>yield point</strong>. The coroutine pauses, and the event loop picks another one to run. ${switchCount} context switches so far — all on a single thread!`;
+            } else if (currentStep < 10) {
+                insightText.innerHTML = `While rollouts wait for slow operations (LLM inference takes seconds!), the event loop keeps other coroutines moving. <strong>No CPU time is wasted waiting.</strong>`;
+            } else if (currentStep < 15) {
+                insightText.innerHTML = `The Training coroutine runs when the event loop picks it. It consumes from the buffer that rollouts fill. <strong>Producer-consumer pattern</strong> — no locks needed, just <code>await</code>.`;
+            } else {
+                insightText.innerHTML = `<strong>32 rollouts + 1 training</strong> in the real code, all on one thread. The event loop handles thousands of context switches per second — far cheaper than OS thread switches.`;
+            }
+        }
+        
+        function updateSequence() {
+            const track = document.getElementById('sequenceTrack');
+            track.innerHTML = '';
+            
+            executionSequence.forEach((item, idx) => {
+                const el = document.createElement('div');
+                el.className = `seq-item ${item.type}`;
+                if (idx === executionSequence.length - 1) el.classList.add('active');
+                else el.classList.add('past');
+                el.textContent = item.name;
+                track.appendChild(el);
+            });
+        }
+        
+        function toggleAuto() {
+            const btn = document.getElementById('autoBtn');
+            if (autoInterval) {
+                clearInterval(autoInterval);
+                autoInterval = null;
+                btn.textContent = 'Auto ▶';
+            } else {
+                btn.textContent = 'Pause ⏸';
+                autoInterval = setInterval(() => {
+                    if (currentStep >= totalSteps) {
+                        clearInterval(autoInterval);
+                        autoInterval = null;
+                        btn.textContent = 'Auto ▶';
+                        return;
+                    }
+                    step();
+                }, 1200); // Slower pace for comprehension
+            }
+        }
+        
+        function reset() {
+            if (autoInterval) {
+                clearInterval(autoInterval);
+                autoInterval = null;
+                document.getElementById('autoBtn').textContent = 'Auto ▶';
+            }
+            
+            currentStep = 0;
+            switchCount = 0;
+            executionSequence = [];
+            
+            coroutines.forEach(c => {
+                c.state = 'waiting';
+                c.stageIndex = 0;
+            });
+            
+            renderCoroutineList();
+            updateDisplay();
+            updateSequence();
+        }
+        
+        init();
+    </script>
+</body>
+</html>
