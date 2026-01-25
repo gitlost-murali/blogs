@@ -309,29 +309,28 @@ Threaded: 1.01s  -> ~5x speedup!
 
 This works because while Thread 1 is waiting for HTTP response, Thread 2 can grab the GIL and start its request.
 
-<div class="mermaid">
-gantt
-    title Timeline with GIL (I/O-bound)
-    dateFormat X
-    axisFormat %s
+```
+I/O-Bound Threading Timeline (GIL released during waits)
+═══════════════════════════════════════════════════════════════════════════════
+                    0ms      20ms      40ms      60ms      80ms     100ms
+                     │         │         │         │         │         │
+Thread 1  ▓▓▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▓▓
+          send                    waiting for response...              done
 
-    section Thread 1
-    Request           :t1a, 0, 1
-    Waiting for response :t1b, 1, 4
-    Process          :t1c, 5, 1
+Thread 2     ▓▓▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▓▓
+             send                 waiting for response...              done
 
-    section Thread 2
-    Request          :t2a, 1, 1
-    Waiting...       :t2b, 2, 3
-    Process         :t2c, 5, 1
+Thread 3        ▓▓▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▓▓
+                send              waiting for response...              done
+                     │         │         │         │         │         │
+═══════════════════════════════════════════════════════════════════════════════
+▓▓▓ = CPU work (has GIL)    ░░░ = Waiting for I/O (GIL released)
 
-    section Thread 3
-    Request         :t3a, 2, 1
-    Waiting...      :t3b, 3, 3
-    Process        :t3c, 6, 1
-</div>
+💡 All 3 requests sent within ~3ms, all responses arrive ~100ms later
+   Total time ≈ 100ms — not 300ms! Threads overlap during I/O waits.
+```
 
-*Threads overlap during I/O waits, allowing concurrent execution*
+*While waiting for I/O, threads release the GIL — other threads can start their requests*
 
 ### Why Not Just Use More Threads?
 
@@ -638,95 +637,6 @@ Output: Same as sequential execution. Async is for I/O, not CPU work.
 
 ---
 
-## The Workarounds We've Lived With
-
-For 33 years, Python developers have used various workarounds for CPU-bound parallelism.
-
-### 1. Multiprocessing: The Heavyweight Solution
-
-Since threads share the GIL, use separate processes — each gets its own Python interpreter and GIL:
-
-```python
-from multiprocessing import Pool
-import time
-
-def cpu_intensive_task(n):
-    count = 0
-    for _ in range(n):
-        count += 1
-    return count
-
-if __name__ == "__main__":
-    start = time.time()
-    
-    with Pool(processes=4) as pool:
-        results = pool.map(cpu_intensive_task, [25_000_000] * 4)
-    
-    print(f"Time: {time.time() - start:.2f}s")
-    print(f"Total: {sum(results)}")
-```
-
-**Pros:** True parallelism, uses all cores
-
-**Cons:**
-- High memory overhead (each process copies the entire Python interpreter)
-- IPC (Inter-Process Communication) requires serialization (pickle)
-- Can't share memory easily
-- Process creation is slow
-
-<div class="mermaid">
-flowchart TB
-    subgraph P1["🔷 Process 1"]
-        I1["🐍 Python Interpreter<br/>+ GIL #1"]
-        M1["💾 Memory: 150MB"]
-    end
-    subgraph P2["🔷 Process 2"]
-        I2["🐍 Python Interpreter<br/>+ GIL #2"]
-        M2["💾 Memory: 150MB"]
-    end
-    subgraph P3["🔷 Process 3"]
-        I3["🐍 Python Interpreter<br/>+ GIL #3"]
-        M3["💾 Memory: 150MB"]
-    end
-    P1 <-->|pickle/IPC overhead| P2
-    P2 <-->|pickle/IPC overhead| P3
-    P1 <-->|pickle/IPC overhead| P3
-</div>
-
-### 2. C Extensions That Release the GIL
-
-NumPy, SciPy, and other libraries are written in C and release the GIL during computation:
-
-```python
-import numpy as np
-from concurrent.futures import ThreadPoolExecutor
-
-def numpy_operation(arr):
-    # NumPy releases GIL during this operation!
-    return np.fft.fft(arr)
-
-arrays = [np.random.random(1000000) for _ in range(8)]
-
-# This actually runs in parallel because NumPy releases the GIL
-with ThreadPoolExecutor(max_workers=8) as executor:
-    results = list(executor.map(numpy_operation, arrays))
-```
-
-This is why data science in Python "works" — the heavy lifting happens in C, outside the GIL.
-
-### 3. Numba JIT Compilation
-
-```python
-from numba import jit, prange
-import numpy as np
-
-@jit(nopython=True, parallel=True)
-def parallel_sum(arr):
-    total = 0.0
-    for i in prange(len(arr)):  # Runs in parallel, no GIL
-        total += arr[i]
-    return total
-```
 
 ### The Mental Overhead
 
@@ -765,9 +675,8 @@ This complexity is what made the GIL such a pain point.
 
 ## Why 896% CPU is Historic
 
-Now we can understand why that screenshot matters.
-
 ### What Changed: PEP 703
+
 
 [PEP 703](https://peps.python.org/pep-0703/) proposed making the GIL optional. After years of work by Sam Gross and others, Python 3.13 shipped with an experimental **free-threaded build** (the `t` in `python3.14t`).
 
@@ -813,7 +722,7 @@ for t in threads: t.join()
 # After:  ~0.8 seconds (parallel, all cores utilized)
 ```
 
----
+<!-- ---
 
 ## What This Means for You
 
@@ -849,7 +758,7 @@ Eventually, the free-threaded build may become the default, and the GIL will be 
 
 4. **For ML/AI workloads:** The impact will be gradual — PyTorch/JAX already handle parallelism at the CUDA level. But free-threading could simplify data loading, preprocessing pipelines, and orchestration code.
 
----
+--- -->
 
 ## Conclusion
 
