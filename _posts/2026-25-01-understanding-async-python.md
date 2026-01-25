@@ -449,29 +449,34 @@ The numbers show execution order. Here's what happens step by step — remember,
 <div class="mermaid">
 flowchart TD
     subgraph T0["⏱️ t=0ms"]
-        A1["🟢 <b>fetch_user() runs</b><br/>print('Fetching user...')"]
-        A2["hits <code>await sleep(2)</code><br/>💤 pauses, yields control"]
-        A3["🟢 <b>fetch_posts() runs</b><br/>print('Fetching posts...')"]
-        A4["hits <code>await sleep(1)</code><br/>💤 pauses, yields control"]
-        A5["😴 Event loop: nothing to do<br/>both tasks waiting for timers"]
+        A1["🔵 <b>fetch_user()</b><br/>print 'Fetching user...'"]:::user
+        A2["🔵 await sleep(2) — YIELDS"]:::userpause
+        A3["🟠 <b>fetch_posts()</b><br/>print 'Fetching posts...'"]:::posts
+        A4["🟠 await sleep(1) — YIELDS"]:::postspause
+        A5["⚪ Event loop idle<br/>both waiting..."]:::idle
         A1 --> A2 --> A3 --> A4 --> A5
     end
 
-    subgraph T1["⏱️ t=1000ms"]
-        B1["⏰ 1-second timer fires!"]
-        B2["🟢 <b>fetch_posts() resumes</b><br/>print('Got posts!')<br/>✅ returns, done"]
-        B3["😴 Event loop: waiting<br/>fetch_user still has 1s left"]
-        B1 --> B2 --> B3
+    subgraph T1["⏱️ t=1000ms — posts timer fires"]
+        B1["🟠 <b>fetch_posts() WAKES</b><br/>print 'Got posts!'<br/>✅ done"]:::posts
+        B2["⚪ Event loop idle<br/>user has 1s left..."]:::idle
+        B1 --> B2
     end
 
-    subgraph T2["⏱️ t=2000ms"]
-        C1["⏰ 2-second timer fires!"]
-        C2["🟢 <b>fetch_user() resumes</b><br/>print('Got user!')<br/>✅ returns, done"]
-        C3["🟢 <b>main() resumes</b><br/>print('Done!')"]
-        C1 --> C2 --> C3
+    subgraph T2["⏱️ t=2000ms — user timer fires"]
+        C1["🔵 <b>fetch_user() WAKES</b><br/>print 'Got user!'<br/>✅ done"]:::user
+        C2["✅ Both done!<br/>print 'Done!'"]:::done
+        C1 --> C2
     end
 
     T0 --> T1 --> T2
+
+    classDef user fill:#3b82f6,stroke:#1e40af,color:#fff
+    classDef userpause fill:#93c5fd,stroke:#1e40af,color:#1e3a5f
+    classDef posts fill:#f97316,stroke:#c2410c,color:#fff
+    classDef postspause fill:#fdba74,stroke:#c2410c,color:#7c2d12
+    classDef idle fill:#e5e7eb,stroke:#6b7280,color:#374151
+    classDef done fill:#22c55e,stroke:#15803d,color:#fff
 </div>
 
 **Output:**
@@ -524,7 +529,12 @@ B: end
 
 <div class="mermaid">
 flowchart LR
-    A1["A: start"] --> A2["sleep(1)<br/>🚫 BLOCKS"] --> A3["A: end"] --> B1["B: start"] --> B2["sleep(1)<br/>🚫 BLOCKS"] --> B3["B: end"]
+    A1["🔵 A: start"]:::taskA --> A2["🔵 sleep(1)<br/>🚫 BLOCKS"]:::taskAblock --> A3["🔵 A: end"]:::taskA --> B1["🟠 B: start"]:::taskB --> B2["🟠 sleep(1)<br/>🚫 BLOCKS"]:::taskBblock --> B3["🟠 B: end"]:::taskB
+
+    classDef taskA fill:#3b82f6,stroke:#1e40af,color:#fff
+    classDef taskAblock fill:#93c5fd,stroke:#1e40af,color:#1e3a5f
+    classDef taskB fill:#f97316,stroke:#c2410c,color:#fff
+    classDef taskBblock fill:#fdba74,stroke:#c2410c,color:#7c2d12
 </div>
 
 Compare with `await asyncio.sleep()`:
@@ -552,11 +562,17 @@ B: end
 <div class="mermaid">
 flowchart TD
     subgraph Concurrent["With await — 1 second total"]
-        C1["A: start"] --> C2["await sleep(1)<br/>💤 yields"]
-        C2 --> C3["B: start"] --> C4["await sleep(1)<br/>💤 yields"]
-        C4 --> C5["...1 second passes..."]
-        C5 --> C6["A: end"] --> C7["B: end"]
+        C1["🔵 A: start"]:::taskA --> C2["🔵 await sleep(1)<br/>💤 yields"]:::taskApause
+        C2 --> C3["🟠 B: start"]:::taskB --> C4["🟠 await sleep(1)<br/>💤 yields"]:::taskBpause
+        C4 --> C5["⚪ ...1 second passes..."]:::idle
+        C5 --> C6["🔵 A: end"]:::taskA --> C7["🟠 B: end"]:::taskB
     end
+
+    classDef taskA fill:#3b82f6,stroke:#1e40af,color:#fff
+    classDef taskApause fill:#93c5fd,stroke:#1e40af,color:#1e3a5f
+    classDef taskB fill:#f97316,stroke:#c2410c,color:#fff
+    classDef taskBpause fill:#fdba74,stroke:#c2410c,color:#7c2d12
+    classDef idle fill:#e5e7eb,stroke:#6b7280,color:#374151
 </div>
 
 **The rule:** `await` is the yield point. No `await` = no opportunity for other tasks to run.
