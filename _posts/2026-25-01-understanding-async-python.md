@@ -263,7 +263,7 @@ threaded_time = time.time() - start
 print(f"Threaded: {threaded_time:.2f}s")
 ```
 
-**Results (CPython with GIL):**
+**Results (with GIL):**
 ```
 Sequential: 6.2s
 Threaded: 6.4s  ← Actually SLOWER due to lock contention! 😱
