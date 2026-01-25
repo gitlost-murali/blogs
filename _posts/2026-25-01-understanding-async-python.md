@@ -580,7 +580,7 @@ flowchart TD
 
 **The rule:** `await` is the yield point. No `await` = no opportunity for other tasks to run.
 
-### Async vs Threads: When to Use What?
+<!-- ### Async vs Threads: When to Use What?
 
 | Aspect | Threads | Async |
 |--------|---------|-------|
@@ -589,53 +589,123 @@ flowchart TD
 | I/O Concurrency | ✅ Good | ✅ Excellent |
 | CPU Parallelism | ❌ No (GIL) | ❌ No (single thread) |
 | Code Complexity | Moderate | "async everywhere" |
-| Existing Libraries | Most work | Need async versions |
+| Existing Libraries | Most work | Need async versions | -->
 
-### The "What Color is Your Function" Problem
+### Common Async Mistakes That Kill Performance
 
-Async introduces a viral constraint — async functions can only be called from other async functions:
+Async code looks simple, but there are several ways to accidentally destroy your concurrency. Here are the most common pitfalls:
 
-```python
-async def fetch_data():
-    ...
-
-def process_data():
-    # ❌ Cannot do this:
-    # data = await fetch_data()
-    
-    # ✅ Must use:
-    data = asyncio.run(fetch_data())  # Creates new event loop
-
-# Your entire codebase becomes "colored" — sync or async
-```
-
-This has led to parallel ecosystems: `requests` vs `aiohttp`, `psycopg2` vs `asyncpg`, etc.
-
-### Async Doesn't Help CPU-Bound Work Either
+#### 1. Blocking the Event Loop with CPU Work
 
 ```python
 import asyncio
-import time
 
-async def cpu_task():
-    """This blocks the entire event loop!"""
-    count = 0
-    for _ in range(100_000_000):
-        count += 1
-    return count
+async def process_image(data):
+    # ❌ This blocks the ENTIRE event loop!
+    # No other coroutines can run during this computation
+    result = heavy_image_processing(data)  # CPU-bound, no await
+    return result
 
 async def main():
-    start = time.time()
-    # These run SEQUENTIALLY because there's no await inside cpu_task
-    await asyncio.gather(cpu_task(), cpu_task())
-    print(f"Time: {time.time() - start:.2f}s")
-
-asyncio.run(main())
+    # These run SEQUENTIALLY, not concurrently!
+    await asyncio.gather(
+        process_image(img1),
+        process_image(img2),
+        process_image(img3),
+    )
 ```
 
-Output: Same as sequential execution. Async is for I/O, not CPU work.
+**The fix:** Offload CPU work to a thread pool:
 
----
+```python
+async def process_image(data):
+    loop = asyncio.get_event_loop()
+    # ✅ Run CPU work in a thread, freeing the event loop
+    result = await loop.run_in_executor(None, heavy_image_processing, data)
+    return result
+```
+
+#### 2. Forgetting to `await` (Silent Failures)
+
+```python
+async def save_to_db(data):
+    await db.insert(data)
+
+async def handler(request):
+    data = parse_request(request)
+    save_to_db(data)  # ❌ Missing await! Returns a coroutine object, never executes
+    return {"status": "saved"}  # Lies! Nothing was saved
+```
+
+Python won't error — it just creates a coroutine object that gets garbage collected. Your data silently vanishes.
+
+#### 3. Sequential `await` When You Want Concurrency
+
+```python
+async def fetch_all_data():
+    # ❌ These run one after another — 3 seconds total
+    user = await fetch_user()      # 1 second
+    posts = await fetch_posts()    # 1 second  
+    comments = await fetch_comments()  # 1 second
+    return user, posts, comments
+
+async def fetch_all_data():
+    # ✅ These run concurrently — 1 second total
+    user, posts, comments = await asyncio.gather(
+        fetch_user(),
+        fetch_posts(),
+        fetch_comments(),
+    )
+    return user, posts, comments
+```
+
+#### 4. Using Blocking I/O Libraries
+
+```python
+import requests  # Synchronous library!
+
+async def fetch_url(url):
+    # ❌ requests.get() blocks the entire event loop
+    response = requests.get(url)
+    return response.json()
+```
+
+**The fix:** Use async-native libraries:
+
+```python
+import aiohttp
+
+async def fetch_url(url):
+    # ✅ aiohttp properly yields control during I/O
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            return await response.json()
+```
+
+#### 5. Creating Too Many Concurrent Connections
+
+```python
+async def fetch_all(urls):
+    # ❌ 10,000 simultaneous connections = angry servers, rate limits, crashes
+    return await asyncio.gather(*[fetch(url) for url in urls])
+```
+
+**The fix:** Use a semaphore to limit concurrency:
+
+```python
+async def fetch_all(urls, max_concurrent=100):
+    semaphore = asyncio.Semaphore(max_concurrent)
+    
+    async def fetch_limited(url):
+        async with semaphore:
+            return await fetch(url)
+    
+    # ✅ At most 100 concurrent requests
+    return await asyncio.gather(*[fetch_limited(url) for url in urls])
+```
+
+**The golden rule:** Every long-running operation inside an async function needs an `await`. If there's no `await`, there's no concurrency — you're just writing complicated synchronous code.
+
 
 
 ### The Mental Overhead
