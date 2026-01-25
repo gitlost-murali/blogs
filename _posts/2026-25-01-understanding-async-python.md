@@ -333,25 +333,24 @@ gantt
 
 *Threads overlap during I/O waits, allowing concurrent execution*
 
----
+### Why Not Just Use More Threads?
+
+So threads work great for I/O-bound tasks, but they have limits. Each thread costs ~8KB of memory and requires OS-level context switching. For 10 concurrent HTTP requests, threads are fine. But what about 10,000 concurrent connections — streaming data from thousands of RL environments or handling parallel API calls to an LLM provider? Spawning 10,000 threads would consume ~80MB just for thread stacks, plus the OS scheduler would thrash trying to manage them all.
+
+The deeper issue is **how switching happens (preemptive vs cooperative scheduling)**:
+
+- **Threads (preemptive scheduling):** The OS decides when to switch between threads. It can interrupt a thread at *any* point, save its entire state (registers, stack pointer, etc.), and switch to another. This context switch is expensive (~1-10μs) and unpredictable.
+
+- **Async (cooperative scheduling):** Your code decides when to yield control via `await`. No OS involvement, no saving full thread state — just a simple function call to resume a coroutine. Context switch cost: ~100ns (10-100x faster).
+
 
 ## Async/Await: Concurrency Without Parallelism
 
-Threads work for I/O-bound tasks, but they have limits. Each thread costs ~8KB of memory and requires OS-level context switching. If you're managing 10 concurrent HTTP requests, threads are fine. But what if you need 10,000 concurrent connections — say, streaming data from thousands of RL environments or handling many parallel API calls to an LLM provider?
-
-Spawning 10,000 threads would consume ~80MB just for thread stacks, plus the OS scheduler would thrash trying to manage them all.
-
-The deeper issue is **preemptive vs cooperative scheduling**:
-
-- **Threads (preemptive):** The OS decides when to switch between threads. It can interrupt a thread at *any* point, save its entire state (registers, stack pointer, etc.), and switch to another. This context switch is expensive (~1-10μs) and unpredictable.
-
-- **Async (cooperative):** Your code decides when to yield control via `await`. No OS involvement, no saving full thread state — just a simple function call to resume a coroutine. Context switch cost: ~100ns (10-100x faster).
-
-This is where **async/await** shines — Python 3.5 introduced it as a lightweight alternative for high-concurrency I/O.
+Python 3.5 introduced **async/await** as a lightweight alternative for high-concurrency I/O.
 
 ### The Event Loop Model
-
-Async uses **cooperative multitasking** — a single thread that voluntarily **yields control** (pauses itself) when waiting for I/O, allowing other tasks to run:
+Async uses **cooperative multitasking** — a single thread that voluntarily **yields control** (pauses itself) when waiting for 
+I/O, allowing other tasks to run. To be specific, **async runs entirely on a single thread**. Coroutines don't get their own threads — they're lightweight Python objects (similar to generators) that can be paused and resumed. The **event loop** is the executor that multiplexes between them:
 
 ```python
 import asyncio
@@ -396,7 +395,7 @@ async def example():
 
 ### How the Event Loop Works
 
-The event loop is like a restaurant manager coordinating multiple tables:
+The event loop maintains a queue of coroutines and runs them one at a time:
 
 <div class="mermaid">
 flowchart TB
@@ -412,9 +411,12 @@ flowchart TB
     end
 </div>
 
-**"Yielding control"** means the coroutine voluntarily pauses and tells the event loop: "I'm waiting for something — go run other tasks, and come back to me when my I/O is done."
+**"Yielding control"** means the coroutine voluntarily pauses and tells the event loop: "I'm waiting for something — go run 
+other tasks, and come back to me when my I/O is done."
 
-The key insight: **no parallelism, just efficient scheduling**. While Task A waits for I/O, the event loop runs Task B. No thread switching overhead, no locks needed.
+When coroutine A hits `await`, it pauses (state saved in the coroutine object), and the event loop picks the next ready coroutine from the queue. When A's I/O completes, it goes back in the queue to be resumed later.
+
+**No parallelism, just efficient scheduling.** While Task A waits for I/O, the event loop runs Task B. No thread switching overhead, no locks needed.
 
 ### Async vs Threads: When to Use What?
 
