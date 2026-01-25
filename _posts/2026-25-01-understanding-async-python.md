@@ -25,9 +25,8 @@ This post is my attempt to build a solid mental model of Python's concurrency la
 2. [The Two Types of Waiting](#the-two-types-of-waiting)
 3. [Enter the GIL: Python's Infamous Lock](#enter-the-gil-pythons-infamous-lock)
 4. [Async/Await: Concurrency Without Parallelism](#asyncawait-concurrency-without-parallelism)
-5. [The Workarounds We've Lived With](#the-workarounds-weve-lived-with)
-6. [Why 896% CPU is Historic](#why-896-cpu-is-historic)
-7. [What This Means for You](#what-this-means-for-you)
+5. [Why 896% CPU is Historic](#why-896-cpu-is-historic)
+6. [Real-World Example: GRPO Training Loop](#real-world-example-grpo-training-loop)
 
 ---
 
@@ -828,6 +827,69 @@ Eventually, the free-threaded build may become the default, and the GIL will be 
 4. **For ML/AI workloads:** The impact will be gradual — PyTorch/JAX already handle parallelism at the CUDA level. But free-threading could simplify data loading, preprocessing pipelines, and orchestration code.
 
 --- -->
+
+## Real-World Example: GRPO Training Loop
+
+Let's look at a real async training loop from [TorchForge](https://github.com/meta-pytorch/torchforge/) — a distributed RL framework. This is the main GRPO (Group Relative Policy Optimization) training script, and it's a perfect example of why async shines for orchestrating distributed ML workloads.
+
+The architecture is simple: **32 rollout coroutines** generate training data by calling remote services (dataloader, LLM generator, reward model), while **1 training coroutine** consumes from a shared replay buffer. All 33 coroutines run on a single thread, coordinated by the event loop.
+
+### The Rollout Coroutine
+
+Each rollout coroutine spends most of its time waiting for remote services:
+
+```python
+async def continuous_rollouts():
+    while not shutdown_event.is_set():
+        # 1. Sample from dataloader (I/O - await)
+        sample = await dataloader.sample.call_one()
+        
+        # 2. Generate responses from LLM (I/O - await, ~seconds)
+        responses = await generator.generate.route(prompt)
+        
+        # 3. Compute rewards (I/O - await)
+        reward = await reward_actor.evaluate_response.route(...)
+        
+        # 4. Get reference logprobs (I/O - await)
+        ref_logprobs = await ref_model.forward.route(input_ids)
+        
+        # 5. Compute advantages and add to buffer (I/O - await)
+        advantages = await compute_advantages.compute.call_one(episodes)
+        await replay_buffer.add.call_one(episode)
+```
+
+**Every `await` is a yield point.** While Rollout 1 waits for the generator, Rollouts 2-32 can make progress. This is I/O-bound concurrency — the CPU isn't doing heavy work; it's orchestrating remote calls.
+
+
+### The Training Coroutine
+
+Meanwhile, a single training coroutine consumes from the replay buffer:
+
+```python
+async def continuous_training():
+    while training_step < max_steps:
+        batch = await replay_buffer.sample.call_one()
+        if batch is None:
+            await asyncio.sleep(0.1)  # Buffer empty — yield, let rollouts fill it
+        else:
+            await trainer.train_step.call(batch)
+            await trainer.push_weights.call()
+            await generator.update_weights.fanout()
+```
+
+### Putting It Together
+
+```python
+# Launch 32 rollout coroutines + 1 training coroutine
+rollout_tasks = [asyncio.create_task(continuous_rollouts()) for _ in range(32)]
+training_task = asyncio.create_task(continuous_training())
+
+await training_task  # Run until training completes
+```
+
+**The result:** 32 concurrent rollouts, all making progress, all on a single thread. No GIL contention, no thread synchronization, no race conditions. The event loop efficiently multiplexes between coroutines at each `await` point.
+
+---
 
 ## Conclusion
 
