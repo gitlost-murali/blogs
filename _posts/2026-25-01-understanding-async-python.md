@@ -173,9 +173,36 @@ This brings us to Python's infamous limitation.
 
 ## Enter the GIL: Python's Original Sin
 
-### What is the GIL?
+### The Problem: Reference Counting Isn't Thread-Safe
 
-The **Global Interpreter Lock (GIL)** is a mutex (mutual exclusion lock) that protects access to Python objects. It ensures that **only one thread can execute Python bytecode at any given time**, even on a multi-core machine.
+Python was created in 1991. At that time, most computers had a single CPU core, and multi-threading was rare. The hard problem to solve was memory management.
+
+Python uses **reference counting** for memory management. Every object has an internal counter tracking how many variables (references) point to it. When this counter hits zero, Python knows the object is no longer needed and frees its memory:
+
+```python
+a = [1, 2, 3]  # Create a list. Reference count = 1 (only 'a' points to it)
+b = a          # 'b' now also points to the SAME list. Reference count = 2
+del a          # Remove the 'a' reference. Reference count = 1 (only 'b' remains)
+del b          # Remove the 'b' reference. Reference count = 0 → Object is freed!
+```
+
+Note: `b = a` doesn't copy the list — both `a` and `b` point to the *same* list object in memory. Python tracks this internally.
+
+**The problem:** Without protection, two threads could modify the reference count simultaneously. Say an object has refcount = 2, and both threads try to add a reference at the same time:
+
+```
+Thread 1: reads refcount (2)     Thread 2: reads refcount (2)
+Thread 1: computes 2 + 1 = 3     Thread 2: computes 2 + 1 = 3
+Thread 1: writes 3               Thread 2: writes 3
+
+Result: 3    Should be: 4    → Reference count is wrong! 💥
+```
+
+Now the object might get freed while something still references it — a crash waiting to happen.
+
+### The Solution: The GIL
+
+The **Global Interpreter Lock (GIL)** is a mutex (mutual exclusion lock) that protects access to Python objects. It ensures that **only one thread can execute Python code at any given time**, even on a multi-core machine.
 
 <div class="mermaid">
 flowchart TB
@@ -199,33 +226,6 @@ flowchart TB
     T1 --> C1
     Note["You have 4 cores, but Python only uses 1.<br/>Max CPU usage: ~100%"]
 </div>
-
-### Why Does the GIL Exist?
-
-Python was created in 1991. At that time:
-
-- Most computers had a single CPU core
-- Multi-threading was rare and exotic
-- Memory management was the hard problem to solve
-
-Python uses **reference counting** for memory management. Every object has a counter tracking how many references point to it:
-
-```python
-a = [1, 2, 3]  # Reference count of list: 1
-b = a          # Reference count of list: 2
-del a          # Reference count of list: 1
-del b          # Reference count of list: 0 → Object is freed
-```
-
-Without the GIL, two threads could modify the reference count simultaneously:
-
-```
-Thread 1: reads refcount (2)     Thread 2: reads refcount (2)
-Thread 1: increments to 3        Thread 2: increments to 3
-Thread 1: writes 3               Thread 2: writes 3
-
-Expected: 4    Actual: 3    → Memory corruption! 💥
-```
 
 The GIL was a simple, elegant solution: just don't let threads run simultaneously. Problem solved... until multi-core CPUs became the norm.
 
@@ -339,7 +339,7 @@ So threads help with I/O but not CPU-bound work. Python 3.5 introduced another t
 
 ### The Event Loop Model
 
-Async uses **cooperative multitasking** — a single thread that voluntarily yields control when waiting:
+Async uses **cooperative multitasking** — a single thread that voluntarily **yields control** (pauses itself) when waiting for I/O, allowing other tasks to run:
 
 ```python
 import asyncio
@@ -359,21 +359,52 @@ async def main():
 asyncio.run(main())
 ```
 
-### How Async Works
+### What Does `await` Actually Do?
+
+The `await` keyword is the magic that makes async work. It does two things:
+
+1. **Pauses the current coroutine** — "I'm waiting for this result, let others run"
+2. **Resumes when ready** — "The result is here, continue from where I left off"
+
+```python
+async def example():
+    print("Starting request...")
+    
+    # WITHOUT await - WRONG! This just creates a coroutine object, doesn't run it
+    response = fetch_data()  # Returns <coroutine object>, not actual data!
+    
+    # WITH await - CORRECT! This actually runs the coroutine and waits for result
+    response = await fetch_data()  # Pauses here, lets other tasks run, 
+                                   # resumes when data arrives
+    
+    print(f"Got response: {response}")
+```
+
+Think of `await` like placing an order at a restaurant:
+- **Without `await`**: You hand the waiter a note saying "I want pasta" but walk away before they read it. You never get food.
+- **With `await`**: You place your order and wait at your table. While the kitchen cooks, other customers can order too. When your food is ready, the waiter brings it to you.
+
+**Key insight:** `await` is where your coroutine *yields control* back to the event loop. Without `await` points, your async function would block everything else — defeating the purpose of async entirely.
+
+### How the Event Loop Works
+
+The event loop is like a restaurant manager coordinating multiple tables:
 
 <div class="mermaid">
 flowchart TB
     subgraph SingleThread["🧵 Single Thread"]
         subgraph EventLoop["⚡ Event Loop"]
             Queue["📋 Task Queue<br/>[Task A] [Task B] [Task C] [Task D] [Task E]"]
-            Queue --> Step1["Task A: runs until 'await' → yields control"]
-            Step1 --> Step2["Task B: runs until 'await' → yields control"]
-            Step2 --> Step3["Task A: response ready, resumes, runs until 'await'"]
-            Step3 --> Step4["Task C: runs until 'await' → yields control"]
+            Queue --> Step1["Task A: runs until 'await' → pauses, yields control to event loop"]
+            Step1 --> Step2["Task B: runs until 'await' → pauses, yields control"]
+            Step2 --> Step3["Task A: I/O complete! resumes from where it paused"]
+            Step3 --> Step4["Task C: runs until 'await' → pauses, yields control"]
             Step4 --> Continue["..."]
         end
     end
 </div>
+
+**"Yielding control"** means the coroutine voluntarily pauses and tells the event loop: "I'm waiting for something — go run other tasks, and come back to me when my I/O is done."
 
 The key insight: **no parallelism, just efficient scheduling**. While Task A waits for I/O, the event loop runs Task B. No thread switching overhead, no locks needed.
 
