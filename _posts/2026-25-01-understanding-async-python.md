@@ -625,21 +625,7 @@ async def process_image(data):
     return result
 ```
 
-#### 2. Forgetting to `await` (Silent Failures)
-
-```python
-async def save_to_db(data):
-    await db.insert(data)
-
-async def handler(request):
-    data = parse_request(request)
-    save_to_db(data)  # ❌ Missing await! Returns a coroutine object, never executes
-    return {"status": "saved"}  # Lies! Nothing was saved
-```
-
-Python won't error — it just creates a coroutine object that gets garbage collected. Your data silently vanishes.
-
-#### 3. Sequential `await` When You Want Concurrency
+#### 2. Sequential `await` When You Want Concurrency
 
 ```python
 async def fetch_all_data():
@@ -659,7 +645,7 @@ async def fetch_all_data():
     return user, posts, comments
 ```
 
-#### 4. Using Blocking I/O Libraries
+#### 3. Using Blocking I/O Libraries
 
 ```python
 import requests  # Synchronous library!
@@ -682,7 +668,7 @@ async def fetch_url(url):
             return await response.json()
 ```
 
-#### 5. Creating Too Many Concurrent Connections
+#### 4. Creating Too Many Concurrent Connections
 
 ```python
 async def fetch_all(urls):
@@ -704,8 +690,21 @@ async def fetch_all(urls, max_concurrent=100):
     return await asyncio.gather(*[fetch_limited(url) for url in urls])
 ```
 
-**The golden rule:** Every long-running operation inside an async function needs an `await`. If there's no `await`, there's no concurrency — you're just writing complicated synchronous code.
+#### 5. Forgetting to `await`
 
+```python
+async def save_to_db(data):
+    await db.insert(data)
+
+async def handler(request):
+    data = parse_request(request)
+    save_to_db(data)  # ❌ Missing await! Returns a coroutine object, never executes
+    return {"status": "saved"}  # False signal. Nothing was saved
+```
+
+Python emits a `RuntimeWarning: coroutine 'save_to_db' was never awaited` — but only at garbage collection time, not when the bug occurs. In noisy logs or production environments, this warning is easy to miss. Your function returns successfully, the response looks correct, but the database write never happened.
+
+**The golden rule:** Every long-running operation inside an async function needs an `await`. If there's no `await`, there's no concurrency — you're just writing complicated synchronous code.
 
 
 ### The Mental Overhead
