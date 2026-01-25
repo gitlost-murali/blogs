@@ -349,8 +349,12 @@ The deeper issue is **how switching happens (preemptive vs cooperative schedulin
 Python 3.5 introduced **async/await** as a lightweight alternative for high-concurrency I/O.
 
 ### The Event Loop Model
-Async uses **cooperative multitasking** — a single thread that voluntarily **yields control** (pauses itself) when waiting for 
-I/O, allowing other tasks to run. To be specific, **async runs entirely on a single thread**. Coroutines don't get their own threads — they're lightweight Python objects (similar to generators) that can be paused and resumed. The **event loop** is the executor that multiplexes between them:
+
+Async uses **cooperative multitasking** — sub-tasks (called coroutines) voluntarily **yield control** when waiting for I/O, allowing other coroutines to run. 
+
+**What are coroutines?** They're lightweight Python objects created when you call an `async def` function. Technically, they're a special type of generator — objects that implement the iterator protocol with `__await__`, allowing them to be paused (at `await` points) and resumed. They don't get their own threads; they're just Python objects sitting in memory.
+
+**Async runs entirely on a single thread.** The **event loop** is the scheduler that multiplexes between coroutines — it keeps track of which ones are waiting for I/O and which are ready to run, switching between them whenever one yields:
 
 ```python
 import asyncio
