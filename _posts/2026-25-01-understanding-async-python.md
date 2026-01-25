@@ -23,7 +23,7 @@ This post is my attempt to build a solid mental model of Python's concurrency la
 
 1. [The Basics: What Are Threads and Processes?](#the-basics-what-are-threads-and-processes)
 2. [The Two Types of Waiting](#the-two-types-of-waiting)
-3. [Enter the GIL: Python's Original Sin](#enter-the-gil-pythons-original-sin)
+3. [Enter the GIL: Python's Infamous Lock](#enter-the-gil-pythons-infamous-lock)
 4. [Async/Await: Concurrency Without Parallelism](#asyncawait-concurrency-without-parallelism)
 5. [The Workarounds We've Lived With](#the-workarounds-weve-lived-with)
 6. [Why 896% CPU is Historic](#why-896-cpu-is-historic)
@@ -171,9 +171,9 @@ This brings us to Python's infamous limitation.
 
 ---
 
-## Enter the GIL: Python's Original Sin
+## Enter the GIL: Python's Infamous Lock
 
-### The Problem: Reference Counting Isn't Thread-Safe
+<!-- ### The Problem: Reference Counting Isn't Thread-Safe
 
 Python was created in 1991. At that time, most computers had a single CPU core, and multi-threading was rare. The hard problem to solve was memory management.
 
@@ -202,7 +202,9 @@ Now the object might get freed while something still references it — a crash w
 
 ### The Solution: The GIL
 
-The **Global Interpreter Lock (GIL)** is a mutex (mutual exclusion lock) that protects access to Python objects. It ensures that **only one thread can execute Python code at any given time**, even on a multi-core machine.
+The **Global Interpreter Lock (GIL)** is a mutex (mutual exclusion lock) that protects access to Python objects. It ensures that **only one thread can execute Python code at any given time**, even on a multi-core machine. -->
+
+Python's internals aren't thread-safe i.e. multiple threads modifying the same data structures can corrupt memory. Rather than adding fine-grained locks everywhere (complex and slow), Python uses the **Global Interpreter Lock (GIL)**: a single mutex that ensures **only one thread can execute Python code at any given time**, even on a multi-core machine.
 
 <div class="mermaid">
 flowchart TB
@@ -380,10 +382,6 @@ async def example():
     print(f"Got response: {response}")
 ```
 
-Think of `await` like placing an order at a restaurant:
-- **Without `await`**: You hand the waiter a note saying "I want pasta" but walk away before they read it. You never get food.
-- **With `await`**: You place your order and wait at your table. While the kitchen cooks, other customers can order too. When your food is ready, the waiter brings it to you.
-
 **Key insight:** `await` is where your coroutine *yields control* back to the event loop. Without `await` points, your async function would block everything else — defeating the purpose of async entirely.
 
 ### How the Event Loop Works
@@ -541,27 +539,7 @@ with ThreadPoolExecutor(max_workers=8) as executor:
 
 This is why data science in Python "works" — the heavy lifting happens in C, outside the GIL.
 
-### 3. Cython with `nogil`
-
-You can write Python-like code that compiles to C and explicitly releases the GIL:
-
-```cython
-# In .pyx file
-from cython.parallel import prange
-
-def parallel_sum(double[:] arr):
-    cdef double total = 0
-    cdef int i
-    cdef int n = arr.shape[0]
-    
-    with nogil:  # Release the GIL!
-        for i in prange(n):  # Parallel loop
-            total += arr[i]
-    
-    return total
-```
-
-### 4. Numba JIT Compilation
+### 3. Numba JIT Compilation
 
 ```python
 from numba import jit, prange
@@ -660,20 +638,6 @@ for t in threads: t.join()
 # After:  ~0.8 seconds (parallel, all cores utilized)
 ```
 
-### What Made This Possible?
-
-The implementation required massive changes:
-
-1. **Biased Reference Counting**: Objects start with thread-local reference counts, only switching to atomic operations when shared between threads
-
-2. **Per-Object Locks**: Fine-grained locking replaces the global lock
-
-3. **Deferred Reference Counting**: Some reference count updates are batched
-
-4. **Immortal Objects**: Common objects like `None`, `True`, small integers don't need reference counting at all
-
-5. **Thread-Safe Containers**: `dict`, `list`, etc. now have internal synchronization
-
 ---
 
 ## What This Means for You
@@ -712,15 +676,11 @@ Eventually, the free-threaded build may become the default, and the GIL will be 
 
 ---
 
-## Conclusion: The End of an Era
+## Conclusion
 
-The GIL was a reasonable design choice in 1991. It made Python's memory management simple and safe. But as computing evolved to multi-core parallelism, it became an increasingly painful limitation.
+The GIL was a reasonable design choice in 1991, but it became a painful limitation as multi-core CPUs became the norm. For decades, we worked around it with multiprocessing, C extensions, and async.
 
-For 33 years, we worked around it with multiprocessing, C extensions, async, and third-party tools. We told ourselves "Python isn't for CPU-bound work" or "just use the right tool for the job."
-
-That screenshot of `python3.14t` at 896% CPU marks the beginning of the end for all those workarounds. Pure Python, using the `threading` module we've had since 1998, can finally use multiple cores.
-
-The GIL is dead. Long live Python.
+Python 3.13+'s free-threaded build changes everything: pure Python threads can finally use multiple cores. For RL workloads, this means simpler code for parallel environment rollouts, data preprocessing, and orchestration — without the overhead of multiprocessing or the complexity of async everywhere.
 
 ---
 
