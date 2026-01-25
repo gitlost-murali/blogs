@@ -418,6 +418,149 @@ When coroutine A hits `await`, it pauses (state saved in the coroutine object), 
 
 **No parallelism, just efficient scheduling.** While Task A waits for I/O, the event loop runs Task B. No thread switching overhead, no locks needed.
 
+### Visualizing Async Execution
+
+Let's trace through a simple example — making two API calls concurrently:
+
+```python
+import asyncio
+
+async def fetch_user():
+    print("1. Fetching user...")
+    await asyncio.sleep(2)  # Simulate 2-second API call
+    print("4. Got user!")
+    return {"name": "Alice"}
+
+async def fetch_posts():
+    print("2. Fetching posts...")
+    await asyncio.sleep(1)  # Simulate 1-second API call
+    print("3. Got posts!")
+    return [{"title": "Hello"}]
+
+async def main():
+    user, posts = await asyncio.gather(fetch_user(), fetch_posts())
+    print("5. Done!")
+
+asyncio.run(main())
+```
+
+The numbers show execution order. Here's what happens step by step — remember, **everything runs on a single thread**, so only one thing executes at a time:
+
+<div class="mermaid">
+flowchart TD
+    subgraph T0["⏱️ t=0ms"]
+        A1["🟢 <b>fetch_user() runs</b><br/>print('Fetching user...')"]
+        A2["hits <code>await sleep(2)</code><br/>💤 pauses, yields control"]
+        A3["🟢 <b>fetch_posts() runs</b><br/>print('Fetching posts...')"]
+        A4["hits <code>await sleep(1)</code><br/>💤 pauses, yields control"]
+        A5["😴 Event loop: nothing to do<br/>both tasks waiting for timers"]
+        A1 --> A2 --> A3 --> A4 --> A5
+    end
+
+    subgraph T1["⏱️ t=1000ms"]
+        B1["⏰ 1-second timer fires!"]
+        B2["🟢 <b>fetch_posts() resumes</b><br/>print('Got posts!')<br/>✅ returns, done"]
+        B3["😴 Event loop: waiting<br/>fetch_user still has 1s left"]
+        B1 --> B2 --> B3
+    end
+
+    subgraph T2["⏱️ t=2000ms"]
+        C1["⏰ 2-second timer fires!"]
+        C2["🟢 <b>fetch_user() resumes</b><br/>print('Got user!')<br/>✅ returns, done"]
+        C3["🟢 <b>main() resumes</b><br/>print('Done!')"]
+        C1 --> C2 --> C3
+    end
+
+    T0 --> T1 --> T2
+</div>
+
+**Output:**
+```
+1. Fetching user...    ← runs immediately (no await yet)
+2. Fetching posts...   ← runs immediately after user yields
+3. Got posts!          ← posts timer fires first (1s)
+4. Got user!           ← user timer fires second (2s)
+5. Done!
+```
+
+**Key points:**
+- At t=0, both `print()` statements run **synchronously** — no await has happened yet, so no yielding
+- `fetch_user()` runs first because it's the first argument to `gather()`
+- Only when each task hits `await` does it pause and let the next task run
+- Total time = 2 seconds (the slower one), not 3 seconds (1 + 2 if sequential)
+- The event loop is **single-threaded** — it runs one thing at a time, but switches between tasks at `await` points
+
+### No `await` = No Concurrency
+
+If there's no `await`, async functions run **purely sequentially** — the `async` keyword alone does nothing for concurrency:
+
+```python
+import asyncio
+import time
+
+async def task_a():
+    print("A: start")
+    time.sleep(1)  # Regular sleep — BLOCKS everything!
+    print("A: end")
+
+async def task_b():
+    print("B: start")
+    time.sleep(1)  # Regular sleep — BLOCKS everything!
+    print("B: end")
+
+async def main():
+    await asyncio.gather(task_a(), task_b())
+
+asyncio.run(main())
+```
+
+**Output (takes 2 seconds!):**
+```
+A: start
+A: end      ← A runs completely before B even starts
+B: start
+B: end
+```
+
+<div class="mermaid">
+flowchart LR
+    A1["A: start"] --> A2["sleep(1)<br/>🚫 BLOCKS"] --> A3["A: end"] --> B1["B: start"] --> B2["sleep(1)<br/>🚫 BLOCKS"] --> B3["B: end"]
+</div>
+
+Compare with `await asyncio.sleep()`:
+
+```python
+async def task_a():
+    print("A: start")
+    await asyncio.sleep(1)  # Yields control!
+    print("A: end")
+
+async def task_b():
+    print("B: start")
+    await asyncio.sleep(1)  # Yields control!
+    print("B: end")
+```
+
+**Output (takes 1 second!):**
+```
+A: start
+B: start    ← B starts while A is waiting
+A: end
+B: end
+```
+
+<div class="mermaid">
+flowchart TD
+    subgraph Concurrent["With await — 1 second total"]
+        C1["A: start"] --> C2["await sleep(1)<br/>💤 yields"]
+        C2 --> C3["B: start"] --> C4["await sleep(1)<br/>💤 yields"]
+        C4 --> C5["...1 second passes..."]
+        C5 --> C6["A: end"] --> C7["B: end"]
+    end
+</div>
+
+**The rule:** `await` is the yield point. No `await` = no opportunity for other tasks to run.
+
 ### Async vs Threads: When to Use What?
 
 | Aspect | Threads | Async |
