@@ -337,7 +337,17 @@ gantt
 
 ## Async/Await: Concurrency Without Parallelism
 
-So threads help with I/O but not CPU-bound work. Python 3.5 introduced another tool: **async/await**.
+Threads work for I/O-bound tasks, but they have limits. Each thread costs ~8KB of memory and requires OS-level context switching. If you're managing 10 concurrent HTTP requests, threads are fine. But what if you need 10,000 concurrent connections — say, streaming data from thousands of RL environments or handling many parallel API calls to an LLM provider?
+
+Spawning 10,000 threads would consume ~80MB just for thread stacks, plus the OS scheduler would thrash trying to manage them all.
+
+The deeper issue is **preemptive vs cooperative scheduling**:
+
+- **Threads (preemptive):** The OS decides when to switch between threads. It can interrupt a thread at *any* point, save its entire state (registers, stack pointer, etc.), and switch to another. This context switch is expensive (~1-10μs) and unpredictable.
+
+- **Async (cooperative):** Your code decides when to yield control via `await`. No OS involvement, no saving full thread state — just a simple function call to resume a coroutine. Context switch cost: ~100ns (10-100x faster).
+
+This is where **async/await** shines — Python 3.5 introduced it as a lightweight alternative for high-concurrency I/O.
 
 ### The Event Loop Model
 
