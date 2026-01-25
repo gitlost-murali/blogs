@@ -280,31 +280,30 @@ import threading
 import requests
 import time
 
-def fetch_url(url):
-    """I/O-bound task — network waiting"""
-    response = requests.get(url)
-    return len(response.content)
+def simulated_io_task(task_id):
+    """Simulate I/O-bound task — sleep releases the GIL"""
+    time.sleep(1)  # Simulates waiting for disk/network/database
+    return task_id
 
-urls = ["https://example.com"] * 10
+num_tasks = 5
 
 # Sequential
 start = time.time()
-for url in urls:
-    fetch_url(url)
-print(f"Sequential: {time.time() - start:.2f}s")
+for i in range(num_tasks):
+    simulated_io_task(i)
+print(f"Sequential I/O: {time.time() - start:.2f}s")
 
 # Threaded
 start = time.time()
-threads = [threading.Thread(target=fetch_url, args=(url,)) for url in urls]
+threads = [threading.Thread(target=simulated_io_task, args=(i,)) for i in range(num_tasks)]
 for t in threads: t.start()
 for t in threads: t.join()
-print(f"Threaded: {time.time() - start:.2f}s")
-```
+print(f"Threaded I/O: {time.time() - start:.2f}s")```
 
 **Results:**
 ```
 Sequential: 5.2s
-Threaded: 0.6s  ← ~9x faster! 🎉
+Threaded: 1.01s  -> ~5x speedup!
 ```
 
 This works because while Thread 1 is waiting for HTTP response, Thread 2 can grab the GIL and start its request.
@@ -335,7 +334,7 @@ gantt
 
 ### Why Not Just Use More Threads?
 
-So threads work great for I/O-bound tasks, but they have limits. Each thread costs ~8KB of memory and requires OS-level context switching. For 10 concurrent HTTP requests, threads are fine. But what about 10,000 concurrent connections — streaming data from thousands of RL environments or handling parallel API calls to an LLM provider? Spawning 10,000 threads would consume ~80MB just for thread stacks, plus the OS scheduler would thrash trying to manage them all.
+So threads work great for I/O-bound tasks, but they have limits. Each OS thread comes with an overhead: a thread stack and OS-level scheduling/context-switching. For 10 concurrent HTTP requests, threads are fine. But what about 10,000 concurrent connections — streaming data from thousands of RL environments or handling parallel API calls to an LLM provider? A one-thread-per-connection approach can burn gigabytes of thread stack space and spend a lot of time switching between threads instead of doing useful work.
 
 The deeper issue is **how switching happens (preemptive vs cooperative scheduling)**:
 
