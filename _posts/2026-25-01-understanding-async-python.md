@@ -266,7 +266,7 @@ print(f"Threaded: {threaded_time:.2f}s")
 **Results (with GIL):**
 ```
 Sequential: 6.2s
-Threaded: 6.4s  ← Actually SLOWER due to lock contention! 😱
+Threaded: 6.4s  ← Actually SLOWER due to GIL lock contention!
 ```
 
 The threads aren't running in parallel — they're taking turns, plus paying the overhead of lock acquisition/release. More threads can actually make it **slower**.
