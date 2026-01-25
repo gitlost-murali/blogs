@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GRPO Async Training Flow</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Source+Sans+Pro:wght@400;500;600;700&display=swap');
         
         * {
             margin: 0;
@@ -13,179 +13,237 @@
             box-sizing: border-box;
         }
         
+        /* Cream theme colors matching minimal-mistakes cream skin */
+        :root {
+            --bg-color: #fefcf8;
+            --bg-secondary: #f5f2ed;
+            --bg-tertiary: #ebe7e0;
+            --text-color: #2c2c2c;
+            --text-muted: #6b6b6b;
+            --primary: #c17f59;
+            --primary-dark: #8b5a3c;
+            --border-color: #e8e4de;
+            --accent-green: #6a9f4d;
+            --accent-blue: #5778c1;
+            --accent-purple: #9c6b9c;
+            --accent-red: #c75646;
+            --accent-orange: #d28445;
+        }
+        
         body {
-            font-family: 'Space Grotesk', sans-serif;
-            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
-            min-height: 100vh;
-            color: #e0e0e0;
-            padding: 30px 20px;
+            font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            padding: 25px 20px;
+            line-height: 1.6;
         }
         
         .container {
-            max-width: 1100px;
+            max-width: 1000px;
             margin: 0 auto;
         }
         
         h1 {
             text-align: center;
-            font-size: 1.8rem;
-            margin-bottom: 8px;
-            background: linear-gradient(90deg, #00d4ff, #7b2cbf, #ff6b6b);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            font-size: 1.5rem;
+            margin-bottom: 6px;
+            color: var(--text-color);
+            font-weight: 600;
         }
         
         .subtitle {
             text-align: center;
-            color: #888;
-            margin-bottom: 30px;
-            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+        }
+        
+        .subtitle code {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-secondary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+        
+        /* Top controls bar */
+        .top-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 12px 20px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .top-controls .btn {
+            padding: 10px 20px;
+            min-width: 90px;
+        }
+        
+        .top-controls .step-info {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin: 0 15px;
         }
         
         /* Main layout */
         .main-grid {
             display: grid;
-            grid-template-columns: 1fr 320px;
-            gap: 25px;
+            grid-template-columns: 1fr 280px;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
         }
         
         /* Left panel - the story */
         .story-panel {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 16px;
-            padding: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: var(--bg-color);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
         }
         
         .current-execution {
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
         
         .exec-label {
-            font-size: 0.75rem;
-            color: #888;
+            font-size: 0.7rem;
+            color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
+            font-weight: 600;
         }
         
         .exec-box {
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 12px;
-            padding: 20px;
-            border-left: 4px solid #00d4ff;
-            min-height: 120px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            padding: 18px;
+            border-left: 4px solid var(--primary);
+            min-height: 110px;
         }
         
         .exec-coroutine {
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             font-weight: 600;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             display: flex;
             align-items: center;
             gap: 10px;
         }
         
         .exec-coroutine .badge {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             padding: 3px 8px;
             border-radius: 4px;
-            font-weight: 500;
+            font-weight: 600;
+            color: white;
         }
         
         .badge-rollout {
-            background: linear-gradient(135deg, #7b2cbf, #9d4edd);
+            background: var(--accent-purple);
         }
         
         .badge-training {
-            background: linear-gradient(135deg, #00d4ff, #0099cc);
-            color: #000;
+            background: var(--accent-blue);
         }
         
         .exec-action {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9rem;
-            color: #00d4ff;
-            margin-bottom: 12px;
+            font-size: 0.85rem;
+            color: var(--primary-dark);
+            margin-bottom: 10px;
         }
         
         .exec-explanation {
             font-size: 0.85rem;
-            color: #aaa;
+            color: var(--text-muted);
             line-height: 1.5;
         }
         
         /* Timeline / sequence */
         .sequence-container {
-            margin-top: 20px;
+            margin-top: 18px;
         }
         
         .sequence-label {
-            font-size: 0.75rem;
-            color: #888;
+            font-size: 0.7rem;
+            color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
+            font-weight: 600;
         }
         
         .sequence-track {
             display: flex;
             gap: 4px;
             flex-wrap: wrap;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            min-height: 80px;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            min-height: 60px;
+            border: 1px solid var(--border-color);
         }
         
         .seq-item {
-            padding: 6px 10px;
-            border-radius: 6px;
+            padding: 5px 9px;
+            border-radius: 5px;
             font-size: 0.7rem;
             font-family: 'JetBrains Mono', monospace;
-            opacity: 0.4;
+            opacity: 0.35;
             transition: all 0.3s ease;
+            color: white;
         }
         
         .seq-item.active {
             opacity: 1;
-            transform: scale(1.05);
+            transform: scale(1.08);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
         
         .seq-item.past {
-            opacity: 0.6;
+            opacity: 0.7;
         }
         
         .seq-item.rollout {
-            background: linear-gradient(135deg, #7b2cbf, #9d4edd);
+            background: var(--accent-purple);
         }
         
         .seq-item.training {
-            background: linear-gradient(135deg, #00d4ff, #0099cc);
-            color: #000;
+            background: var(--accent-blue);
         }
         
         /* Right panel - coroutine states */
         .states-panel {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 16px;
-            padding: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: var(--bg-color);
+            border-radius: 12px;
+            padding: 18px;
+            border: 1px solid var(--border-color);
         }
         
         .states-title {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 600;
-            margin-bottom: 15px;
-            color: #00d4ff;
+            margin-bottom: 12px;
+            color: var(--primary-dark);
         }
         
         .coroutine-list {
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            max-height: 400px;
+            gap: 5px;
+            max-height: 320px;
             overflow-y: auto;
             padding-right: 5px;
         }
@@ -193,128 +251,140 @@
         .coroutine-item {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 8px;
+            gap: 8px;
+            padding: 8px 10px;
+            background: var(--bg-secondary);
+            border-radius: 6px;
             transition: all 0.3s ease;
             font-size: 0.8rem;
+            border: 1px solid transparent;
         }
         
         .coroutine-item.running {
-            background: rgba(0, 212, 255, 0.15);
-            border: 1px solid rgba(0, 212, 255, 0.3);
+            background: #fff;
+            border: 1px solid var(--primary);
+            box-shadow: 0 2px 8px rgba(193, 127, 89, 0.15);
         }
         
         .coroutine-item.waiting {
-            opacity: 0.5;
+            opacity: 0.6;
         }
         
         .coro-id {
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.7rem;
-            color: #888;
+            color: var(--text-muted);
             width: 20px;
         }
         
         .coro-name {
             flex: 1;
+            font-weight: 500;
         }
         
         .coro-status {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             padding: 2px 6px;
             border-radius: 3px;
             font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
         }
         
         .status-running {
-            background: #00d4ff;
-            color: #000;
+            background: var(--primary);
+            color: white;
         }
         
         .status-waiting {
-            background: rgba(255, 255, 255, 0.1);
-            color: #888;
+            background: var(--bg-tertiary);
+            color: var(--text-muted);
         }
         
         /* Controls */
         .controls {
-            margin-top: 20px;
+            margin-top: 15px;
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
         
         .btn {
             flex: 1;
-            padding: 12px;
+            padding: 10px;
             border: none;
-            border-radius: 8px;
-            font-family: 'Space Grotesk', sans-serif;
+            border-radius: 6px;
+            font-family: 'Source Sans Pro', sans-serif;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #00d4ff, #0099cc);
-            color: #000;
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
         }
         
         .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
+            background: var(--bg-secondary);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
         }
         
-        .btn:hover {
-            transform: translateY(-2px);
+        .btn-secondary:hover {
+            background: var(--bg-tertiary);
         }
         
         .btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
-            transform: none;
         }
         
         /* Key insight */
         .insight-box {
-            margin-top: 25px;
-            background: linear-gradient(135deg, rgba(123, 44, 191, 0.15), rgba(0, 212, 255, 0.15));
-            border-radius: 12px;
-            padding: 18px;
-            border-left: 4px solid #7b2cbf;
+            margin-top: 18px;
+            background: linear-gradient(135deg, rgba(156, 107, 156, 0.08), rgba(87, 120, 193, 0.08));
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 4px solid var(--accent-purple);
         }
         
         .insight-title {
             font-weight: 600;
-            margin-bottom: 8px;
-            color: #00d4ff;
-            font-size: 0.9rem;
+            margin-bottom: 6px;
+            color: var(--primary-dark);
+            font-size: 0.85rem;
         }
         
         .insight-text {
-            font-size: 0.85rem;
-            line-height: 1.6;
-            color: #ccc;
+            font-size: 0.82rem;
+            line-height: 1.55;
+            color: var(--text-muted);
         }
         
         .insight-text code {
             font-family: 'JetBrains Mono', monospace;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.8em;
+            background: var(--bg-secondary);
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 0.85em;
+        }
+        
+        .insight-text strong {
+            color: var(--text-color);
         }
         
         /* Stats bar */
         .stats-bar {
             display: flex;
-            gap: 20px;
-            margin-top: 15px;
-            padding: 12px 15px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
+            gap: 15px;
+            margin-top: 12px;
+            padding: 10px 12px;
+            background: var(--bg-secondary);
+            border-radius: 6px;
         }
         
         .stat {
@@ -322,63 +392,32 @@
         }
         
         .stat-value {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             font-weight: 700;
             font-family: 'JetBrains Mono', monospace;
-            color: #00d4ff;
+            color: var(--primary-dark);
         }
         
         .stat-label {
-            font-size: 0.65rem;
-            color: #888;
+            font-size: 0.6rem;
+            color: var(--text-muted);
             text-transform: uppercase;
+            font-weight: 600;
         }
         
-        /* Step indicator */
-        .step-indicator {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 15px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-        }
-        
-        .step-num {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: #888;
-        }
-        
-        .step-dots {
-            display: flex;
-            gap: 6px;
-        }
-        
-        .step-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
-            transition: all 0.3s ease;
-        }
-        
-        .step-dot.active {
-            background: #00d4ff;
-            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
-        }
-        
-        .step-dot.past {
-            background: rgba(0, 212, 255, 0.4);
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🔄 Event Loop in Action</h1>
         <p class="subtitle">Watch how the event loop switches between coroutines at each <code>await</code></p>
+        
+        <div class="top-controls">
+            <button class="btn btn-primary" id="stepBtn" onclick="step()">Step →</button>
+            <button class="btn btn-secondary" id="autoBtn" onclick="toggleAuto()">Auto ▶</button>
+            <button class="btn btn-secondary" onclick="reset()">↺ Reset</button>
+            <span class="step-info" id="stepNum">Step 0 / 20</span>
+        </div>
         
         <div class="main-grid">
             <div class="story-panel">
@@ -399,13 +438,6 @@
                 <div class="sequence-container">
                     <div class="sequence-label">Execution Sequence</div>
                     <div class="sequence-track" id="sequenceTrack">
-                        <!-- Filled by JS -->
-                    </div>
-                </div>
-                
-                <div class="step-indicator">
-                    <span class="step-num" id="stepNum">Step 0 / 20</span>
-                    <div class="step-dots" id="stepDots">
                         <!-- Filled by JS -->
                     </div>
                 </div>
@@ -437,12 +469,6 @@
                         <div class="stat-value" id="statSwitches">0</div>
                         <div class="stat-label">Switches</div>
                     </div>
-                </div>
-                
-                <div class="controls">
-                    <button class="btn btn-primary" id="stepBtn" onclick="step()">Step →</button>
-                    <button class="btn btn-secondary" id="autoBtn" onclick="toggleAuto()">Auto ▶</button>
-                    <button class="btn btn-secondary" onclick="reset()">↺</button>
                 </div>
             </div>
         </div>
@@ -496,15 +522,6 @@
                 stageIndex: 0,
                 state: 'waiting',
             });
-            
-            // Generate step dots
-            const dotsContainer = document.getElementById('stepDots');
-            for (let i = 0; i < totalSteps; i++) {
-                const dot = document.createElement('div');
-                dot.className = 'step-dot';
-                dot.id = `dot-${i}`;
-                dotsContainer.appendChild(dot);
-            }
             
             renderCoroutineList();
             updateDisplay();
@@ -589,7 +606,7 @@
                 execBadge.className = `badge badge-${running.type}`;
                 execAction.textContent = stage.action;
                 execExplanation.innerHTML = stage.explanation;
-                execBox.style.borderLeftColor = running.type === 'rollout' ? '#9d4edd' : '#00d4ff';
+                execBox.style.borderLeftColor = running.type === 'rollout' ? '#9c6b9c' : '#5778c1';
             } else {
                 execName.textContent = '—';
                 execAction.textContent = 'Click "Step" to begin';
@@ -601,14 +618,8 @@
             document.getElementById('statWaiting').textContent = coroutines.filter(c => c.state === 'waiting').length;
             document.getElementById('statSwitches').textContent = switchCount;
             
-            // Update step indicator
+            // Update step indicator in top controls
             document.getElementById('stepNum').textContent = `Step ${currentStep} / ${totalSteps}`;
-            for (let i = 0; i < totalSteps; i++) {
-                const dot = document.getElementById(`dot-${i}`);
-                dot.className = 'step-dot';
-                if (i < currentStep) dot.classList.add('past');
-                if (i === currentStep - 1) dot.classList.add('active');
-            }
             
             // Update insight based on progress
             const insightText = document.getElementById('insightText');
